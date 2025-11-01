@@ -14,13 +14,170 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_results: {
+        Row: {
+          created_at: string | null
+          credits_spent: number | null
+          diamonds_won: number | null
+          game_name: string
+          id: string
+          multiplier: number | null
+          result: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits_spent?: number | null
+          diamonds_won?: number | null
+          game_name: string
+          id?: string
+          multiplier?: number | null
+          result: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits_spent?: number | null
+          diamonds_won?: number | null
+          game_name?: string
+          id?: string
+          multiplier?: number | null
+          result?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          connected_at: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+          wallet_address: string | null
+          wallet_name: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+          wallet_address?: string | null
+          wallet_name?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+          wallet_address?: string | null
+          wallet_name?: string | null
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          id: string
+          total_purchased: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          total_purchased?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          total_purchased?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_diamonds: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          id: string
+          total_earned: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          total_earned?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          total_earned?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          avatar_url: string | null
+          rank: number | null
+          total_diamonds: number | null
+          total_games: number | null
+          total_wins: number | null
+          username: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      handle_wallet_auth: {
+        Args: {
+          _nickname?: string
+          _wallet_address: string
+          _wallet_name: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
