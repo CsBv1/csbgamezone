@@ -121,70 +121,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleReverseSwap = async (diamondsCost: number, creditsAmount: number) => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Required 🔒",
-        description: "Please connect your wallet to swap",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSwapping(true);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      // Fetch both credits and diamonds in parallel
-      const [creditsResult, diamondsResult] = await Promise.all([
-        supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single(),
-        supabase.from('user_diamonds' as any).select('balance, total_earned').eq('user_id', user.id).single()
-      ]);
-
-      if (!(diamondsResult.data as any) || (diamondsResult.data as any).balance < diamondsCost) {
-        toast({
-          title: "Not Enough Diamonds! 💎",
-          description: `You need ${diamondsCost} diamonds for this swap`,
-          variant: "destructive",
-        });
-        setIsSwapping(false);
-        return;
-      }
-
-      // Update both in parallel for instant response
-      const [creditsUpdate, diamondsUpdate] = await Promise.all([
-        supabase.from('user_credits' as any)
-          .update({ balance: ((creditsResult.data as any)?.balance || 0) + creditsAmount })
-          .eq('user_id', user.id),
-        supabase.from('user_diamonds' as any)
-          .update({ 
-            balance: (diamondsResult.data as any).balance - diamondsCost
-          })
-          .eq('user_id', user.id)
-      ]);
-
-      if (creditsUpdate.error) throw creditsUpdate.error;
-      if (diamondsUpdate.error) throw diamondsUpdate.error;
-
-      toast({
-        title: "Swap Successful! 🎉",
-        description: `Traded ${diamondsCost} 💎 for ${creditsAmount} credits`,
-      });
-
-    } catch (error) {
-      console.error('Swap error:', error);
-      toast({
-        title: "Swap Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSwapping(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bull-pattern">
       {/* Header */}
@@ -206,7 +142,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Wallet Connector & Stats Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Wallet Connection Card */}
             {!isConnected ? (
               <Card className="p-6 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40">
@@ -242,15 +178,12 @@ const Dashboard = () => {
 
             {/* Leaderboard */}
             <Leaderboard />
-          </div>
 
-          {/* Swap Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Get Diamonds */}
+            {/* Purchase Diamonds */}
             <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
               <div className="flex items-center gap-3 mb-4">
                 <Gem className="w-6 h-6 text-cyan-400" />
-                <h3 className="text-xl font-bold text-foreground">Get Diamonds 💎</h3>
+                <h3 className="text-xl font-bold text-foreground">Get Diamonds</h3>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
                 Trade credits for diamonds
@@ -283,51 +216,6 @@ const Dashboard = () => {
                     size="sm" 
                     className="w-full"
                     onClick={() => handleSwap(500, 30)}
-                    disabled={isSwapping || !isConnected}
-                  >
-                    Swap Now
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Get Gold */}
-            <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
-              <div className="flex items-center gap-3 mb-4">
-                <Coins className="w-6 h-6 text-yellow-400" />
-                <h3 className="text-xl font-bold text-foreground">Get Gold 💰</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Trade diamonds for credits
-              </p>
-              <div className="space-y-2">
-                <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-foreground">5 💎</span>
-                    <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                      100 Credits
-                    </span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => handleReverseSwap(5, 100)}
-                    disabled={isSwapping || !isConnected}
-                  >
-                    Swap Now
-                  </Button>
-                </div>
-                <div className="p-3 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-foreground">30 💎</span>
-                    <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                      500 Credits
-                    </span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => handleReverseSwap(30, 500)}
                     disabled={isSwapping || !isConnected}
                   >
                     Swap Now
