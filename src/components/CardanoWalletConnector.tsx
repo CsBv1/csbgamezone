@@ -17,16 +17,16 @@ interface CardanoWalletConnectorProps {
 }
 
 const SUPPORTED_WALLETS = [
-  { id: 'nami', name: 'Nami' },
-  { id: 'eternl', name: 'Eternl' },
-  { id: 'lace', name: 'Lace' },
-  { id: 'flint', name: 'Flint' },
-  { id: 'typhon', name: 'Typhon' },
-  { id: 'gerowallet', name: 'Gero' },
-  { id: 'nufi', name: 'NuFi' },
-  { id: 'begin', name: 'Begin' },
-  { id: 'vespr', name: 'Vespr' },
-  { id: 'yoroi', name: 'Yoroi' },
+  { id: 'nami', name: 'Nami', aliases: ['nami'] },
+  { id: 'eternl', name: 'Eternl', aliases: ['eternl', 'ccvault'] },
+  { id: 'lace', name: 'Lace', aliases: ['lace'] },
+  { id: 'flint', name: 'Flint', aliases: ['flint'] },
+  { id: 'typhon', name: 'Typhon', aliases: ['typhon', 'typhoncip30'] },
+  { id: 'gerowallet', name: 'Gero', aliases: ['gerowallet'] },
+  { id: 'nufi', name: 'NuFi', aliases: ['nufi'] },
+  { id: 'begin', name: 'Begin', aliases: ['begin'] },
+  { id: 'vespr', name: 'Vespr', aliases: ['vespr'] },
+  { id: 'yoroi', name: 'Yoroi', aliases: ['yoroi'] },
 ];
 
 export const CardanoWalletConnector = ({ 
@@ -51,7 +51,14 @@ export const CardanoWalletConnector = ({
   } = useCardanoWallet();
 
   const handleWalletSelect = async (walletId: string) => {
-    setSelectedWallet(walletId);
+    // Find the actual wallet key from available wallets using aliases
+    const wallet = SUPPORTED_WALLETS.find(w => w.id === walletId);
+    const actualWalletKey = availableWallets.find(installed => 
+      wallet?.aliases.some(alias => 
+        installed.toLowerCase().includes(alias.toLowerCase()) || alias.toLowerCase().includes(installed.toLowerCase())
+      )
+    );
+    setSelectedWallet(actualWalletKey || walletId);
   };
 
   const handleConnect = async () => {
@@ -132,9 +139,12 @@ export const CardanoWalletConnector = ({
   };
 
   const detectedWallets = SUPPORTED_WALLETS.filter(w => 
-    availableWallets.some(installed => 
-      installed.toLowerCase().includes(w.id) || w.id.includes(installed.toLowerCase())
-    )
+    availableWallets.some(installed => {
+      const installedLower = installed.toLowerCase();
+      return w.aliases.some(alias => 
+        installedLower.includes(alias.toLowerCase()) || alias.toLowerCase().includes(installedLower)
+      );
+    })
   );
 
   if (isConnected && connectedWallet) {
