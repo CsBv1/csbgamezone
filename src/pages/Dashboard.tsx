@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
+import { ColorSelector } from "@/components/ColorSelector";
 import { useCardanoWallet } from "@/hooks/useCardanoWallet";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -238,8 +239,11 @@ const Dashboard = () => {
               </Card>
             )}
 
-            {/* Leaderboard */}
-            <Leaderboard />
+          {/* Color Selector */}
+          <ColorSelector />
+
+          {/* Leaderboard */}
+          <Leaderboard />
 
             {/* Purchase Diamonds */}
             <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
