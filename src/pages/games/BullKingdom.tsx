@@ -56,11 +56,13 @@ const BullKingdom = () => {
 
   const buyBuilding = (type: string) => {
     const cost = prices[type as keyof typeof prices];
-    if (credits >= cost) {
+    const buildingKey = type === 'bull' ? 'bulls' : type === 'farm' ? 'farms' : type === 'mine' ? 'mines' : 'castles';
+    const currentCount = kingdom[buildingKey as keyof typeof kingdom];
+    
+    if (credits >= cost && currentCount < 100) {
       setKingdom(prev => ({
         ...prev,
-        [type === 'bull' ? 'bulls' : type === 'farm' ? 'farms' : type === 'mine' ? 'mines' : 'castles']: 
-          prev[type === 'bull' ? 'bulls' : type === 'farm' ? 'farms' : type === 'mine' ? 'mines' : 'castles'] + 1
+        [buildingKey]: currentCount + 1
       }));
     }
   };
@@ -178,39 +180,43 @@ const BullKingdom = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button 
               onClick={() => buyBuilding('bull')} 
-              disabled={credits < prices.bull}
+              disabled={credits < prices.bull || kingdom.bulls >= 100}
               className="flex flex-col h-auto py-4"
             >
               <span className="text-2xl mb-2">🐂</span>
               <span className="text-xs">Bull</span>
               <span className="text-xs font-bold">{prices.bull} 💰</span>
+              <span className="text-xs text-muted-foreground">{kingdom.bulls}/100</span>
             </Button>
             <Button 
               onClick={() => buyBuilding('farm')} 
-              disabled={credits < prices.farm}
+              disabled={credits < prices.farm || kingdom.farms >= 100}
               className="flex flex-col h-auto py-4"
             >
               <span className="text-2xl mb-2">🌾</span>
               <span className="text-xs">Farm</span>
               <span className="text-xs font-bold">{prices.farm} 💰</span>
+              <span className="text-xs text-muted-foreground">{kingdom.farms}/100</span>
             </Button>
             <Button 
               onClick={() => buyBuilding('mine')} 
-              disabled={credits < prices.mine}
+              disabled={credits < prices.mine || kingdom.mines >= 100}
               className="flex flex-col h-auto py-4"
             >
               <span className="text-2xl mb-2">⛏️</span>
               <span className="text-xs">Mine</span>
               <span className="text-xs font-bold">{prices.mine} 💰</span>
+              <span className="text-xs text-muted-foreground">{kingdom.mines}/100</span>
             </Button>
             <Button 
               onClick={() => buyBuilding('castle')} 
-              disabled={credits < prices.castle}
+              disabled={credits < prices.castle || kingdom.castles >= 100}
               className="flex flex-col h-auto py-4"
             >
               <span className="text-2xl mb-2">🏰</span>
               <span className="text-xs">Castle</span>
               <span className="text-xs font-bold">{prices.castle} 💰</span>
+              <span className="text-xs text-muted-foreground">{kingdom.castles}/100</span>
             </Button>
           </div>
         </Card>
