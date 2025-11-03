@@ -296,39 +296,41 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Trade diamonds for keys to unlock the Wheel of Fortune!
             </p>
-            <div className="space-y-2">
-              <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-foreground">10 💎</span>
-                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                    1 🔑
-                  </span>
-                </div>
-                <Button 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => handleDiamondToKeySwap(10, 1)}
-                  disabled={isSwapping || !isConnected}
-                >
-                  Get Key
-                </Button>
+            <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-foreground">1,000,000 💎</span>
+                <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
+                  1 🔑
+                </span>
               </div>
-              <div className="p-3 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-foreground">50 💎</span>
-                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                    6 🔑
-                  </span>
-                </div>
-                <Button 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => handleDiamondToKeySwap(50, 6)}
-                  disabled={isSwapping || !isConnected}
-                >
-                  Get Keys
-                </Button>
+              <Button 
+                size="sm" 
+                className="w-full"
+                onClick={() => handleDiamondToKeySwap(1000000, 1)}
+                disabled={isSwapping || !isConnected}
+              >
+                Get Key
+              </Button>
+            </div>
+          </Card>
+
+          {/* Wheel of Fortune */}
+          <Card 
+            className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
+            onClick={() => navigate('/games/wheel-of-fortune')}
+          >
+            <div className="h-40 bg-gradient-to-br from-pink-600 to-purple-700 flex items-center justify-center relative">
+              <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
+                COSMETIC!
               </div>
+              <Target className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-2 text-foreground">🎯 Wheel of Fortune</h3>
+              <p className="text-sm text-muted-foreground mb-4">Spin for exclusive neon name colors! Stand out on the leaderboard!</p>
+              <Button variant="outline" size="sm" className="w-full">
+                Spin the Wheel
+              </Button>
             </div>
           </Card>
 
