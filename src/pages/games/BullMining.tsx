@@ -19,7 +19,7 @@ const BullMining = () => {
   const miningSpeed = bulls * 2;
 
   const buyBull = () => {
-    if (credits >= bullCost) {
+    if (credits >= bullCost && bulls < 100) {
       setBulls(prev => prev + 1);
     }
   };
@@ -82,8 +82,8 @@ const BullMining = () => {
                 <Pickaxe className="w-6 h-6 text-primary" />
                 <span className="text-xl font-bold">Mining Bulls: {bulls}</span>
               </div>
-              <Button onClick={buyBull} disabled={credits < bullCost || loading}>
-                Buy Bull ({bullCost} 💰)
+              <Button onClick={buyBull} disabled={credits < bullCost || bulls >= 100 || loading}>
+                Buy Bull ({bullCost} 💰) - {bulls}/100
               </Button>
             </div>
             

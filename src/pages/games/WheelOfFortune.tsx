@@ -1,47 +1,124 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Key } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import holyBull from "@/assets/holy-bull.jpeg";
 
 const WheelOfFortune = () => {
   const navigate = useNavigate();
-  const [credits, setCredits] = useState(1000);
+  const [keys, setKeys] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [result, setResult] = useState<number | null>(null);
-  const betAmount = 50;
+  const [result, setResult] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userColors, setUserColors] = useState<any[]>([]);
 
-  const prizes = [10, 50, 100, 5, 200, 0, 25, 500, 10, 75, 0, 150];
+  const colorPrizes = [
+    { name: "Neon Pink", value: "#FF10F0", emoji: "💖" },
+    { name: "Electric Blue", value: "#00D4FF", emoji: "⚡" },
+    { name: "Laser Green", value: "#39FF14", emoji: "💚" },
+    { name: "Cyber Purple", value: "#B026FF", emoji: "💜" },
+    { name: "Golden Glow", value: "#FFD700", emoji: "✨" },
+    { name: "Toxic Green", value: "#00FF41", emoji: "☢️" },
+    { name: "Hot Pink", value: "#FF69B4", emoji: "🔥" },
+    { name: "Ice Blue", value: "#7DF9FF", emoji: "❄️" },
+    { name: "Solar Orange", value: "#FF4500", emoji: "🌞" },
+    { name: "Plasma Red", value: "#FF0080", emoji: "⚡" },
+    { name: "Mint Fresh", value: "#00FFB3", emoji: "🍃" },
+    { name: "Royal Purple", value: "#7851A9", emoji: "👑" },
+  ];
 
-  const spin = () => {
-    if (credits < betAmount) {
-      toast.error("Not enough credits!");
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        
+        // Fetch user keys
+        const { data: keysData } = await supabase
+          .from('user_keys' as any)
+          .select('balance')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (keysData) setKeys((keysData as any).balance);
+        
+        // Fetch user colors
+        const { data: colorsData } = await supabase
+          .from('user_colors' as any)
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (colorsData) setUserColors(colorsData);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+
+  const spin = async () => {
+    if (keys < 1) {
+      toast.error("You need a key to spin! 🔑");
       return;
     }
 
-    setCredits(prev => prev - betAmount);
+    if (!userId) {
+      toast.error("Please connect your wallet!");
+      return;
+    }
+
     setSpinning(true);
+    
+    // Deduct key
+    const { error: keyError } = await supabase
+      .from('user_keys' as any)
+      .update({ balance: keys - 1 })
+      .eq('user_id', userId);
+    
+    if (keyError) {
+      toast.error("Failed to use key!");
+      setSpinning(false);
+      return;
+    }
+    
+    setKeys(prev => prev - 1);
     
     const spins = 5 + Math.random() * 3;
     const finalRotation = rotation + (360 * spins) + Math.random() * 360;
     setRotation(finalRotation);
 
-    setTimeout(() => {
-      const segmentAngle = 360 / prizes.length;
+    setTimeout(async () => {
+      const segmentAngle = 360 / colorPrizes.length;
       const normalizedRotation = finalRotation % 360;
-      const prizeIndex = Math.floor((360 - normalizedRotation) / segmentAngle) % prizes.length;
-      const prize = prizes[prizeIndex];
+      const prizeIndex = Math.floor((360 - normalizedRotation) / segmentAngle) % colorPrizes.length;
+      const prize = colorPrizes[prizeIndex];
 
-      setResult(prize);
-      if (prize > 0) {
-        setCredits(prev => prev + prize);
-        toast.success(`🐂 You won ${prize} credits!`);
+      // Check if user already has this color
+      const hasColor = userColors.some((c: any) => c.color_name === prize.name);
+      
+      if (!hasColor) {
+        // Award new color
+        const { error: colorError } = await supabase
+          .from('user_colors' as any)
+          .insert({
+            user_id: userId,
+            color_name: prize.name,
+            color_value: prize.value,
+            active: false
+          });
+        
+        if (!colorError) {
+          setUserColors(prev => [...prev, { color_name: prize.name, color_value: prize.value }]);
+          toast.success(`🎉 Unlocked ${prize.emoji} ${prize.name}!`);
+        }
       } else {
-        toast.error("Better luck next time!");
+        toast.success(`${prize.emoji} You won ${prize.name} (already unlocked)`);
       }
+
+      setResult(prize.name);
       setSpinning(false);
     }, 4000);
   };
@@ -55,8 +132,12 @@ const WheelOfFortune = () => {
       <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold gradient-gold bg-clip-text text-transparent mb-2">Wheel of Fortune 🐂</h1>
-          <p className="text-muted-foreground">Spin the wheel and win!</p>
-          <div className="text-2xl font-bold text-primary mt-4">Credits: {credits}</div>
+          <p className="text-muted-foreground">Spin for exclusive neon name colors!</p>
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-primary mt-4">
+            <Key className="w-6 h-6" />
+            <span>Keys: {keys} 🔑</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">Colors unlocked: {userColors.length}/{colorPrizes.length}</p>
         </div>
 
         <div className="mb-6 flex justify-center">
@@ -94,15 +175,41 @@ const WheelOfFortune = () => {
           </div>
         </div>
 
-        {result !== null && (
+        {result && (
           <div className="text-center mb-6">
-            <p className="text-3xl font-bold text-primary">Won: {result} credits!</p>
+            <p className="text-3xl font-bold" style={{ color: colorPrizes.find(c => c.name === result)?.value }}>
+              Won: {result}!
+            </p>
           </div>
         )}
 
-        <Button onClick={spin} disabled={spinning} size="lg" className="w-full">
-          {spinning ? "Spinning..." : `Spin (${betAmount} credits)`}
+        <Button onClick={spin} disabled={spinning || keys < 1} size="lg" className="w-full">
+          {spinning ? "Spinning..." : keys < 1 ? "Need Key 🔑" : "Spin (1 🔑)"}
         </Button>
+        
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+          <h3 className="font-bold mb-3 text-center">Available Colors</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {colorPrizes.map((color) => (
+              <div 
+                key={color.name}
+                className="p-2 rounded text-center text-xs"
+                style={{ 
+                  backgroundColor: `${color.value}20`,
+                  borderColor: color.value,
+                  borderWidth: '2px'
+                }}
+              >
+                <div style={{ color: color.value }} className="font-bold">
+                  {color.emoji} {color.name}
+                </div>
+                {userColors.some(c => c.color_name === color.name) && (
+                  <div className="text-xs mt-1">✓ Unlocked</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </Card>
     </div>
   );

@@ -121,6 +121,68 @@ const Dashboard = () => {
     }
   };
 
+  const handleDiamondToKeySwap = async (diamondsCost: number, keysAmount: number) => {
+    if (!isConnected) {
+      toast({
+        title: "Wallet Required 🔒",
+        description: "Please connect your wallet to swap",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSwapping(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      // Fetch both diamonds and keys in parallel
+      const [diamondsResult, keysResult] = await Promise.all([
+        supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single(),
+        supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).single()
+      ]);
+
+      if (!(diamondsResult.data as any) || (diamondsResult.data as any).balance < diamondsCost) {
+        toast({
+          title: "Not Enough Diamonds! 💎",
+          description: `You need ${diamondsCost} diamonds for this swap`,
+          variant: "destructive",
+        });
+        setIsSwapping(false);
+        return;
+      }
+
+      // Update both in parallel for instant response
+      const [diamondsUpdate, keysUpdate] = await Promise.all([
+        supabase.from('user_diamonds' as any)
+          .update({ balance: (diamondsResult.data as any).balance - diamondsCost })
+          .eq('user_id', user.id),
+        supabase.from('user_keys' as any)
+          .update({ balance: ((keysResult.data as any)?.balance || 0) + keysAmount })
+          .eq('user_id', user.id)
+      ]);
+
+      if (diamondsUpdate.error) throw diamondsUpdate.error;
+      if (keysUpdate.error) throw keysUpdate.error;
+
+      toast({
+        title: "Swap Successful! 🎉",
+        description: `Traded ${diamondsCost} 💎 for ${keysAmount} 🔑`,
+      });
+
+    } catch (error) {
+      console.error('Swap error:', error);
+      toast({
+        title: "Swap Failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSwapping(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bull-pattern">
       {/* Header */}
@@ -224,6 +286,51 @@ const Dashboard = () => {
               </div>
             </Card>
           </div>
+
+          {/* Diamond to Keys Swap */}
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-accent/30 max-w-md mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-2xl">🔑</div>
+              <h3 className="text-xl font-bold text-foreground">Get Keys</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Trade diamonds for keys to unlock the Wheel of Fortune!
+            </p>
+            <div className="space-y-2">
+              <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-foreground">10 💎</span>
+                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
+                    1 🔑
+                  </span>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => handleDiamondToKeySwap(10, 1)}
+                  disabled={isSwapping || !isConnected}
+                >
+                  Get Key
+                </Button>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-foreground">50 💎</span>
+                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
+                    6 🔑
+                  </span>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => handleDiamondToKeySwap(50, 6)}
+                  disabled={isSwapping || !isConnected}
+                >
+                  Get Keys
+                </Button>
+              </div>
+            </div>
+          </Card>
 
           {/* Diamond Earning Games */}
           <div>

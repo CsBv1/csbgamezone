@@ -80,6 +80,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_colors: {
+        Row: {
+          active: boolean
+          color_name: string
+          color_value: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          color_name: string
+          color_value: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          color_name?: string
+          color_value?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           balance: number | null
@@ -134,6 +161,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_keys: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       leaderboard: {
@@ -143,6 +194,7 @@ export type Database = {
           total_diamonds: number | null
           total_games: number | null
           total_wins: number | null
+          user_id: string | null
           username: string | null
         }
         Relationships: []

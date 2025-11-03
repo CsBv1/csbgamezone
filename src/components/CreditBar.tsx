@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Gem, Coins } from "lucide-react";
+import { Gem, Coins, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const CreditBar = () => {
   const [credits, setCredits] = useState(0);
   const [diamonds, setDiamonds] = useState(0);
+  const [keys, setKeys] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
@@ -81,7 +82,7 @@ export const CreditBar = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [creditsResult, diamondsResult] = await Promise.all([
+      const [creditsResult, diamondsResult, keysResult] = await Promise.all([
         supabase
           .from('user_credits' as any)
           .select('balance')
@@ -91,11 +92,17 @@ export const CreditBar = () => {
           .from('user_diamonds' as any)
           .select('balance')
           .eq('user_id', user.id)
+          .single(),
+        supabase
+          .from('user_keys' as any)
+          .select('balance')
+          .eq('user_id', user.id)
           .single()
       ]);
 
       if ((creditsResult as any).data) setCredits((creditsResult as any).data.balance);
       if ((diamondsResult as any).data) setDiamonds((diamondsResult as any).data.balance);
+      if ((keysResult as any).data) setKeys((keysResult as any).data.balance);
     } catch (error: any) {
       console.error('Error fetching balances:', error);
       toast({
@@ -138,6 +145,14 @@ export const CreditBar = () => {
         <div>
           <p className="text-xs text-muted-foreground">Diamonds</p>
           <p className="text-lg font-bold gradient-gold bg-clip-text text-transparent">{diamonds} 💎</p>
+        </div>
+      </div>
+      <div className="h-8 w-px bg-border"></div>
+      <div className="flex items-center gap-2">
+        <Key className="w-5 h-5 text-amber-500" />
+        <div>
+          <p className="text-xs text-muted-foreground">Keys</p>
+          <p className="text-lg font-bold text-foreground">{keys} 🔑</p>
         </div>
       </div>
     </Card>

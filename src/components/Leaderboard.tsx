@@ -11,10 +11,18 @@ interface LeaderboardEntry {
   total_diamonds: number;
   total_wins: number;
   total_games: number;
+  user_id?: string;
+}
+
+interface UserColor {
+  user_id: string;
+  color_value: string;
+  active: boolean;
 }
 
 export const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [userColors, setUserColors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,6 +71,20 @@ export const Leaderboard = () => {
       if (error) throw error;
       
       setLeaderboard(data || []);
+      
+      // Fetch active colors for all users
+      const { data: colorsData } = await supabase
+        .from('user_colors' as any)
+        .select('user_id, color_value, active')
+        .eq('active', true);
+      
+      if (colorsData && Array.isArray(colorsData)) {
+        const colorsMap: Record<string, string> = {};
+        colorsData.forEach((color: any) => {
+          colorsMap[color.user_id] = color.color_value;
+        });
+        setUserColors(colorsMap);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
@@ -123,7 +145,17 @@ export const Leaderboard = () => {
                     {getMedalEmoji(entry.rank)}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground truncate">
+                    <p 
+                      className="font-semibold truncate"
+                      style={{ 
+                        color: entry.user_id && userColors[entry.user_id] 
+                          ? userColors[entry.user_id] 
+                          : 'inherit',
+                        textShadow: entry.user_id && userColors[entry.user_id]
+                          ? `0 0 10px ${userColors[entry.user_id]}80`
+                          : 'none'
+                      }}
+                    >
                       {entry.username}
                     </p>
                     <p className="text-xs text-muted-foreground">
