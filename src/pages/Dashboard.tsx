@@ -138,39 +138,62 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      // Fetch both diamonds and keys in parallel
-      const [diamondsResult, keysResult] = await Promise.all([
-        supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single(),
-        supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).single()
-      ]);
+      // Fetch diamonds balance
+      const diamondsResult = await supabase
+        .from('user_diamonds' as any)
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
 
       if (!(diamondsResult.data as any) || (diamondsResult.data as any).balance < diamondsCost) {
         toast({
           title: "Not Enough Diamonds! 💎",
-          description: `You need ${diamondsCost} diamonds for this swap`,
+          description: `You need ${diamondsCost.toLocaleString()} diamonds for this swap`,
           variant: "destructive",
         });
         setIsSwapping(false);
         return;
       }
 
-      // Update both in parallel for instant response
-      const [diamondsUpdate, keysUpdate] = await Promise.all([
-        supabase.from('user_diamonds' as any)
-          .update({ balance: (diamondsResult.data as any).balance - diamondsCost })
-          .eq('user_id', user.id),
-        supabase.from('user_keys' as any)
-          .update({ balance: ((keysResult.data as any)?.balance || 0) + keysAmount })
-          .eq('user_id', user.id)
-      ]);
+      // Deduct diamonds
+      const diamondsUpdate = await supabase
+        .from('user_diamonds' as any)
+        .update({ balance: (diamondsResult.data as any).balance - diamondsCost })
+        .eq('user_id', user.id);
 
       if (diamondsUpdate.error) throw diamondsUpdate.error;
-      if (keysUpdate.error) throw keysUpdate.error;
+
+      // Upsert keys (insert if not exists, update if exists)
+      const { data: existingKeys } = await supabase
+        .from('user_keys' as any)
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingKeys && (existingKeys as any).balance !== undefined) {
+        // Update existing
+        const keysUpdate = await supabase
+          .from('user_keys' as any)
+          .update({ balance: (existingKeys as any).balance + keysAmount })
+          .eq('user_id', user.id);
+        
+        if (keysUpdate.error) throw keysUpdate.error;
+      } else {
+        // Insert new
+        const keysInsert = await supabase
+          .from('user_keys' as any)
+          .insert({ user_id: user.id, balance: keysAmount });
+        
+        if (keysInsert.error) throw keysInsert.error;
+      }
 
       toast({
         title: "Swap Successful! 🎉",
-        description: `Traded ${diamondsCost} 💎 for ${keysAmount} 🔑`,
+        description: `Traded ${diamondsCost.toLocaleString()} 💎 for ${keysAmount} 🔑`,
       });
+
+      // Refresh page to update all displays
+      window.location.reload();
 
     } catch (error) {
       console.error('Swap error:', error);
@@ -254,39 +277,21 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Trade credits for diamonds
               </p>
-              <div className="space-y-2">
-                <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-foreground">100 Credits</span>
-                    <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                      5 💎
-                    </span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => handleSwap(100, 5)}
-                    disabled={isSwapping || !isConnected}
-                  >
-                    Swap Now
-                  </Button>
+              <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-foreground">100 Credits</span>
+                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
+                    5 💎
+                  </span>
                 </div>
-                <div className="p-3 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-foreground">500 Credits</span>
-                    <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                      30 💎
-                    </span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => handleSwap(500, 30)}
-                    disabled={isSwapping || !isConnected}
-                  >
-                    Swap Now
-                  </Button>
-                </div>
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => handleSwap(100, 5)}
+                  disabled={isSwapping || !isConnected}
+                >
+                  Swap Now
+                </Button>
               </div>
             </Card>
           </div>
