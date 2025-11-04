@@ -408,6 +408,74 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Advanced Key-Only Games */}
+          <div>
+            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent text-center">
+              🔑 Advanced Key-Only Games
+            </h2>
+            <p className="text-center text-muted-foreground mb-6">
+              Exclusive games requiring keys. Higher stakes, bigger rewards!
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/bull-gauntlet')}
+              >
+                <div className="h-40 bg-gradient-to-br from-orange-600 to-red-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">⚔️ Bull Gauntlet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Battle through waves for massive rewards!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Enter Arena
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/diamond-fortress')}
+              >
+                <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">💎 Diamond Fortress</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Defend and collect diamonds in waves!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Enter Fortress
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/treasure-vault')}
+              >
+                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Coins className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🏆 Treasure Vault</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Unlock chests for legendary prizes!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Open Vault
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+
           {/* Link to Casino Games */}
           <div className="text-center">
             <Card className="inline-block p-8 bg-gradient-to-r from-primary/20 to-card border-2 border-primary/40">

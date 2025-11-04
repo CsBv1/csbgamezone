@@ -124,6 +124,9 @@ import BullDestiny from "./pages/games/BullDestiny";
 import BullMining from "./pages/games/BullMining";
 import MilkTheBull from "./pages/games/MilkTheBull";
 import BullKingdom from "./pages/games/BullKingdom";
+import BullGauntlet from "./pages/games/BullGauntlet";
+import DiamondFortress from "./pages/games/DiamondFortress";
+import TreasureVault from "./pages/games/TreasureVault";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -141,6 +144,9 @@ const App = () => (
           <Route path="/games/bull-mining" element={<ProtectedGameRoute><BullMining /></ProtectedGameRoute>} />
           <Route path="/games/milk-the-bull" element={<ProtectedGameRoute><MilkTheBull /></ProtectedGameRoute>} />
           <Route path="/games/bull-kingdom" element={<ProtectedGameRoute><BullKingdom /></ProtectedGameRoute>} />
+          <Route path="/games/bull-gauntlet" element={<ProtectedGameRoute><BullGauntlet /></ProtectedGameRoute>} />
+          <Route path="/games/diamond-fortress" element={<ProtectedGameRoute><DiamondFortress /></ProtectedGameRoute>} />
+          <Route path="/games/treasure-vault" element={<ProtectedGameRoute><TreasureVault /></ProtectedGameRoute>} />
           <Route path="/games/slots" element={<Slots />} />
           <Route path="/games/number-bet" element={<NumberBet />} />
           <Route path="/games/card-flip" element={<CardFlip />} />
