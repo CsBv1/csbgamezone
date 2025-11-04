@@ -469,7 +469,64 @@ const Dashboard = () => {
                   <h3 className="text-xl font-bold mb-2 text-foreground">🏆 Treasure Vault</h3>
                   <p className="text-sm text-muted-foreground mb-4">Unlock chests for legendary prizes!</p>
                   <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Open Vault
+                    Enter Vault
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/cosmic-gauntlet')}
+              >
+                <div className="h-40 bg-gradient-to-br from-purple-600 to-blue-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🚀 Cosmic Gauntlet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Navigate space for cosmic rewards!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Launch Mission
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/fortune-trial')}
+              >
+                <div className="h-40 bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Coins className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🎲 Fortune's Trial</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Risk vs Reward - Choose wisely!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Begin Trial
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/shadow-vault')}
+              >
+                <div className="h-40 bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🌑 Shadow Vault</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Progressive mystery boxes & tiers!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Enter Shadows
                   </Button>
                 </div>
               </Card>

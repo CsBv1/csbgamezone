@@ -127,6 +127,9 @@ import BullKingdom from "./pages/games/BullKingdom";
 import BullGauntlet from "./pages/games/BullGauntlet";
 import DiamondFortress from "./pages/games/DiamondFortress";
 import TreasureVault from "./pages/games/TreasureVault";
+import CosmicGauntlet from "./pages/games/CosmicGauntlet";
+import FortuneTrial from "./pages/games/FortuneTrial";
+import ShadowVault from "./pages/games/ShadowVault";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -147,6 +150,9 @@ const App = () => (
           <Route path="/games/bull-gauntlet" element={<ProtectedGameRoute><BullGauntlet /></ProtectedGameRoute>} />
           <Route path="/games/diamond-fortress" element={<ProtectedGameRoute><DiamondFortress /></ProtectedGameRoute>} />
           <Route path="/games/treasure-vault" element={<ProtectedGameRoute><TreasureVault /></ProtectedGameRoute>} />
+          <Route path="/games/cosmic-gauntlet" element={<ProtectedGameRoute><CosmicGauntlet /></ProtectedGameRoute>} />
+          <Route path="/games/fortune-trial" element={<ProtectedGameRoute><FortuneTrial /></ProtectedGameRoute>} />
+          <Route path="/games/shadow-vault" element={<ProtectedGameRoute><ShadowVault /></ProtectedGameRoute>} />
           <Route path="/games/slots" element={<Slots />} />
           <Route path="/games/number-bet" element={<NumberBet />} />
           <Route path="/games/card-flip" element={<CardFlip />} />

@@ -131,28 +131,28 @@ export const CreditBar = () => {
   }
 
   return (
-    <Card className="flex items-center gap-6 px-6 py-3 bg-gradient-to-r from-card/90 to-primary/10 backdrop-blur-sm border-2 border-primary/40 shadow-lg">
-      <div className="flex items-center gap-2">
-        <Coins className="w-5 h-5 text-yellow-500" />
+    <Card className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-card/90 to-primary/10 backdrop-blur-sm border-2 border-primary/40 shadow-lg">
+      <div className="flex items-center gap-1.5">
+        <Coins className="w-4 h-4 text-yellow-500" />
         <div>
-          <p className="text-xs text-muted-foreground">Credits</p>
-          <p className="text-lg font-bold text-foreground">{credits}</p>
+          <p className="text-[10px] text-muted-foreground">Credits</p>
+          <p className="text-sm font-bold text-foreground">{credits}</p>
         </div>
       </div>
-      <div className="h-8 w-px bg-border"></div>
-      <div className="flex items-center gap-2">
-        <Gem className="w-5 h-5 text-cyan-400" />
+      <div className="h-6 w-px bg-border"></div>
+      <div className="flex items-center gap-1.5">
+        <Gem className="w-4 h-4 text-cyan-400" />
         <div>
-          <p className="text-xs text-muted-foreground">Diamonds</p>
-          <p className="text-lg font-bold gradient-gold bg-clip-text text-transparent">{diamonds} 💎</p>
+          <p className="text-[10px] text-muted-foreground">Diamonds</p>
+          <p className="text-sm font-bold gradient-gold bg-clip-text text-transparent">{diamonds} 💎</p>
         </div>
       </div>
-      <div className="h-8 w-px bg-border"></div>
-      <div className="flex items-center gap-2">
-        <Key className="w-5 h-5 text-amber-500" />
+      <div className="h-6 w-px bg-border"></div>
+      <div className="flex items-center gap-1.5">
+        <Key className="w-4 h-4 text-amber-500" />
         <div>
-          <p className="text-xs text-muted-foreground">Keys</p>
-          <p className="text-lg font-bold text-foreground">{keys} 🔑</p>
+          <p className="text-[10px] text-muted-foreground">Keys</p>
+          <p className="text-sm font-bold text-foreground">{keys} 🔑</p>
         </div>
       </div>
     </Card>
