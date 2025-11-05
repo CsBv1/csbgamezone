@@ -130,6 +130,10 @@ import TreasureVault from "./pages/games/TreasureVault";
 import CosmicGauntlet from "./pages/games/CosmicGauntlet";
 import FortuneTrial from "./pages/games/FortuneTrial";
 import ShadowVault from "./pages/games/ShadowVault";
+import EternalArena from "./pages/games/EternalArena";
+import LuckyChain from "./pages/games/LuckyChain";
+import PatternMaster from "./pages/games/PatternMaster";
+import PerfectTiming from "./pages/games/PerfectTiming";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -153,6 +157,10 @@ const App = () => (
           <Route path="/games/cosmic-gauntlet" element={<ProtectedGameRoute><CosmicGauntlet /></ProtectedGameRoute>} />
           <Route path="/games/fortune-trial" element={<ProtectedGameRoute><FortuneTrial /></ProtectedGameRoute>} />
           <Route path="/games/shadow-vault" element={<ProtectedGameRoute><ShadowVault /></ProtectedGameRoute>} />
+          <Route path="/games/eternal-arena" element={<ProtectedGameRoute><EternalArena /></ProtectedGameRoute>} />
+          <Route path="/games/lucky-chain" element={<ProtectedGameRoute><LuckyChain /></ProtectedGameRoute>} />
+          <Route path="/games/pattern-master" element={<ProtectedGameRoute><PatternMaster /></ProtectedGameRoute>} />
+          <Route path="/games/perfect-timing" element={<ProtectedGameRoute><PerfectTiming /></ProtectedGameRoute>} />
           <Route path="/games/slots" element={<Slots />} />
           <Route path="/games/number-bet" element={<NumberBet />} />
           <Route path="/games/card-flip" element={<CardFlip />} />

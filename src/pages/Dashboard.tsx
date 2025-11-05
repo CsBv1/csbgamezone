@@ -530,6 +530,82 @@ const Dashboard = () => {
                   </Button>
                 </div>
               </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/eternal-arena')}
+              >
+                <div className="h-40 bg-gradient-to-br from-red-600 to-orange-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">⚔️ Eternal Arena</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Boss battle through 5 phases!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Enter Arena
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/lucky-chain')}
+              >
+                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Coins className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🔗 Lucky Chain</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Build multipliers, don't get greedy!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Start Chain
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/pattern-master')}
+              >
+                <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🧠 Pattern Master</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Test your memory with patterns!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Test Memory
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/perfect-timing')}
+              >
+                <div className="h-40 bg-gradient-to-br from-orange-600 to-red-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">⏱️ Perfect Timing</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Hit the target zone perfectly!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Test Timing
+                  </Button>
+                </div>
+              </Card>
             </div>
           </div>
 
