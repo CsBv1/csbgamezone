@@ -28,34 +28,34 @@ const CosmicGauntlet = () => {
           .eq('user_id', user.id)
           .single();
         
-        if (keysData) setKeys((keysData as any).balance);
+        if (keysData) {
+          setKeys((keysData as any).balance);
+          // Auto-start game
+          if ((keysData as any).balance >= 1) {
+            startGameAuto(user.id, (keysData as any).balance);
+          } else {
+            toast.error("You need a key to enter! 🔑");
+            setTimeout(() => navigate("/dashboard"), 2000);
+          }
+        }
       }
     };
     
     fetchUserData();
   }, []);
 
-  const startGame = async () => {
-    if (keys < 1) {
-      toast.error("You need a key to enter! 🔑");
-      return;
-    }
-
-    if (!userId) {
-      toast.error("Please connect your wallet!");
-      return;
-    }
-
+  const startGameAuto = async (uid: string, currentKeys: number) => {
     setPlaying(true);
     
     const { error: keyError } = await supabase
       .from('user_keys' as any)
-      .update({ balance: keys - 1 })
-      .eq('user_id', userId);
+      .update({ balance: currentKeys - 1 })
+      .eq('user_id', uid);
     
     if (keyError) {
       toast.error("Failed to use key!");
       setPlaying(false);
+      setTimeout(() => navigate("/dashboard"), 2000);
       return;
     }
     
@@ -64,6 +64,7 @@ const CosmicGauntlet = () => {
     setLevel(1);
     setDiamonds(0);
     setMultiplier(1);
+    setPlaying(false);
     
     toast.success("🚀 Cosmic journey begins!");
   };
@@ -152,27 +153,8 @@ const CosmicGauntlet = () => {
         </div>
 
         {!gameActive ? (
-          <div className="space-y-6">
-            <div className="p-6 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg border-2 border-purple-500/50">
-              <h3 className="text-xl font-bold mb-4 text-center">Game Rules</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Requires 1 🔑 to enter</li>
-                <li>• Progress through 15 levels</li>
-                <li>• 65% success rate per level</li>
-                <li>• Rewards increase with level & multiplier</li>
-                <li>• Multiplier increases by 0.2x each level</li>
-                <li>• Keep earned diamonds if you fail</li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={startGame} 
-              disabled={playing || keys < 1} 
-              size="lg" 
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-700 hover:from-purple-700 hover:to-blue-800"
-            >
-              {keys < 1 ? "Need Key 🔑" : "Launch Mission (1 🔑)"}
-            </Button>
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading game...</p>
           </div>
         ) : (
           <div className="space-y-6">

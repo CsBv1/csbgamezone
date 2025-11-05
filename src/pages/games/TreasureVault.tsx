@@ -28,34 +28,34 @@ const TreasureVault = () => {
           .eq('user_id', user.id)
           .single();
         
-        if (keysData) setKeys((keysData as any).balance);
+        if (keysData) {
+          setKeys((keysData as any).balance);
+          // Auto-start game
+          if ((keysData as any).balance >= 1) {
+            startGameAuto(user.id, (keysData as any).balance);
+          } else {
+            toast.error("You need a key to enter! 🔑");
+            setTimeout(() => navigate("/dashboard"), 2000);
+          }
+        }
       }
     };
     
     fetchUserData();
   }, []);
 
-  const startGame = async () => {
-    if (keys < 1) {
-      toast.error("You need a key to enter! 🔑");
-      return;
-    }
-
-    if (!userId) {
-      toast.error("Please connect your wallet!");
-      return;
-    }
-
+  const startGameAuto = async (uid: string, currentKeys: number) => {
     setPlaying(true);
     
     const { error: keyError } = await supabase
       .from('user_keys' as any)
-      .update({ balance: keys - 1 })
-      .eq('user_id', userId);
+      .update({ balance: currentKeys - 1 })
+      .eq('user_id', uid);
     
     if (keyError) {
       toast.error("Failed to use key!");
       setPlaying(false);
+      setTimeout(() => navigate("/dashboard"), 2000);
       return;
     }
     
@@ -64,6 +64,7 @@ const TreasureVault = () => {
     setChestsOpened(0);
     setTotalDiamonds(0);
     setAvailableChests(Array.from({ length: 9 }, (_, i) => i));
+    setPlaying(false);
     
     toast.success("🏆 Treasure Vault unlocked! Choose wisely!");
   };
@@ -166,29 +167,8 @@ const TreasureVault = () => {
         </div>
 
         {!gameActive ? (
-          <div className="space-y-6">
-            <div className="p-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg border-2 border-purple-500/50">
-              <h3 className="text-xl font-bold mb-4 text-center">Game Rules</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Requires 1 🔑 to enter</li>
-                <li>• Choose 5 chests from 9 available</li>
-                <li>• Each chest contains random rewards:</li>
-                <li className="ml-6">🎰 JACKPOT: 500,000 💎 (5%)</li>
-                <li className="ml-6">💰 MEGA: 200,000 💎 (15%)</li>
-                <li className="ml-6">💎 BIG: 100,000 💎 (25%)</li>
-                <li className="ml-6">💵 MEDIUM: 50,000 💎 (30%)</li>
-                <li className="ml-6">💳 SMALL: 25,000 💎 (25%)</li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={startGame} 
-              disabled={playing || keys < 1} 
-              size="lg" 
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-700 hover:to-pink-800"
-            >
-              {keys < 1 ? "Need Key 🔑" : "Enter Vault (1 🔑)"}
-            </Button>
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading game...</p>
           </div>
         ) : (
           <div className="space-y-6">

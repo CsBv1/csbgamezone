@@ -28,34 +28,34 @@ const DiamondFortress = () => {
           .eq('user_id', user.id)
           .single();
         
-        if (keysData) setKeys((keysData as any).balance);
+        if (keysData) {
+          setKeys((keysData as any).balance);
+          // Auto-start game
+          if ((keysData as any).balance >= 1) {
+            startGameAuto(user.id, (keysData as any).balance);
+          } else {
+            toast.error("You need a key to enter! 🔑");
+            setTimeout(() => navigate("/dashboard"), 2000);
+          }
+        }
       }
     };
     
     fetchUserData();
   }, []);
 
-  const startGame = async () => {
-    if (keys < 1) {
-      toast.error("You need a key to enter! 🔑");
-      return;
-    }
-
-    if (!userId) {
-      toast.error("Please connect your wallet!");
-      return;
-    }
-
+  const startGameAuto = async (uid: string, currentKeys: number) => {
     setPlaying(true);
     
     const { error: keyError } = await supabase
       .from('user_keys' as any)
-      .update({ balance: keys - 1 })
-      .eq('user_id', userId);
+      .update({ balance: currentKeys - 1 })
+      .eq('user_id', uid);
     
     if (keyError) {
       toast.error("Failed to use key!");
       setPlaying(false);
+      setTimeout(() => navigate("/dashboard"), 2000);
       return;
     }
     
@@ -64,8 +64,9 @@ const DiamondFortress = () => {
     setRound(1);
     setDiamonds(0);
     setFortressHealth(100);
+    setPlaying(false);
     
-    toast.success("🛡️ Fortress defense begins!");
+    toast.success("🏰 Defending the Diamond Fortress!");
   };
 
   const defendRound = async () => {
@@ -152,27 +153,8 @@ const DiamondFortress = () => {
         </div>
 
         {!gameActive ? (
-          <div className="space-y-6">
-            <div className="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg border-2 border-cyan-500/50">
-              <h3 className="text-xl font-bold mb-4 text-center">Game Rules</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Requires 1 🔑 to enter</li>
-                <li>• Defend for 12 rounds</li>
-                <li>• Each round deals 10-40 damage</li>
-                <li>• Better defense = more diamonds</li>
-                <li>• Complete all rounds for 2x bonus!</li>
-                <li>• Keep earned diamonds if defeated</li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={startGame} 
-              disabled={playing || keys < 1} 
-              size="lg" 
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-700 hover:to-blue-800"
-            >
-              {keys < 1 ? "Need Key 🔑" : "Enter Fortress (1 🔑)"}
-            </Button>
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading game...</p>
           </div>
         ) : (
           <div className="space-y-6">

@@ -28,34 +28,34 @@ const FortuneTrial = () => {
           .eq('user_id', user.id)
           .single();
         
-        if (keysData) setKeys((keysData as any).balance);
+        if (keysData) {
+          setKeys((keysData as any).balance);
+          // Auto-start game
+          if ((keysData as any).balance >= 1) {
+            startGameAuto(user.id, (keysData as any).balance);
+          } else {
+            toast.error("You need a key to enter! 🔑");
+            setTimeout(() => navigate("/dashboard"), 2000);
+          }
+        }
       }
     };
     
     fetchUserData();
   }, []);
 
-  const startGame = async () => {
-    if (keys < 1) {
-      toast.error("You need a key to enter! 🔑");
-      return;
-    }
-
-    if (!userId) {
-      toast.error("Please connect your wallet!");
-      return;
-    }
-
+  const startGameAuto = async (uid: string, currentKeys: number) => {
     setPlaying(true);
     
     const { error: keyError } = await supabase
       .from('user_keys' as any)
-      .update({ balance: keys - 1 })
-      .eq('user_id', userId);
+      .update({ balance: currentKeys - 1 })
+      .eq('user_id', uid);
     
     if (keyError) {
       toast.error("Failed to use key!");
       setPlaying(false);
+      setTimeout(() => navigate("/dashboard"), 2000);
       return;
     }
     
@@ -64,6 +64,7 @@ const FortuneTrial = () => {
     setRound(1);
     setDiamonds(0);
     setStreak(0);
+    setPlaying(false);
     
     toast.success("🎲 Fortune's Trial begins!");
   };
@@ -178,28 +179,8 @@ const FortuneTrial = () => {
         </div>
 
         {!gameActive ? (
-          <div className="space-y-6">
-            <div className="p-6 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg border-2 border-amber-500/50">
-              <h3 className="text-xl font-bold mb-4 text-center">Game Rules</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Requires 1 🔑 to enter</li>
-                <li>• 8 rounds to complete</li>
-                <li>• Each round: choose Low Risk or High Risk</li>
-                <li>• Low Risk: 80% win, 15K base + streak bonus</li>
-                <li>• High Risk: 50% win, 50K base + streak bonus</li>
-                <li>• Streak multiplier increases rewards</li>
-                <li>• Keep earned diamonds if you fail</li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={startGame} 
-              disabled={playing || keys < 1} 
-              size="lg" 
-              className="w-full bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800"
-            >
-              {keys < 1 ? "Need Key 🔑" : "Begin Trial (1 🔑)"}
-            </Button>
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading game...</p>
           </div>
         ) : (
           <div className="space-y-6">
