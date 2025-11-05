@@ -15,7 +15,8 @@ const DiamondFortress = () => {
   const [diamonds, setDiamonds] = useState(0);
   const [gameActive, setGameActive] = useState(false);
   const [fortressHealth, setFortressHealth] = useState(100);
-
+  const [autoStarting, setAutoStarting] = useState(true);
+ 
   useEffect(() => {
     const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -32,11 +33,12 @@ const DiamondFortress = () => {
           setKeys((keysData as any).balance);
           // Auto-start game
           if ((keysData as any).balance >= 1) {
-            startGameAuto(user.id, (keysData as any).balance);
+            await startGameAuto(user.id, (keysData as any).balance);
           } else {
             toast.error("You need a key to enter! 🔑");
             setTimeout(() => navigate("/dashboard"), 2000);
           }
+          setAutoStarting(false);
         }
       }
     };
@@ -153,9 +155,16 @@ const DiamondFortress = () => {
         </div>
 
         {!gameActive ? (
-          <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground">Loading game...</p>
-          </div>
+          autoStarting ? (
+            <div className="text-center py-12">
+              <p className="text-xl text-muted-foreground">Loading game...</p>
+            </div>
+          ) : (
+            <div className="space-y-6 text-center">
+              <p className="text-muted-foreground">Run finished. Thanks for playing!</p>
+              <Button onClick={() => navigate('/dashboard')} size="lg" variant="outline" className="mx-auto">Back to Dashboard</Button>
+            </div>
+          )
         ) : (
           <div className="space-y-6">
             <div className="text-center">
