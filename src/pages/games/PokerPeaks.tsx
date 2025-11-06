@@ -1,113 +1,251 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { useGameLogic } from "@/hooks/useGameLogic";
+import { CreditBar } from "@/components/CreditBar";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import holyBull from "@/assets/holy-bull.jpeg";
 
-const PokerPeaks = () => {
+const SUITS = ["♠", "♥", "♦", "♣"];
+const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+interface CardType {
+  suit: string;
+  rank: string;
+}
+
+export default function PokerPeaks() {
   const navigate = useNavigate();
-  const [credits, setCredits] = useState(1000);
-  const [playing, setPlaying] = useState(false);
-  const [cards, setCards] = useState<string[]>([]);
-  const [held, setHeld] = useState<boolean[]>([false, false, false, false, false]);
-  const [phase, setPhase] = useState<"initial" | "redraw">("initial");
-  const betAmount = 50;
+  const { credits, diamonds, keys, updateCredits, updateDiamonds, updateKeys } = useGameLogic();
+  const [autoStarting, setAutoStarting] = useState(true);
+  const [gameActive, setGameActive] = useState(false);
+  const [round, setRound] = useState(1);
+  const [hand, setHand] = useState<CardType[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [totalDiamonds, setTotalDiamonds] = useState(0);
+  const [gameFinished, setGameFinished] = useState(false);
 
-  const suits = ["♠", "♥", "♦", "♣"];
-  const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-  const drawCard = () => `${ranks[Math.floor(Math.random() * ranks.length)]}${suits[Math.floor(Math.random() * suits.length)]}`;
+  useEffect(() => {
+    const startGameAuto = async () => {
+      try {
+        if (keys <= 0) {
+          toast.error("You need a key to play this game!");
+          navigate("/dashboard");
+          return;
+        }
 
-  const startGame = () => {
-    if (credits < betAmount) {
-      toast.error("Not enough credits!");
-      return;
-    }
-    setCredits(prev => prev - betAmount);
-    setPlaying(true);
-    setPhase("initial");
-    setCards(Array(5).fill(0).map(() => drawCard()));
-    setHeld([false, false, false, false, false]);
-  };
+        const { error } = await updateKeys(-1);
+        if (error) {
+          toast.error("Failed to deduct key. Please try again.");
+          navigate("/dashboard");
+          return;
+        }
 
-  const toggleHold = (index: number) => {
-    if (phase === "initial") {
-      const newHeld = [...held];
-      newHeld[index] = !newHeld[index];
-      setHeld(newHeld);
-    }
-  };
-
-  const redraw = () => {
-    const newCards = cards.map((card, i) => held[i] ? card : drawCard());
-    setCards(newCards);
-    setPhase("redraw");
-
-    setTimeout(() => {
-      const win = Math.random() > 0.6;
-      if (win) {
-        const winAmount = betAmount * 3;
-        setCredits(prev => prev + winAmount);
-        toast.success(`🐂 Winning hand! Won ${winAmount} credits!`);
-      } else {
-        toast.error("No winning combination!");
+        toast.success("Key used! Game starting...");
+        dealNewHand();
+        setGameActive(true);
+        setRound(1);
+        setTotalDiamonds(0);
+        setGameFinished(false);
+        setAutoStarting(false);
+      } catch (error) {
+        console.error("Error starting game:", error);
+        toast.error("Failed to start game");
+        navigate("/dashboard");
       }
-      setPlaying(false);
-    }, 1000);
+    };
+
+    startGameAuto();
+  }, []);
+
+  const dealNewHand = () => {
+    const deck: CardType[] = [];
+    for (const suit of SUITS) {
+      for (const rank of RANKS) {
+        deck.push({ suit, rank });
+      }
+    }
+
+    const shuffled = deck.sort(() => Math.random() - 0.5);
+    setHand(shuffled.slice(0, 5));
+    setSelectedIndices([]);
   };
+
+  const evaluateHand = (cards: CardType[]): { name: string; multiplier: number } => {
+    const rankCounts: Record<string, number> = {};
+    const suitCounts: Record<string, number> = {};
+
+    cards.forEach(card => {
+      rankCounts[card.rank] = (rankCounts[card.rank] || 0) + 1;
+      suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
+    });
+
+    const counts = Object.values(rankCounts).sort((a, b) => b - a);
+    const isFlush = Object.values(suitCounts).some(count => count === 5);
+
+    if (counts[0] === 4) return { name: "Four of a Kind", multiplier: 25 };
+    if (counts[0] === 3 && counts[1] === 2) return { name: "Full House", multiplier: 15 };
+    if (isFlush) return { name: "Flush", multiplier: 10 };
+    if (counts[0] === 3) return { name: "Three of a Kind", multiplier: 6 };
+    if (counts[0] === 2 && counts[1] === 2) return { name: "Two Pair", multiplier: 4 };
+    if (counts[0] === 2) return { name: "Pair", multiplier: 2 };
+    return { name: "High Card", multiplier: 0 };
+  };
+
+  const submitHand = async () => {
+    if (!gameActive) return;
+
+    const result = evaluateHand(hand);
+    const earned = result.multiplier * round;
+
+    if (earned > 0) {
+      setTotalDiamonds((prev) => prev + earned);
+      toast.success(`${result.name}! Earned ${earned} 💎`);
+    } else {
+      toast.error(`${result.name}. No diamonds this round.`);
+    }
+
+    if (round >= 10) {
+      endGame();
+    } else {
+      setRound((r) => r + 1);
+      dealNewHand();
+    }
+  };
+
+  const toggleCard = (index: number) => {
+    if (selectedIndices.includes(index)) {
+      setSelectedIndices(selectedIndices.filter(i => i !== index));
+    } else if (selectedIndices.length < 3) {
+      setSelectedIndices([...selectedIndices, index]);
+    }
+  };
+
+  const replaceCards = () => {
+    const deck: CardType[] = [];
+    for (const suit of SUITS) {
+      for (const rank of RANKS) {
+        if (!hand.some(c => c.suit === suit && c.rank === rank)) {
+          deck.push({ suit, rank });
+        }
+      }
+    }
+
+    const shuffled = deck.sort(() => Math.random() - 0.5);
+    const newHand = [...hand];
+    
+    selectedIndices.forEach((idx, i) => {
+      newHand[idx] = shuffled[i];
+    });
+
+    setHand(newHand);
+    setSelectedIndices([]);
+    toast.info("Cards replaced!");
+  };
+
+  const endGame = async () => {
+    setGameActive(false);
+    setGameFinished(true);
+    await updateDiamonds(totalDiamonds);
+    toast.success(`Completed 10 rounds! Earned ${totalDiamonds} 💎`);
+  };
+
+  if (autoStarting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
+        <CreditBar credits={credits} diamonds={diamonds} keys={keys} />
+        <Card className="max-w-4xl mx-auto p-8 text-center">
+          <p className="text-xl">Loading game...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (gameFinished) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
+        <CreditBar credits={credits} diamonds={diamonds} keys={keys} />
+        <Card className="max-w-4xl mx-auto p-8 text-center space-y-6">
+          <h2 className="text-3xl font-bold gradient-gold bg-clip-text text-transparent">
+            Run Finished!
+          </h2>
+          <p className="text-xl">Rounds Completed: {round}</p>
+          <p className="text-xl">Total Diamonds: {totalDiamonds} 💎</p>
+          <p className="text-muted-foreground">Thanks for playing!</p>
+          <Button onClick={() => navigate("/dashboard")} size="lg">
+            Return to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bull-pattern p-4">
-      <Button variant="ghost" onClick={() => navigate("/games")} className="mb-4">
-        <ArrowLeft className="w-5 h-5" /> Back to Games
-      </Button>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
+      <CreditBar credits={credits} diamonds={diamonds} keys={keys} />
+      
+      <Card className="max-w-4xl mx-auto p-8">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold gradient-gold bg-clip-text text-transparent">
+              Poker Peaks
+            </h1>
+            <Button onClick={() => navigate("/dashboard")} variant="outline">
+              Exit Game
+            </Button>
+          </div>
 
-      <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold gradient-gold bg-clip-text text-transparent mb-2">Poker Peaks 🐂</h1>
-          <p className="text-muted-foreground">Hold and draw for the best hand!</p>
-          <div className="text-2xl font-bold text-primary mt-4">Credits: {credits}</div>
-        </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <p className="text-muted-foreground">Round</p>
+              <p className="text-2xl font-bold">{round}/10</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Diamonds</p>
+              <p className="text-2xl font-bold">{totalDiamonds} 💎</p>
+            </div>
+          </div>
 
-        <div className="mb-6 flex justify-center">
-          <img src={holyBull} alt="Holy Bull" className="w-32 h-32 object-cover rounded-full border-4 border-primary" />
-        </div>
-
-        {cards.length > 0 && (
-          <div className="flex gap-3 justify-center mb-6">
-            {cards.map((card, i) => (
-              <div key={i} className="text-center">
-                <Button
-                  variant={held[i] ? "default" : "outline"}
-                  onClick={() => toggleHold(i)}
-                  disabled={phase !== "initial"}
-                  className="p-6 h-auto mb-2"
-                >
-                  <p className="text-3xl font-bold">{card}</p>
-                </Button>
-                {held[i] && phase === "initial" && (
-                  <p className="text-xs text-primary font-bold">HELD</p>
-                )}
-              </div>
+          <div className="flex justify-center gap-2 flex-wrap">
+            {hand.map((card, idx) => (
+              <Button
+                key={idx}
+                onClick={() => toggleCard(idx)}
+                variant={selectedIndices.includes(idx) ? "default" : "outline"}
+                className="h-32 w-24 text-3xl flex flex-col items-center justify-center"
+                style={{
+                  color: card.suit === "♥" || card.suit === "♦" ? "#ef4444" : "#000"
+                }}
+              >
+                <span>{card.rank}</span>
+                <span>{card.suit}</span>
+              </Button>
             ))}
           </div>
-        )}
 
-        {!playing ? (
-          <Button onClick={startGame} size="lg" className="w-full">
-            Play ({betAmount} credits)
-          </Button>
-        ) : phase === "initial" ? (
-          <Button onClick={redraw} size="lg" className="w-full">
-            Draw
-          </Button>
-        ) : (
-          <div className="text-center text-muted-foreground">Evaluating hand...</div>
-        )}
+          <div className="flex gap-2 justify-center">
+            <Button
+              onClick={replaceCards}
+              disabled={selectedIndices.length === 0}
+            >
+              Replace Selected ({selectedIndices.length}/3)
+            </Button>
+            <Button
+              onClick={submitHand}
+              variant="default"
+              size="lg"
+            >
+              Submit Hand
+            </Button>
+          </div>
+
+          <div className="text-sm text-center text-muted-foreground space-y-1">
+            <p>Select up to 3 cards to replace before submitting</p>
+            <p>Pair: 2x | Two Pair: 4x | Three: 6x | Flush: 10x | Full House: 15x | Four: 25x</p>
+          </div>
+        </div>
       </Card>
     </div>
   );
-};
-
-export default PokerPeaks;
+}

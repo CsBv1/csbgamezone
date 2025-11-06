@@ -66,7 +66,7 @@ export const Leaderboard = () => {
       const { data, error } = await supabase
         .from('leaderboard')
         .select('*')
-        .limit(25);
+        .limit(100);
 
       if (error) throw error;
       
@@ -97,7 +97,7 @@ export const Leaderboard = () => {
       <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
         <div className="flex items-center gap-3 mb-4">
           <Trophy className="w-6 h-6 text-yellow-500" />
-          <h3 className="text-xl font-bold text-foreground">Top 25 Leaderboard Most Diamond Hodl 💎</h3>
+          <h3 className="text-xl font-bold text-foreground">Cardano Stake Bulls Leaderboard Most Diamond Hodl 💎</h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -119,7 +119,7 @@ export const Leaderboard = () => {
     <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
       <div className="flex items-center gap-3 mb-4">
         <Trophy className="w-6 h-6 text-yellow-500" />
-        <h3 className="text-xl font-bold text-foreground">Top 25 Leaderboard Most Diamond Hodl 💎</h3>
+        <h3 className="text-xl font-bold text-foreground">Cardano Stake Bulls Leaderboard Most Diamond Hodl 💎</h3>
       </div>
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {leaderboard.length === 0 ? (
