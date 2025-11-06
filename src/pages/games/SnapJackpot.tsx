@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useGameLogic } from "@/hooks/useGameLogic";
 import { CreditBar } from "@/components/CreditBar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function SnapJackpot() {
   const navigate = useNavigate();
-  const { credits, diamonds, keys, updateCredits, updateDiamonds, updateKeys } = useGameLogic();
+  const [userId, setUserId] = useState<string | null>(null);
   const [autoStarting, setAutoStarting] = useState(true);
   const [gameActive, setGameActive] = useState(false);
   const [round, setRound] = useState(1);
@@ -22,36 +21,48 @@ export default function SnapJackpot() {
   const [snapStartTime, setSnapStartTime] = useState<number | null>(null);
 
   useEffect(() => {
-    const startGameAuto = async () => {
-      try {
-        if (keys <= 0) {
-          toast.error("You need a key to play this game!");
-          navigate("/dashboard");
-          return;
-        }
-
-        const { error } = await updateKeys(-1);
-        if (error) {
-          toast.error("Failed to deduct key. Please try again.");
-          navigate("/dashboard");
-          return;
-        }
-
-        toast.success("Key used! Game starting...");
-        startNewRound(1);
-        setGameActive(true);
-        setRound(1);
-        setTotalDiamonds(0);
-        setGameFinished(false);
-        setAutoStarting(false);
-      } catch (error) {
-        console.error("Error starting game:", error);
-        toast.error("Failed to start game");
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please log in first!");
         navigate("/dashboard");
+        return;
       }
+      setUserId(user.id);
+
+      const { data: keysData } = await supabase
+        .from('user_keys' as any)
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!keysData || (keysData as any).balance < 1) {
+        toast.error("You need a key to enter! 🔑");
+        setTimeout(() => navigate("/dashboard"), 2000);
+        return;
+      }
+
+      const { error: keyError } = await supabase
+        .from('user_keys' as any)
+        .update({ balance: (keysData as any).balance - 1 })
+        .eq('user_id', user.id);
+
+      if (keyError) {
+        toast.error("Failed to use key!");
+        navigate("/dashboard");
+        return;
+      }
+
+      toast.success("Key used! Game starting...");
+      startNewRound(1);
+      setGameActive(true);
+      setRound(1);
+      setTotalDiamonds(0);
+      setGameFinished(false);
+      setAutoStarting(false);
     };
 
-    startGameAuto();
+    init();
   }, []);
 
   const startNewRound = (currentRound: number) => {
@@ -113,14 +124,29 @@ export default function SnapJackpot() {
   const endGame = async () => {
     setGameActive(false);
     setGameFinished(true);
-    await updateDiamonds(totalDiamonds);
+    if (userId && totalDiamonds > 0) {
+      const { data } = await supabase
+        .from('user_diamonds' as any)
+        .select('balance, total_earned')
+        .eq('user_id', userId)
+        .single();
+      if (data) {
+        await supabase
+          .from('user_diamonds' as any)
+          .update({
+            balance: (data as any).balance + totalDiamonds,
+            total_earned: (data as any).total_earned + totalDiamonds
+          })
+          .eq('user_id', userId);
+      }
+    }
     toast.success(`Completed ${round} rounds! Earned ${totalDiamonds} 💎`);
   };
 
   if (autoStarting) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
-        <CreditBar credits={credits} diamonds={diamonds} keys={keys} />
+        <CreditBar />
         <Card className="max-w-4xl mx-auto p-8 text-center">
           <p className="text-xl">Loading game...</p>
         </Card>
@@ -131,7 +157,7 @@ export default function SnapJackpot() {
   if (gameFinished) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
-        <CreditBar credits={credits} diamonds={diamonds} keys={keys} />
+        <CreditBar />
         <Card className="max-w-4xl mx-auto p-8 text-center space-y-6">
           <h2 className="text-3xl font-bold gradient-gold bg-clip-text text-transparent">
             Run Finished!
@@ -150,7 +176,7 @@ export default function SnapJackpot() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
-      <CreditBar credits={credits} diamonds={diamonds} keys={keys} />
+      <CreditBar />
       
       <Card className="max-w-4xl mx-auto p-8">
         <div className="space-y-6">
