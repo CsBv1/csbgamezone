@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane } from "lucide-react";
+import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelector } from "@/components/ColorSelector";
@@ -603,6 +603,82 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground mb-4">Hit the target zone perfectly!</p>
                   <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
                     Test Timing
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/rhythm-rush')}
+              >
+                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Music className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🎵 Rhythm Rush</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Hit beats, build combos, earn diamonds!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Start Rhythm
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/gem-chain')}
+              >
+                <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">💎 Gem Chain</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Match-3 puzzle with levels & rewards!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Match Gems
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/risk-vault')}
+              >
+                <div className="h-40 bg-gradient-to-br from-red-600 to-orange-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Lock className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">🔐 Risk Vault</h3>
+                  <p className="text-sm text-muted-foreground mb-4">High-risk progression - cash out or bust!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Take Risk
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                onClick={() => navigate('/games/speed-run')}
+              >
+                <div className="h-40 bg-gradient-to-br from-yellow-600 to-amber-700 flex items-center justify-center relative">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <Gauge className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-foreground">⚡ Speed Run</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Reflex arcade - click targets fast!</p>
+                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
+                    Start Run
                   </Button>
                 </div>
               </Card>
