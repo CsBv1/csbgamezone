@@ -37,6 +37,16 @@ export default function RhythmRush() {
       }
       setUserId(user.id);
 
+      // Check if coming from Bull World (free access)
+      const fromBullWorld = sessionStorage.getItem('bullWorldAccess') === 'true';
+      if (fromBullWorld) {
+        sessionStorage.removeItem('bullWorldAccess'); // One-time use
+        toast.success("Free play from Bull World! 🐂");
+        startGame();
+        setAutoStarting(false);
+        return;
+      }
+
       const { data: keysData } = await supabase
         .from('user_keys' as any)
         .select('balance')

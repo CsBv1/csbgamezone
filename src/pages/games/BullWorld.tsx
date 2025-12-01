@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditBar } from "@/components/CreditBar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Gem, Users, Gamepad2 } from "lucide-react";
+import { ArrowLeft, Gem, Users, Gamepad2, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Player {
@@ -323,8 +323,34 @@ export default function BullWorld() {
   };
 
   const enterPortal = (portal: GamePortal) => {
+    // Store in sessionStorage that user came from Bull World - games are free inside
+    sessionStorage.setItem('bullWorldAccess', 'true');
     leaveWorld();
     navigate(portal.route);
+  };
+
+  // Mobile touch controls
+  const handleMobileMove = (direction: string) => {
+    let dx = 0, dy = 0;
+    if (direction === 'up') { dy = -MOVE_SPEED * 2; }
+    if (direction === 'down') { dy = MOVE_SPEED * 2; }
+    if (direction === 'left') { dx = -MOVE_SPEED * 2; }
+    if (direction === 'right') { dx = MOVE_SPEED * 2; }
+
+    setMyPosition(prev => {
+      const newX = Math.max(20, Math.min(WORLD_WIDTH - 20, prev.x + dx));
+      const newY = Math.max(20, Math.min(WORLD_HEIGHT - 20, prev.y + dy));
+      
+      if (userId) {
+        supabase
+          .from('world_players')
+          .update({ x: newX, y: newY, direction, last_seen: new Date().toISOString() })
+          .eq('user_id', userId);
+      }
+
+      return { x: newX, y: newY };
+    });
+    setMyDirection(direction);
   };
 
   // Canvas rendering
@@ -524,8 +550,54 @@ export default function BullWorld() {
           />
         </Card>
 
-        {/* Controls */}
-        <Card className="p-4">
+        {/* Mobile Controls */}
+        <Card className="p-4 md:hidden">
+          <h3 className="font-bold mb-3 text-center">Mobile Controls</h3>
+          <div className="flex flex-col items-center gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-16 h-16 rounded-full"
+              onTouchStart={() => handleMobileMove('up')}
+              onMouseDown={() => handleMobileMove('up')}
+            >
+              <ArrowUp className="w-8 h-8" />
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-16 h-16 rounded-full"
+                onTouchStart={() => handleMobileMove('left')}
+                onMouseDown={() => handleMobileMove('left')}
+              >
+                <ArrowLeftIcon className="w-8 h-8" />
+              </Button>
+              <div className="w-16 h-16" /> {/* Spacer */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-16 h-16 rounded-full"
+                onTouchStart={() => handleMobileMove('right')}
+                onMouseDown={() => handleMobileMove('right')}
+              >
+                <ArrowRight className="w-8 h-8" />
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-16 h-16 rounded-full"
+              onTouchStart={() => handleMobileMove('down')}
+              onMouseDown={() => handleMobileMove('down')}
+            >
+              <ArrowDown className="w-8 h-8" />
+            </Button>
+          </div>
+        </Card>
+
+        {/* Desktop Controls */}
+        <Card className="p-4 hidden md:block">
           <h3 className="font-bold mb-2">Controls</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div><kbd className="px-2 py-1 bg-muted rounded">↑ W</kbd> Move Up</div>
@@ -533,11 +605,12 @@ export default function BullWorld() {
             <div><kbd className="px-2 py-1 bg-muted rounded">← A</kbd> Move Left</div>
             <div><kbd className="px-2 py-1 bg-muted rounded">→ D</kbd> Move Right</div>
           </div>
-          <p className="text-muted-foreground mt-3 text-sm">
-            <Gamepad2 className="w-4 h-4 inline mr-1" />
-            Walk to a portal to enter a mini-game! Collect 💎 diamonds scattered around the world.
-          </p>
         </Card>
+
+        <p className="text-muted-foreground text-sm text-center">
+          <Gamepad2 className="w-4 h-4 inline mr-1" />
+          Walk to a portal to enter a mini-game (FREE inside Bull World)! Collect 💎 diamonds scattered around.
+        </p>
 
         {/* Portal buttons for quick access */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">

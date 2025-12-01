@@ -28,6 +28,17 @@ export default function RiskVault() {
       }
       setUserId(user.id);
 
+      // Check if coming from Bull World (free access)
+      const fromBullWorld = sessionStorage.getItem('bullWorldAccess') === 'true';
+      if (fromBullWorld) {
+        sessionStorage.removeItem('bullWorldAccess');
+        toast.success("Free play from Bull World! 🐂");
+        generateSafes();
+        setGameActive(true);
+        setAutoStarting(false);
+        return;
+      }
+
       const { data: keysData } = await supabase
         .from('user_keys' as any)
         .select('balance')
