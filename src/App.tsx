@@ -138,6 +138,7 @@ import RhythmRush from "./pages/games/RhythmRush";
 import GemChain from "./pages/games/GemChain";
 import RiskVault from "./pages/games/RiskVault";
 import SpeedRun from "./pages/games/SpeedRun";
+import BullWorld from "./pages/games/BullWorld";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -169,6 +170,7 @@ const App = () => (
           <Route path="/games/gem-chain" element={<ProtectedGameRoute><GemChain /></ProtectedGameRoute>} />
           <Route path="/games/risk-vault" element={<ProtectedGameRoute><RiskVault /></ProtectedGameRoute>} />
           <Route path="/games/speed-run" element={<ProtectedGameRoute><SpeedRun /></ProtectedGameRoute>} />
+          <Route path="/games/bull-world" element={<ProtectedGameRoute><BullWorld /></ProtectedGameRoute>} />
           <Route path="/games/slots" element={<Slots />} />
           <Route path="/games/number-bet" element={<NumberBet />} />
           <Route path="/games/card-flip" element={<CardFlip />} />
