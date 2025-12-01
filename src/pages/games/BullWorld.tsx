@@ -325,6 +325,7 @@ export default function BullWorld() {
   const enterPortal = (portal: GamePortal) => {
     // Store in sessionStorage that user came from Bull World - games are free inside
     sessionStorage.setItem('bullWorldAccess', 'true');
+    sessionStorage.setItem('fromBullWorld', 'true'); // For return navigation
     leaveWorld();
     navigate(portal.route);
   };
@@ -359,26 +360,114 @@ export default function BullWorld() {
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
+    // Terrain decorations (static positions)
+    const trees = [
+      { x: 200, y: 180 }, { x: 550, y: 120 }, { x: 300, y: 350 },
+      { x: 700, y: 280 }, { x: 150, y: 500 }, { x: 500, y: 480 },
+      { x: 750, y: 380 }, { x: 50, y: 250 }, { x: 420, y: 200 },
+    ];
+    const rocks = [
+      { x: 250, y: 280 }, { x: 580, y: 350 }, { x: 350, y: 520 },
+      { x: 680, y: 150 }, { x: 120, y: 380 },
+    ];
+    const flowers = [
+      { x: 180, y: 220 }, { x: 620, y: 180 }, { x: 280, y: 400 },
+      { x: 720, y: 320 }, { x: 380, y: 150 }, { x: 520, y: 380 },
+      { x: 450, y: 550 }, { x: 80, y: 320 }, { x: 600, y: 520 },
+    ];
+
     const render = () => {
-      // Clear canvas
-      ctx.fillStyle = '#1a1a2e';
+      // Draw grass background with gradient
+      const grassGradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
+      grassGradient.addColorStop(0, '#2d5a27');
+      grassGradient.addColorStop(0.5, '#1e4d1a');
+      grassGradient.addColorStop(1, '#163812');
+      ctx.fillStyle = grassGradient;
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-      // Draw isometric grid
-      ctx.strokeStyle = '#2a2a4e';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < WORLD_WIDTH; i += 50) {
+      // Draw dirt paths between portals
+      ctx.strokeStyle = '#8B7355';
+      ctx.lineWidth = 25;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(100, 100); ctx.lineTo(400, 300); ctx.lineTo(650, 100);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(100, 450); ctx.lineTo(400, 300); ctx.lineTo(650, 450);
+      ctx.stroke();
+      
+      // Path border
+      ctx.strokeStyle = '#6B5344';
+      ctx.lineWidth = 28;
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.beginPath();
+      ctx.moveTo(100, 100); ctx.lineTo(400, 300); ctx.lineTo(650, 100);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(100, 450); ctx.lineTo(400, 300); ctx.lineTo(650, 450);
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+
+      // Draw grass patches
+      for (let i = 0; i < 30; i++) {
+        const gx = (i * 137 + 50) % WORLD_WIDTH;
+        const gy = (i * 89 + 30) % WORLD_HEIGHT;
+        ctx.fillStyle = `rgba(34, 139, 34, ${0.3 + Math.random() * 0.2})`;
         ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, WORLD_HEIGHT);
-        ctx.stroke();
+        ctx.ellipse(gx, gy, 20 + Math.random() * 15, 10 + Math.random() * 8, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
-      for (let i = 0; i < WORLD_HEIGHT; i += 50) {
+
+      // Draw flowers
+      flowers.forEach(flower => {
+        const colors = ['#FF6B6B', '#FFE66D', '#4ECDC4', '#FF69B4', '#DDA0DD'];
+        ctx.fillStyle = colors[Math.floor((flower.x + flower.y) % colors.length)];
         ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(WORLD_WIDTH, i);
-        ctx.stroke();
-      }
+        ctx.arc(flower.x, flower.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(flower.x, flower.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw rocks
+      rocks.forEach(rock => {
+        ctx.fillStyle = '#696969';
+        ctx.beginPath();
+        ctx.ellipse(rock.x, rock.y, 15, 10, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#808080';
+        ctx.beginPath();
+        ctx.ellipse(rock.x - 3, rock.y - 3, 8, 5, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw trees
+      trees.forEach(tree => {
+        // Tree shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(tree.x + 5, tree.y + 25, 18, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Tree trunk
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(tree.x - 5, tree.y - 5, 10, 30);
+        
+        // Tree foliage layers
+        ctx.fillStyle = '#228B22';
+        ctx.beginPath();
+        ctx.arc(tree.x, tree.y - 20, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#32CD32';
+        ctx.beginPath();
+        ctx.arc(tree.x - 8, tree.y - 15, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(tree.x + 8, tree.y - 18, 10, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
       // Draw game portals
       GAME_PORTALS.forEach(portal => {

@@ -171,8 +171,12 @@ export default function RiskVault() {
           <p className="text-xl">Final Multiplier: {currentMultiplier.toFixed(2)}x</p>
           <p className="text-xl">Diamonds Earned: {totalDiamonds} 💎</p>
           {busted && <p className="text-destructive">You hit a trap and lost everything!</p>}
-          <Button onClick={() => navigate("/dashboard")} size="lg">
-            Return to Dashboard
+          <Button onClick={() => {
+            const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
+            sessionStorage.removeItem('fromBullWorld');
+            navigate(fromBullWorld ? "/games/bull-world" : "/dashboard");
+          }} size="lg">
+            {sessionStorage.getItem('fromBullWorld') === 'true' ? "Return to Bull World" : "Return to Dashboard"}
           </Button>
         </Card>
       </div>
