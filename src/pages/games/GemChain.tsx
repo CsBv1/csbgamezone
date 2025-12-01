@@ -219,8 +219,12 @@ export default function GemChain() {
           <p className="text-xl">Level Reached: {level}</p>
           <p className="text-xl">Final Score: {score}</p>
           <p className="text-xl">Diamonds Earned: {totalDiamonds} 💎</p>
-          <Button onClick={() => navigate("/dashboard")} size="lg">
-            Return to Dashboard
+          <Button onClick={() => {
+            const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
+            sessionStorage.removeItem('fromBullWorld');
+            navigate(fromBullWorld ? "/games/bull-world" : "/dashboard");
+          }} size="lg">
+            {sessionStorage.getItem('fromBullWorld') === 'true' ? "Return to Bull World" : "Return to Dashboard"}
           </Button>
         </Card>
       </div>
