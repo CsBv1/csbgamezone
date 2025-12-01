@@ -185,6 +185,81 @@ export type Database = {
         }
         Relationships: []
       }
+      world_diamonds: {
+        Row: {
+          collected_at: string | null
+          collected_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          value: number
+          x: number
+          y: number
+        }
+        Insert: {
+          collected_at?: string | null
+          collected_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          value?: number
+          x: number
+          y: number
+        }
+        Update: {
+          collected_at?: string | null
+          collected_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          value?: number
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      world_players: {
+        Row: {
+          color: string
+          created_at: string
+          direction: string
+          id: string
+          is_online: boolean
+          last_seen: string
+          updated_at: string
+          user_id: string
+          username: string | null
+          x: number
+          y: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_online?: boolean
+          last_seen?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+          x?: number
+          y?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_online?: boolean
+          last_seen?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       leaderboard: {

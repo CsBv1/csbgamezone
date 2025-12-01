@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge } from "lucide-react";
+import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelector } from "@/components/ColorSelector";
@@ -679,6 +679,33 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground mb-4">Reflex arcade - click targets fast!</p>
                   <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
                     Start Run
+                  </Button>
+                </div>
+              </Card>
+
+              {/* FEATURED: Bull World - Multiplayer Virtual World */}
+              <Card
+                className="group overflow-hidden bg-card border-4 border-cyan-400 hover:border-cyan-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3"
+                onClick={() => navigate('/games/bull-world')}
+              >
+                <div className="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%220.1%22%3E%3Cpath%20d%3D%22M0%2020L20%200L40%2020L20%2040z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"></div>
+                  <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                    🌍 MULTIPLAYER WORLD
+                  </div>
+                  <div className="absolute top-2 left-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    🔑 KEY REQUIRED
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <Globe className="w-24 h-24 text-white group-hover:scale-110 transition-transform animate-pulse" />
+                    <Users className="w-16 h-16 text-cyan-300 group-hover:scale-110 transition-transform" />
+                  </div>
+                </div>
+                <div className="p-6 text-center">
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 Bull World 🌍</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Enter a virtual world! See other players, collect diamonds, explore & play mini-games together!</p>
+                  <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">
+                    Enter Bull World
                   </Button>
                 </div>
               </Card>
