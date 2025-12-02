@@ -32,56 +32,51 @@ interface GamePortal {
   y: number;
   route: string;
   color: string;
+  emoji: string;
 }
 
-const WORLD_WIDTH = 4000;
-const WORLD_HEIGHT = 3000;
-const PLAYER_SIZE = 60;
-const MOVE_SPEED = 12;
+// Optimized smaller map for better performance
+const WORLD_WIDTH = 1600;
+const WORLD_HEIGHT = 1000;
+const PLAYER_SIZE = 50;
+const MOVE_SPEED = 8;
 
+// 12 Curated Multiplayer Games
 const GAME_PORTALS: GamePortal[] = [
-  // Row 1
-  { id: 'rhythm', name: 'Rhythm Rush', x: 400, y: 300, route: '/games/rhythm-rush', color: '#FF6B6B' },
-  { id: 'gem', name: 'Gem Chain', x: 1200, y: 300, route: '/games/gem-chain', color: '#4ECDC4' },
-  { id: 'plinko', name: 'Plinko', x: 2000, y: 300, route: '/games/plinko', color: '#9B59B6' },
-  { id: 'mines', name: 'Mines', x: 2800, y: 300, route: '/games/mines', color: '#E74C3C' },
-  { id: 'crash', name: 'Crash', x: 3600, y: 300, route: '/games/crash', color: '#F39C12' },
-  // Row 2
-  { id: 'risk', name: 'Risk Vault', x: 400, y: 1000, route: '/games/risk-vault', color: '#FFE66D' },
-  { id: 'tower', name: 'Tower', x: 1200, y: 1000, route: '/games/tower', color: '#1ABC9C' },
-  { id: 'coinflip', name: 'Coin Flip', x: 2000, y: 1000, route: '/games/coin-flip', color: '#3498DB' },
-  { id: 'slots', name: 'Slots', x: 2800, y: 1000, route: '/games/slots', color: '#E91E63' },
-  { id: 'blackjack', name: 'Blackjack', x: 3600, y: 1000, route: '/games/blackjack', color: '#2ECC71' },
-  // Row 3
-  { id: 'speed', name: 'Speed Run', x: 400, y: 1700, route: '/games/speed-run', color: '#95E1D3' },
-  { id: 'diceroll', name: 'Dice Roll', x: 1200, y: 1700, route: '/games/dice-roll', color: '#8E44AD' },
-  { id: 'wheel', name: 'Lucky Wheel', x: 2000, y: 1700, route: '/games/lucky-wheel', color: '#D35400' },
-  { id: 'keno', name: 'Keno', x: 2800, y: 1700, route: '/games/keno', color: '#16A085' },
-  { id: 'roulette', name: 'Roulette', x: 3600, y: 1700, route: '/games/roulette', color: '#C0392B' },
-  // Row 4
-  { id: 'aviator', name: 'Aviator', x: 400, y: 2400, route: '/games/aviator', color: '#00BCD4' },
-  { id: 'hilo', name: 'Hi-Lo', x: 1200, y: 2400, route: '/games/hi-lo', color: '#FF5722' },
-  { id: 'limbo', name: 'Limbo', x: 2000, y: 2400, route: '/games/limbo', color: '#673AB7' },
-  { id: 'scratch', name: 'Scratch', x: 2800, y: 2400, route: '/games/scratch', color: '#CDDC39' },
-  { id: 'bullrun', name: 'Bull Run', x: 3600, y: 2400, route: '/games/bull-run', color: '#FFD700' },
+  // Row 1 - Classic Casino
+  { id: 'tower', name: 'Bullish Tower', x: 250, y: 200, route: '/games/tower', color: '#00D4FF', emoji: '🏰' },
+  { id: 'crash', name: 'Bull Crash', x: 550, y: 200, route: '/games/crash', color: '#FF6B35', emoji: '🚀' },
+  { id: 'plinko', name: 'Plinko Drop', x: 850, y: 200, route: '/games/plinko', color: '#9B59B6', emoji: '🎯' },
+  { id: 'mines', name: 'Mine Field', x: 1150, y: 200, route: '/games/mines', color: '#E74C3C', emoji: '💣' },
+  // Row 2 - Multiplayer Games  
+  { id: 'blackjack', name: 'Blackjack', x: 250, y: 500, route: '/games/blackjack', color: '#2ECC71', emoji: '🃏' },
+  { id: 'roulette', name: 'Roulette', x: 550, y: 500, route: '/games/roulette', color: '#C0392B', emoji: '🎰' },
+  { id: 'dice', name: 'Dice Duel', x: 850, y: 500, route: '/games/dice-roll', color: '#F39C12', emoji: '🎲' },
+  { id: 'wheel', name: 'Fortune Wheel', x: 1150, y: 500, route: '/games/lucky-wheel', color: '#FFD700', emoji: '🎡' },
+  // Row 3 - Special Games
+  { id: 'aviator', name: 'Aviator', x: 250, y: 800, route: '/games/aviator', color: '#00BCD4', emoji: '✈️' },
+  { id: 'limbo', name: 'Limbo', x: 550, y: 800, route: '/games/limbo', color: '#673AB7', emoji: '📉' },
+  { id: 'hilo', name: 'Hi-Lo', x: 850, y: 800, route: '/games/hi-lo', color: '#FF5722', emoji: '↕️' },
+  { id: 'coinflip', name: 'Coin Flip', x: 1150, y: 800, route: '/games/coin-flip', color: '#3498DB', emoji: '🪙' },
 ];
 
 export default function BullWorld() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [diamonds, setDiamonds] = useState<WorldDiamond[]>([]);
-  const [myPosition, setMyPosition] = useState({ x: 2000, y: 1500 });
-  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
+  const [myPosition, setMyPosition] = useState({ x: 800, y: 500 });
   const [myDirection, setMyDirection] = useState('down');
-  const [myColor, setMyColor] = useState('#FFD700');
+  const [myColor, setMyColor] = useState('#00D4FF');
   const [username, setUsername] = useState<string | null>(null);
   const [keys, setKeys] = useState(0);
   const [collectedDiamonds, setCollectedDiamonds] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [gameActive, setGameActive] = useState(false);
+  const [nearPortal, setNearPortal] = useState<GamePortal | null>(null);
   const keysPressed = useRef<Set<string>>(new Set());
 
   // Initialize user and game
@@ -95,7 +90,6 @@ export default function BullWorld() {
       }
       setUserId(user.id);
 
-      // Get user profile and color
       const [keysResult, profileResult, colorsResult] = await Promise.all([
         supabase.from('user_keys').select('balance').eq('user_id', user.id).single(),
         supabase.from('profiles').select('username').eq('id', user.id).single(),
@@ -115,12 +109,10 @@ export default function BullWorld() {
         return;
       }
 
-      // Deduct key
       await supabase.from('user_keys').update({ balance: currentKeys - 1 }).eq('user_id', user.id);
       setKeys(currentKeys - 1);
 
-      // Join the world
-      await joinWorld(user.id, (profileResult.data as any)?.username, (colorsResult.data as any)?.color_value || '#FFD700');
+      await joinWorld(user.id, (profileResult.data as any)?.username, (colorsResult.data as any)?.color_value || '#00D4FF');
       setGameActive(true);
       setIsLoading(false);
     };
@@ -128,11 +120,11 @@ export default function BullWorld() {
 
     return () => {
       if (userId) leaveWorld();
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, []);
 
   const joinWorld = async (uid: string, uname: string | null, color: string) => {
-    // Check if player already exists
     const { data: existing } = await supabase
       .from('world_players')
       .select('*')
@@ -146,8 +138,8 @@ export default function BullWorld() {
         .eq('user_id', uid);
       setMyPosition({ x: (existing as any).x, y: (existing as any).y });
     } else {
-      const startX = 1800 + Math.random() * 400;
-      const startY = 1300 + Math.random() * 400;
+      const startX = 700 + Math.random() * 200;
+      const startY = 400 + Math.random() * 200;
       await supabase.from('world_players').insert({
         user_id: uid,
         x: startX,
@@ -158,7 +150,6 @@ export default function BullWorld() {
       setMyPosition({ x: startX, y: startY });
     }
 
-    // Spawn some diamonds
     spawnDiamonds();
   };
 
@@ -171,21 +162,19 @@ export default function BullWorld() {
   };
 
   const spawnDiamonds = async () => {
-    // Check if there are enough collectibles (diamonds and coins)
     const { data: existing } = await supabase
       .from('world_diamonds')
       .select('*')
       .is('collected_by', null);
 
-    if (!existing || existing.length < 50) {
+    if (!existing || existing.length < 20) {
       const newItems = [];
-      for (let i = 0; i < 50 - (existing?.length || 0); i++) {
-        // Mix of diamonds (value 1-3) and gold coins (value 5-10)
-        const isGoldCoin = Math.random() > 0.6;
+      for (let i = 0; i < 20 - (existing?.length || 0); i++) {
+        const isGold = Math.random() > 0.7;
         newItems.push({
-          x: 200 + Math.random() * (WORLD_WIDTH - 400),
-          y: 200 + Math.random() * (WORLD_HEIGHT - 400),
-          value: isGoldCoin ? Math.floor(Math.random() * 6) + 5 : Math.floor(Math.random() * 3) + 1
+          x: 100 + Math.random() * (WORLD_WIDTH - 200),
+          y: 100 + Math.random() * (WORLD_HEIGHT - 200),
+          value: isGold ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 3) + 1
         });
       }
       if (newItems.length > 0) {
@@ -200,16 +189,12 @@ export default function BullWorld() {
 
     const playersChannel = supabase
       .channel('world-players')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'world_players' }, () => {
-        fetchPlayers();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'world_players' }, fetchPlayers)
       .subscribe();
 
     const diamondsChannel = supabase
       .channel('world-diamonds')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'world_diamonds' }, () => {
-        fetchDiamonds();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'world_diamonds' }, fetchDiamonds)
       .subscribe();
 
     fetchPlayers();
@@ -222,18 +207,12 @@ export default function BullWorld() {
   }, [gameActive]);
 
   const fetchPlayers = async () => {
-    const { data } = await supabase
-      .from('world_players')
-      .select('*')
-      .eq('is_online', true);
+    const { data } = await supabase.from('world_players').select('*').eq('is_online', true);
     if (data) setPlayers(data as Player[]);
   };
 
   const fetchDiamonds = async () => {
-    const { data } = await supabase
-      .from('world_diamonds')
-      .select('*')
-      .is('collected_by', null);
+    const { data } = await supabase.from('world_diamonds').select('*').is('collected_by', null);
     if (data) setDiamonds(data as WorldDiamond[]);
   };
 
@@ -242,9 +221,14 @@ export default function BullWorld() {
     if (!gameActive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key)) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', ' '].includes(e.key)) {
         e.preventDefault();
         keysPressed.current.add(e.key.toLowerCase());
+        
+        // Enter portal on space
+        if (e.key === ' ' && nearPortal) {
+          enterPortal(nearPortal);
+        }
       }
     };
 
@@ -259,7 +243,7 @@ export default function BullWorld() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gameActive]);
+  }, [gameActive, nearPortal]);
 
   // Game loop
   useEffect(() => {
@@ -279,7 +263,6 @@ export default function BullWorld() {
           const newX = Math.max(40, Math.min(WORLD_WIDTH - 40, prev.x + dx));
           const newY = Math.max(40, Math.min(WORLD_HEIGHT - 40, prev.y + dy));
           
-          // Update in database (throttled)
           supabase
             .from('world_players')
             .update({ x: newX, y: newY, direction: newDirection, last_seen: new Date().toISOString() })
@@ -290,21 +273,19 @@ export default function BullWorld() {
         setMyDirection(newDirection);
       }
 
-      // Check diamond/coin collection
+      // Check diamond collection
       diamonds.forEach(diamond => {
-        const dist = Math.sqrt(Math.pow(myPosition.x - diamond.x, 2) + Math.pow(myPosition.y - diamond.y, 2));
-        if (dist < 50) {
-          collectDiamond(diamond);
-        }
+        const dist = Math.hypot(myPosition.x - diamond.x, myPosition.y - diamond.y);
+        if (dist < 45) collectDiamond(diamond);
       });
 
       // Check portal proximity
+      let foundPortal: GamePortal | null = null;
       GAME_PORTALS.forEach(portal => {
-        const dist = Math.sqrt(Math.pow(myPosition.x - portal.x, 2) + Math.pow(myPosition.y - portal.y, 2));
-        if (dist < 60) {
-          // Show portal hint
-        }
+        const dist = Math.hypot(myPosition.x - portal.x, myPosition.y - portal.y);
+        if (dist < 70) foundPortal = portal;
       });
+      setNearPortal(foundPortal);
     }, 50);
 
     return () => clearInterval(gameLoop);
@@ -321,10 +302,9 @@ export default function BullWorld() {
 
     if (!error) {
       setCollectedDiamonds(prev => prev + diamond.value);
-      const isGoldCoin = diamond.value >= 5;
-      toast({ title: `+${diamond.value} ${isGoldCoin ? '🪙' : '💎'}`, description: isGoldCoin ? "Gold coin collected!" : "Diamond collected!" });
+      const isGold = diamond.value >= 5;
+      toast({ title: `+${diamond.value} ${isGold ? '🪙' : '💎'}`, description: isGold ? "Gold collected!" : "Diamond collected!" });
       
-      // Add to user's balance
       const { data: current } = await supabase
         .from('user_diamonds')
         .select('balance, total_earned')
@@ -341,26 +321,23 @@ export default function BullWorld() {
           .eq('user_id', userId);
       }
 
-      // Spawn new diamond
-      setTimeout(spawnDiamonds, 2000);
+      setTimeout(spawnDiamonds, 3000);
     }
   };
 
   const enterPortal = (portal: GamePortal) => {
-    // Store in sessionStorage that user came from Bull World - games are free inside
     sessionStorage.setItem('bullWorldAccess', 'true');
-    sessionStorage.setItem('fromBullWorld', 'true'); // For return navigation
+    sessionStorage.setItem('fromBullWorld', 'true');
     leaveWorld();
     navigate(portal.route);
   };
 
-  // Mobile touch controls
   const handleMobileMove = (direction: string) => {
     let dx = 0, dy = 0;
-    if (direction === 'up') { dy = -MOVE_SPEED * 2; }
-    if (direction === 'down') { dy = MOVE_SPEED * 2; }
-    if (direction === 'left') { dx = -MOVE_SPEED * 2; }
-    if (direction === 'right') { dx = MOVE_SPEED * 2; }
+    if (direction === 'up') dy = -MOVE_SPEED * 2;
+    if (direction === 'down') dy = MOVE_SPEED * 2;
+    if (direction === 'left') dx = -MOVE_SPEED * 2;
+    if (direction === 'right') dx = MOVE_SPEED * 2;
 
     setMyPosition(prev => {
       const newX = Math.max(40, Math.min(WORLD_WIDTH - 40, prev.x + dx));
@@ -378,433 +355,384 @@ export default function BullWorld() {
     setMyDirection(direction);
   };
 
-  // Update camera to follow player
-  useEffect(() => {
-    const canvasWidth = 1200;
-    const canvasHeight = 700;
-    const offsetX = Math.max(0, Math.min(WORLD_WIDTH - canvasWidth, myPosition.x - canvasWidth / 2));
-    const offsetY = Math.max(0, Math.min(WORLD_HEIGHT - canvasHeight, myPosition.y - canvasHeight / 2));
-    setCameraOffset({ x: offsetX, y: offsetY });
-  }, [myPosition]);
-
-  // Canvas rendering
+  // Canvas rendering - Cardano Stake Bulls Theme
   useEffect(() => {
     if (!canvasRef.current || !gameActive) return;
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    const canvasWidth = 1200;
-    const canvasHeight = 700;
-
-    // Generate terrain decorations based on world size
-    const generateDecorations = () => {
-      const trees: {x: number, y: number}[] = [];
-      const rocks: {x: number, y: number}[] = [];
-      const flowers: {x: number, y: number}[] = [];
-      
-      // Generate trees across entire map
-      for (let i = 0; i < 100; i++) {
-        trees.push({
-          x: (i * 397 + 100) % WORLD_WIDTH,
-          y: (i * 283 + 150) % WORLD_HEIGHT
-        });
-      }
-      // Generate rocks
-      for (let i = 0; i < 60; i++) {
-        rocks.push({
-          x: (i * 521 + 200) % WORLD_WIDTH,
-          y: (i * 337 + 100) % WORLD_HEIGHT
-        });
-      }
-      // Generate flowers
-      for (let i = 0; i < 150; i++) {
-        flowers.push({
-          x: (i * 173 + 50) % WORLD_WIDTH,
-          y: (i * 127 + 80) % WORLD_HEIGHT
-        });
-      }
-      return { trees, rocks, flowers };
-    };
-
-    const { trees, rocks, flowers } = generateDecorations();
-
     const render = () => {
-      ctx.save();
-      ctx.translate(-cameraOffset.x, -cameraOffset.y);
-
-      // Draw grass background with gradient
-      const grassGradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
-      grassGradient.addColorStop(0, '#2d5a27');
-      grassGradient.addColorStop(0.5, '#1e4d1a');
-      grassGradient.addColorStop(1, '#163812');
-      ctx.fillStyle = grassGradient;
+      // Clear and draw Cardano-themed background
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
+      bgGradient.addColorStop(0, '#0a1628');
+      bgGradient.addColorStop(0.5, '#0d2137');
+      bgGradient.addColorStop(1, '#061018');
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-      // Draw grid lines for navigation (subtle)
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      // Cardano hex grid pattern (3D effect)
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
       ctx.lineWidth = 1;
-      for (let x = 0; x < WORLD_WIDTH; x += 400) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, WORLD_HEIGHT);
-        ctx.stroke();
-      }
-      for (let y = 0; y < WORLD_HEIGHT; y += 400) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(WORLD_WIDTH, y);
-        ctx.stroke();
+      const hexSize = 60;
+      for (let row = 0; row < WORLD_HEIGHT / hexSize + 1; row++) {
+        for (let col = 0; col < WORLD_WIDTH / hexSize + 1; col++) {
+          const x = col * hexSize * 1.5;
+          const y = row * hexSize * 1.732 + (col % 2) * hexSize * 0.866;
+          drawHexagon(ctx, x, y, hexSize * 0.5);
+        }
       }
 
-      // Draw dirt paths connecting portals
-      ctx.strokeStyle = '#8B7355';
-      ctx.lineWidth = 50;
+      // Glowing paths between portals
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.15)';
+      ctx.lineWidth = 40;
       ctx.lineCap = 'round';
-      
       // Horizontal paths
-      for (let row = 0; row < 4; row++) {
-        const y = 300 + row * 700;
+      [200, 500, 800].forEach(y => {
         ctx.beginPath();
-        ctx.moveTo(200, y);
-        ctx.lineTo(3800, y);
+        ctx.moveTo(150, y);
+        ctx.lineTo(1450, y);
         ctx.stroke();
-      }
+      });
       // Vertical paths
-      for (let col = 0; col < 5; col++) {
-        const x = 400 + col * 800;
+      [250, 550, 850, 1150].forEach(x => {
         ctx.beginPath();
         ctx.moveTo(x, 100);
-        ctx.lineTo(x, 2600);
+        ctx.lineTo(x, 900);
         ctx.stroke();
+      });
+
+      // Inner path glow
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
+      ctx.lineWidth = 8;
+      [200, 500, 800].forEach(y => {
+        ctx.beginPath();
+        ctx.moveTo(150, y);
+        ctx.lineTo(1450, y);
+        ctx.stroke();
+      });
+      [250, 550, 850, 1150].forEach(x => {
+        ctx.beginPath();
+        ctx.moveTo(x, 100);
+        ctx.lineTo(x, 900);
+        ctx.stroke();
+      });
+
+      // Draw floating particles (stars)
+      const time = Date.now() / 1000;
+      for (let i = 0; i < 30; i++) {
+        const px = (i * 53 + time * 10) % WORLD_WIDTH;
+        const py = (i * 37 + Math.sin(time + i) * 20) % WORLD_HEIGHT;
+        const alpha = 0.3 + Math.sin(time * 2 + i) * 0.2;
+        ctx.fillStyle = `rgba(0, 212, 255, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // Draw grass patches
-      for (let i = 0; i < 200; i++) {
-        const gx = (i * 137 + 50) % WORLD_WIDTH;
-        const gy = (i * 89 + 30) % WORLD_HEIGHT;
-        ctx.fillStyle = `rgba(34, 139, 34, ${0.3 + (i % 5) * 0.05})`;
-        ctx.beginPath();
-        ctx.ellipse(gx, gy, 30 + (i % 3) * 10, 15 + (i % 2) * 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Draw flowers (only visible ones)
-      flowers.forEach(flower => {
-        if (flower.x < cameraOffset.x - 50 || flower.x > cameraOffset.x + canvasWidth + 50) return;
-        if (flower.y < cameraOffset.y - 50 || flower.y > cameraOffset.y + canvasHeight + 50) return;
-        
-        const colors = ['#FF6B6B', '#FFE66D', '#4ECDC4', '#FF69B4', '#DDA0DD'];
-        ctx.fillStyle = colors[Math.floor((flower.x + flower.y) % colors.length)];
-        ctx.beginPath();
-        ctx.arc(flower.x, flower.y, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(flower.x, flower.y, 2, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw rocks (only visible ones)
-      rocks.forEach(rock => {
-        if (rock.x < cameraOffset.x - 50 || rock.x > cameraOffset.x + canvasWidth + 50) return;
-        if (rock.y < cameraOffset.y - 50 || rock.y > cameraOffset.y + canvasHeight + 50) return;
-        
-        ctx.fillStyle = '#696969';
-        ctx.beginPath();
-        ctx.ellipse(rock.x, rock.y, 18, 12, 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#808080';
-        ctx.beginPath();
-        ctx.ellipse(rock.x - 4, rock.y - 4, 10, 6, 0.2, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw trees (only visible ones)
-      trees.forEach(tree => {
-        if (tree.x < cameraOffset.x - 80 || tree.x > cameraOffset.x + canvasWidth + 80) return;
-        if (tree.y < cameraOffset.y - 100 || tree.y > cameraOffset.y + canvasHeight + 80) return;
-        
-        // Tree shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.beginPath();
-        ctx.ellipse(tree.x + 10, tree.y + 50, 35, 15, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Tree trunk
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(tree.x - 10, tree.y - 5, 20, 55);
-        
-        // Tree foliage layers
-        ctx.fillStyle = '#228B22';
-        ctx.beginPath();
-        ctx.arc(tree.x, tree.y - 40, 45, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#32CD32';
-        ctx.beginPath();
-        ctx.arc(tree.x - 15, tree.y - 30, 22, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(tree.x + 15, tree.y - 38, 18, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw game portals
+      // Draw game portals with 3D effect
       GAME_PORTALS.forEach(portal => {
-        // Portal glow
-        const gradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, 100);
-        gradient.addColorStop(0, portal.color + '90');
-        gradient.addColorStop(0.5, portal.color + '40');
-        gradient.addColorStop(1, 'transparent');
-        ctx.fillStyle = gradient;
+        const isNear = nearPortal?.id === portal.id;
+        const pulseScale = isNear ? 1 + Math.sin(time * 4) * 0.1 : 1;
+        
+        // Portal outer glow
+        const glowGradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, 80 * pulseScale);
+        glowGradient.addColorStop(0, portal.color + '60');
+        glowGradient.addColorStop(0.6, portal.color + '20');
+        glowGradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = glowGradient;
         ctx.fillRect(portal.x - 100, portal.y - 100, 200, 200);
 
+        // Portal 3D base (shadow)
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(portal.x + 5, portal.y + 50, 55 * pulseScale, 20 * pulseScale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Portal 3D platform
+        ctx.fillStyle = '#1a3a4a';
+        ctx.beginPath();
+        ctx.ellipse(portal.x, portal.y + 40, 55 * pulseScale, 20 * pulseScale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
         // Portal ring
         ctx.strokeStyle = portal.color;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = isNear ? 6 : 4;
         ctx.beginPath();
-        ctx.ellipse(portal.x, portal.y, 70, 45, 0, 0, Math.PI * 2);
+        ctx.ellipse(portal.x, portal.y, 50 * pulseScale, 35 * pulseScale, 0, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Portal base
-        ctx.fillStyle = portal.color + 'CC';
+        // Portal inner
+        const innerGrad = ctx.createRadialGradient(portal.x, portal.y - 10, 0, portal.x, portal.y, 45);
+        innerGrad.addColorStop(0, portal.color + 'CC');
+        innerGrad.addColorStop(0.7, portal.color + '66');
+        innerGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = innerGrad;
         ctx.beginPath();
-        ctx.ellipse(portal.x, portal.y, 65, 40, 0, 0, Math.PI * 2);
+        ctx.ellipse(portal.x, portal.y, 45 * pulseScale, 30 * pulseScale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Inner glow
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.beginPath();
-        ctx.ellipse(portal.x, portal.y - 10, 40, 25, 0, 0, Math.PI * 2);
-        ctx.fill();
+        // Portal emoji
+        ctx.font = '36px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(portal.emoji, portal.x, portal.y + 12);
 
         // Portal name
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 18px Arial';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 4;
-        ctx.fillText(portal.name, portal.x, portal.y + 80);
+        ctx.font = isNear ? 'bold 16px Arial' : '14px Arial';
+        ctx.shadowColor = portal.color;
+        ctx.shadowBlur = isNear ? 10 : 5;
+        ctx.fillText(portal.name, portal.x, portal.y + 75);
         ctx.shadowBlur = 0;
-        ctx.font = '40px Arial';
-        ctx.fillText('🎮', portal.x, portal.y - 50);
+
+        // "Press SPACE" indicator
+        if (isNear) {
+          ctx.fillStyle = '#FFD700';
+          ctx.font = 'bold 12px Arial';
+          ctx.fillText('PRESS SPACE', portal.x, portal.y + 92);
+        }
       });
 
-      // Draw diamonds and gold coins
+      // Draw diamonds and coins with glow
       diamonds.forEach(diamond => {
-        const isGoldCoin = diamond.value >= 5;
-        ctx.font = '42px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(isGoldCoin ? '🪙' : '💎', diamond.x, diamond.y + 14);
+        const isGold = diamond.value >= 5;
+        const pulse = 1 + Math.sin(time * 3 + diamond.x) * 0.15;
         
-        // Sparkle effect
-        const time = Date.now() / 200;
-        ctx.fillStyle = isGoldCoin 
-          ? `rgba(255, 215, 0, ${0.3 + Math.sin(time + diamond.x) * 0.2})`
-          : `rgba(0, 255, 255, ${0.3 + Math.sin(time + diamond.y) * 0.2})`;
+        // Glow
+        const gemGlow = ctx.createRadialGradient(diamond.x, diamond.y, 0, diamond.x, diamond.y, 30 * pulse);
+        gemGlow.addColorStop(0, isGold ? 'rgba(255,215,0,0.5)' : 'rgba(0,212,255,0.5)');
+        gemGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = gemGlow;
         ctx.beginPath();
-        ctx.arc(diamond.x, diamond.y, 28 + Math.sin(time) * 5, 0, Math.PI * 2);
+        ctx.arc(diamond.x, diamond.y, 30 * pulse, 0, Math.PI * 2);
         ctx.fill();
+
+        // Emoji
+        ctx.font = '32px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(isGold ? '🪙' : '💎', diamond.x, diamond.y + 10);
         
-        // Value indicator
+        // Value
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Arial';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 2;
-        ctx.fillText(`+${diamond.value}`, diamond.x, diamond.y + 45);
+        ctx.font = 'bold 11px Arial';
+        ctx.shadowColor = isGold ? '#FFD700' : '#00D4FF';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`+${diamond.value}`, diamond.x, diamond.y + 35);
         ctx.shadowBlur = 0;
       });
 
       // Draw other players
       players.forEach(player => {
         if (player.user_id === userId) return;
-        drawBull(ctx, player.x, player.y, player.color, player.direction, player.username);
+        drawStakeBull(ctx, player.x, player.y, player.color, player.direction, player.username, false);
       });
 
       // Draw current player
-      drawBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, username, true);
+      drawStakeBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, username, true);
 
-      ctx.restore();
-
-      // Draw minimap
-      const minimapSize = 150;
-      const minimapX = canvasWidth - minimapSize - 10;
-      const minimapY = 10;
+      // Draw border frame (Cardano style)
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(10, 10, WORLD_WIDTH - 20, WORLD_HEIGHT - 20);
       
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(minimapX, minimapY, minimapSize, minimapSize * (WORLD_HEIGHT / WORLD_WIDTH));
-      
-      // Draw portals on minimap
-      GAME_PORTALS.forEach(portal => {
-        ctx.fillStyle = portal.color;
+      // Corner decorations
+      const corners = [[20, 20], [WORLD_WIDTH - 20, 20], [20, WORLD_HEIGHT - 20], [WORLD_WIDTH - 20, WORLD_HEIGHT - 20]];
+      corners.forEach(([cx, cy]) => {
+        ctx.fillStyle = '#00D4FF';
         ctx.beginPath();
-        ctx.arc(
-          minimapX + (portal.x / WORLD_WIDTH) * minimapSize,
-          minimapY + (portal.y / WORLD_HEIGHT) * minimapSize * (WORLD_HEIGHT / WORLD_WIDTH),
-          3, 0, Math.PI * 2
-        );
+        ctx.arc(cx, cy, 8, 0, Math.PI * 2);
         ctx.fill();
       });
-      
-      // Draw player on minimap
-      ctx.fillStyle = '#00FF00';
-      ctx.beginPath();
-      ctx.arc(
-        minimapX + (myPosition.x / WORLD_WIDTH) * minimapSize,
-        minimapY + (myPosition.y / WORLD_HEIGHT) * minimapSize * (WORLD_HEIGHT / WORLD_WIDTH),
-        4, 0, Math.PI * 2
-      );
-      ctx.fill();
-      
-      // Minimap border
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(minimapX, minimapY, minimapSize, minimapSize * (WORLD_HEIGHT / WORLD_WIDTH));
 
-      requestAnimationFrame(render);
+      animationRef.current = requestAnimationFrame(render);
     };
 
     render();
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, cameraOffset]);
 
-  const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean = false) => {
-    const scale = 2.2; // Bigger bull!
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearPortal]);
+
+  const drawHexagon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 6;
+      const hx = x + size * Math.cos(angle);
+      const hy = y + size * Math.sin(angle);
+      if (i === 0) ctx.moveTo(hx, hy);
+      else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  };
+
+  const drawStakeBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean) => {
+    const scale = 1.8;
     
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath();
-    ctx.ellipse(x, y + 25 * scale, 22 * scale, 10 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 30 * scale, 20 * scale, 8 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body (bigger isometric bull shape)
-    ctx.fillStyle = color;
+    // Body with gradient
+    const bodyGrad = ctx.createRadialGradient(x - 10, y - 10, 0, x, y, 30 * scale);
+    bodyGrad.addColorStop(0, color);
+    bodyGrad.addColorStop(1, shadeColor(color, -30));
+    ctx.fillStyle = bodyGrad;
     ctx.beginPath();
-    ctx.ellipse(x, y, 28 * scale, 18 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 25 * scale, 18 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Body highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.beginPath();
-    ctx.ellipse(x - 8, y - 8, 12 * scale, 8 * scale, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(x - 8, y - 10, 10 * scale, 6 * scale, -0.4, 0, Math.PI * 2);
     ctx.fill();
 
     // Head
+    const headOffsetX = direction === 'left' ? -12 : direction === 'right' ? 12 : 0;
+    const headOffsetY = direction === 'up' ? -10 : direction === 'down' ? 10 : -5;
+    
     ctx.fillStyle = color;
     ctx.beginPath();
-    const headOffsetX = direction === 'left' ? -18 : direction === 'right' ? 18 : 0;
-    const headOffsetY = direction === 'up' ? -15 : direction === 'down' ? 15 : 0;
-    ctx.arc(x + headOffsetX * 0.5, y + headOffsetY * 0.5 - 10, 16 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Snout
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.ellipse(x + headOffsetX * 0.3, y + headOffsetY * 0.3 + 5, 10 * scale, 7 * scale, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Nostrils
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.ellipse(x - 5 + headOffsetX * 0.2, y + headOffsetY * 0.2 + 8, 3, 4, 0, 0, Math.PI * 2);
-    ctx.ellipse(x + 5 + headOffsetX * 0.2, y + headOffsetY * 0.2 + 8, 3, 4, 0, 0, Math.PI * 2);
+    ctx.arc(x + headOffsetX * 0.5, y + headOffsetY * 0.5 - 8, 14 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    // Horns - bigger and more curved
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 6;
+    // Snout
+    ctx.fillStyle = shadeColor(color, 20);
+    ctx.beginPath();
+    ctx.ellipse(x + headOffsetX * 0.3, y + headOffsetY * 0.3 + 8, 9 * scale, 6 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nostrils
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(x - 4, y + 10, 2, 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 4, y + 10, 2, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horns - Cardano blue glow
+    ctx.strokeStyle = '#00D4FF';
+    ctx.lineWidth = 5;
     ctx.lineCap = 'round';
+    ctx.shadowColor = '#00D4FF';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
-    ctx.moveTo(x - 15, y - 20);
-    ctx.quadraticCurveTo(x - 30, y - 35, x - 25, y - 50);
+    ctx.moveTo(x - 12, y - 18);
+    ctx.quadraticCurveTo(x - 25, y - 35, x - 20, y - 48);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(x + 15, y - 20);
-    ctx.quadraticCurveTo(x + 30, y - 35, x + 25, y - 50);
+    ctx.moveTo(x + 12, y - 18);
+    ctx.quadraticCurveTo(x + 25, y - 35, x + 20, y - 48);
     ctx.stroke();
-    
+    ctx.shadowBlur = 0;
+
     // Horn tips
-    ctx.strokeStyle = '#FFF8DC';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(x - 26, y - 45);
-    ctx.lineTo(x - 25, y - 50);
-    ctx.moveTo(x + 26, y - 45);
-    ctx.lineTo(x + 25, y - 50);
+    ctx.moveTo(x - 21, y - 44);
+    ctx.lineTo(x - 20, y - 48);
+    ctx.moveTo(x + 21, y - 44);
+    ctx.lineTo(x + 20, y - 48);
     ctx.stroke();
-    
+
     // Ears
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.ellipse(x - 22, y - 15, 8, 5, -0.5, 0, Math.PI * 2);
-    ctx.ellipse(x + 22, y - 15, 8, 5, 0.5, 0, Math.PI * 2);
+    ctx.ellipse(x - 18, y - 12, 6, 4, -0.5, 0, Math.PI * 2);
+    ctx.ellipse(x + 18, y - 12, 6, 4, 0.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Eyes
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(x - 8, y - 15, 6, 0, Math.PI * 2);
-    ctx.arc(x + 8, y - 15, 6, 0, Math.PI * 2);
+    ctx.arc(x - 7, y - 12, 5, 0, Math.PI * 2);
+    ctx.arc(x + 7, y - 12, 5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.arc(x - 8, y - 15, 3, 0, Math.PI * 2);
-    ctx.arc(x + 8, y - 15, 3, 0, Math.PI * 2);
+    ctx.arc(x - 7, y - 12, 2.5, 0, Math.PI * 2);
+    ctx.arc(x + 7, y - 12, 2.5, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Eye shine
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(x - 9, y - 16, 1.5, 0, Math.PI * 2);
-    ctx.arc(x + 7, y - 16, 1.5, 0, Math.PI * 2);
+    ctx.arc(x - 8, y - 13, 1.5, 0, Math.PI * 2);
+    ctx.arc(x + 6, y - 13, 1.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Nose ring - bigger
-    ctx.strokeStyle = '#C0C0C0';
-    ctx.lineWidth = 4;
+    // Nose ring
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 4;
     ctx.beginPath();
-    ctx.arc(x, y + 5, 8, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.arc(x, y + 8, 6, 0.2 * Math.PI, 0.8 * Math.PI);
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Name tag - bigger
-    ctx.fillStyle = isMe ? '#000' : '#000';
-    ctx.font = isMe ? 'bold 16px Arial' : '14px Arial';
+    // Name tag
+    ctx.font = isMe ? 'bold 14px Arial' : '12px Arial';
     ctx.textAlign = 'center';
-    // Background for name
-    const nameWidth = ctx.measureText(name || 'Player').width + 12;
-    ctx.fillStyle = isMe ? 'rgba(255, 215, 0, 0.9)' : 'rgba(255, 255, 255, 0.8)';
-    ctx.fillRect(x - nameWidth / 2, y - 70, nameWidth, 20);
-    ctx.fillStyle = '#000';
-    ctx.fillText(name || 'Player', x, y - 55);
+    const nameText = name || 'Player';
+    const nameWidth = ctx.measureText(nameText).width + 16;
+    
+    // Name background
+    ctx.fillStyle = isMe ? 'rgba(0, 212, 255, 0.9)' : 'rgba(30, 41, 59, 0.9)';
+    ctx.strokeStyle = isMe ? '#00D4FF' : '#475569';
+    ctx.lineWidth = 2;
+    
+    const nameY = y - 65;
+    ctx.beginPath();
+    ctx.roundRect(x - nameWidth / 2, nameY - 8, nameWidth, 20, 4);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = isMe ? '#000' : '#fff';
+    ctx.fillText(nameText, x, nameY + 6);
 
-    // Online indicator for current player
+    // Online indicator
     if (isMe) {
-      ctx.fillStyle = '#00FF00';
-      ctx.beginPath();
-      ctx.arc(x + nameWidth / 2 + 8, y - 60, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#006600';
+      ctx.fillStyle = '#22c55e';
+      ctx.strokeStyle = '#166534';
       ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x + nameWidth / 2 - 4, nameY, 5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.stroke();
     }
   };
 
+  const shadeColor = (color: string, percent: number) => {
+    const num = parseInt(color.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+    const G = Math.min(255, Math.max(0, (num >> 8 & 0x00FF) + amt));
+    const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+    return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-primary/5 flex items-center justify-center">
-        <Card className="p-8 text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-lg">Entering Bull World...</p>
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+        <Card className="p-8 text-center bg-[#0d2137] border-[#00D4FF]/30">
+          <div className="animate-spin w-12 h-12 border-4 border-[#00D4FF] border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-lg text-[#00D4FF]">Entering Stake Bulls World...</p>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-primary/5 p-4">
+    <div className="min-h-screen bg-[#0a1628] p-4">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" onClick={() => { leaveWorld(); navigate('/'); }}>
+          <Button variant="ghost" className="text-[#00D4FF] hover:bg-[#00D4FF]/10" onClick={() => { leaveWorld(); navigate('/'); }}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Exit World
           </Button>
           <CreditBar />
@@ -812,106 +740,90 @@ export default function BullWorld() {
 
         {/* Title */}
         <div className="text-center mb-4">
-          <h1 className="text-3xl font-bold gradient-gold bg-clip-text text-transparent">🐂 Bull World 🌍</h1>
-          <p className="text-muted-foreground">Explore, collect diamonds, and play games with other players!</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00D4FF] via-[#0095ff] to-[#00D4FF] bg-clip-text text-transparent">
+            🐂 Cardano Stake Bulls World 🌍
+          </h1>
+          <p className="text-[#00D4FF]/60">Explore, collect diamonds, and play 12 multiplayer games!</p>
         </div>
 
         {/* Stats */}
         <div className="flex justify-center gap-4 mb-4">
-          <Card className="px-4 py-2 flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            <span>{players.length} Online</span>
+          <Card className="px-4 py-2 flex items-center gap-2 bg-[#0d2137] border-[#00D4FF]/30">
+            <Users className="w-4 h-4 text-[#00D4FF]" />
+            <span className="text-white">{players.length} Online</span>
           </Card>
-          <Card className="px-4 py-2 flex items-center gap-2">
-            <Gem className="w-4 h-4 text-cyan-400" />
-            <span>+{collectedDiamonds} Collected</span>
+          <Card className="px-4 py-2 flex items-center gap-2 bg-[#0d2137] border-[#00D4FF]/30">
+            <Gem className="w-4 h-4 text-[#00D4FF]" />
+            <span className="text-white">+{collectedDiamonds} Collected</span>
           </Card>
         </div>
 
         {/* Game Canvas */}
-        <Card className="p-2 mb-4 overflow-hidden">
+        <Card className="p-2 mb-4 overflow-hidden bg-[#0d2137] border-[#00D4FF]/30">
           <canvas
             ref={canvasRef}
-            width={1200}
-            height={700}
-            className="w-full rounded-lg border-2 border-primary/20"
-            style={{ imageRendering: 'auto' }}
+            width={WORLD_WIDTH}
+            height={WORLD_HEIGHT}
+            className="w-full rounded-lg"
+            style={{ maxHeight: '65vh' }}
           />
         </Card>
 
         {/* Mobile Controls */}
-        <Card className="p-4 md:hidden">
-          <h3 className="font-bold mb-3 text-center">Mobile Controls</h3>
+        <Card className="p-4 md:hidden bg-[#0d2137] border-[#00D4FF]/30">
+          <h3 className="font-bold mb-3 text-center text-white">Mobile Controls</h3>
           <div className="flex flex-col items-center gap-2">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-16 h-16 rounded-full"
-              onTouchStart={() => handleMobileMove('up')}
-              onMouseDown={() => handleMobileMove('up')}
-            >
-              <ArrowUp className="w-8 h-8" />
+            <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#00D4FF] text-[#00D4FF]" onTouchStart={() => handleMobileMove('up')}>
+              <ArrowUp className="w-6 h-6" />
             </Button>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-16 h-16 rounded-full"
-                onTouchStart={() => handleMobileMove('left')}
-                onMouseDown={() => handleMobileMove('left')}
-              >
-                <ArrowLeftIcon className="w-8 h-8" />
+              <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#00D4FF] text-[#00D4FF]" onTouchStart={() => handleMobileMove('left')}>
+                <ArrowLeftIcon className="w-6 h-6" />
               </Button>
-              <div className="w-16 h-16" /> {/* Spacer */}
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-16 h-16 rounded-full"
-                onTouchStart={() => handleMobileMove('right')}
-                onMouseDown={() => handleMobileMove('right')}
-              >
-                <ArrowRight className="w-8 h-8" />
+              <div className="w-14 h-14" />
+              <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#00D4FF] text-[#00D4FF]" onTouchStart={() => handleMobileMove('right')}>
+                <ArrowRight className="w-6 h-6" />
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-16 h-16 rounded-full"
-              onTouchStart={() => handleMobileMove('down')}
-              onMouseDown={() => handleMobileMove('down')}
-            >
-              <ArrowDown className="w-8 h-8" />
+            <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#00D4FF] text-[#00D4FF]" onTouchStart={() => handleMobileMove('down')}>
+              <ArrowDown className="w-6 h-6" />
             </Button>
           </div>
+          {nearPortal && (
+            <Button className="w-full mt-4 bg-[#00D4FF] text-black hover:bg-[#00D4FF]/80" onClick={() => enterPortal(nearPortal)}>
+              Enter {nearPortal.name}
+            </Button>
+          )}
         </Card>
 
         {/* Desktop Controls */}
-        <Card className="p-4 hidden md:block">
-          <h3 className="font-bold mb-2">Controls</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div><kbd className="px-2 py-1 bg-muted rounded">↑ W</kbd> Move Up</div>
-            <div><kbd className="px-2 py-1 bg-muted rounded">↓ S</kbd> Move Down</div>
-            <div><kbd className="px-2 py-1 bg-muted rounded">← A</kbd> Move Left</div>
-            <div><kbd className="px-2 py-1 bg-muted rounded">→ D</kbd> Move Right</div>
+        <Card className="p-4 hidden md:block bg-[#0d2137] border-[#00D4FF]/30">
+          <h3 className="font-bold mb-2 text-white">Controls</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-white/80">
+            <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#00D4FF]">↑ W</kbd> Up</div>
+            <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#00D4FF]">↓ S</kbd> Down</div>
+            <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#00D4FF]">← A</kbd> Left</div>
+            <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#00D4FF]">→ D</kbd> Right</div>
+            <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#00D4FF]">SPACE</kbd> Enter Portal</div>
           </div>
         </Card>
 
-        <p className="text-muted-foreground text-sm text-center">
+        <p className="text-[#00D4FF]/60 text-sm text-center mt-4">
           <Gamepad2 className="w-4 h-4 inline mr-1" />
-          Walk to a portal to enter a mini-game (FREE inside Bull World)! Collect 💎 diamonds and 🪙 gold coins!
+          Walk to a portal and press SPACE to play (FREE inside Bull World)! Collect 💎 and 🪙!
         </p>
 
-        {/* Portal buttons for quick access */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+        {/* Quick Portal Access */}
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-4">
           {GAME_PORTALS.map(portal => (
             <Button
               key={portal.id}
               variant="outline"
-              className="border-2"
-              style={{ borderColor: portal.color }}
+              className="border-2 text-white hover:text-black"
+              style={{ borderColor: portal.color, backgroundColor: 'transparent' }}
               onClick={() => enterPortal(portal)}
             >
-              🎮 {portal.name}
+              {portal.emoji} {portal.name}
             </Button>
           ))}
         </div>
