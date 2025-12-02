@@ -34,16 +34,36 @@ interface GamePortal {
   color: string;
 }
 
-const WORLD_WIDTH = 1600;
-const WORLD_HEIGHT = 1000;
+const WORLD_WIDTH = 4000;
+const WORLD_HEIGHT = 3000;
 const PLAYER_SIZE = 60;
-const MOVE_SPEED = 8;
+const MOVE_SPEED = 12;
 
 const GAME_PORTALS: GamePortal[] = [
-  { id: 'rhythm', name: 'Rhythm Rush', x: 200, y: 150, route: '/games/rhythm-rush', color: '#FF6B6B' },
-  { id: 'gem', name: 'Gem Chain', x: 1400, y: 150, route: '/games/gem-chain', color: '#4ECDC4' },
-  { id: 'risk', name: 'Risk Vault', x: 200, y: 850, route: '/games/risk-vault', color: '#FFE66D' },
-  { id: 'speed', name: 'Speed Run', x: 1400, y: 850, route: '/games/speed-run', color: '#95E1D3' },
+  // Row 1
+  { id: 'rhythm', name: 'Rhythm Rush', x: 400, y: 300, route: '/games/rhythm-rush', color: '#FF6B6B' },
+  { id: 'gem', name: 'Gem Chain', x: 1200, y: 300, route: '/games/gem-chain', color: '#4ECDC4' },
+  { id: 'plinko', name: 'Plinko', x: 2000, y: 300, route: '/games/plinko', color: '#9B59B6' },
+  { id: 'mines', name: 'Mines', x: 2800, y: 300, route: '/games/mines', color: '#E74C3C' },
+  { id: 'crash', name: 'Crash', x: 3600, y: 300, route: '/games/crash', color: '#F39C12' },
+  // Row 2
+  { id: 'risk', name: 'Risk Vault', x: 400, y: 1000, route: '/games/risk-vault', color: '#FFE66D' },
+  { id: 'tower', name: 'Tower', x: 1200, y: 1000, route: '/games/tower', color: '#1ABC9C' },
+  { id: 'coinflip', name: 'Coin Flip', x: 2000, y: 1000, route: '/games/coin-flip', color: '#3498DB' },
+  { id: 'slots', name: 'Slots', x: 2800, y: 1000, route: '/games/slots', color: '#E91E63' },
+  { id: 'blackjack', name: 'Blackjack', x: 3600, y: 1000, route: '/games/blackjack', color: '#2ECC71' },
+  // Row 3
+  { id: 'speed', name: 'Speed Run', x: 400, y: 1700, route: '/games/speed-run', color: '#95E1D3' },
+  { id: 'diceroll', name: 'Dice Roll', x: 1200, y: 1700, route: '/games/dice-roll', color: '#8E44AD' },
+  { id: 'wheel', name: 'Lucky Wheel', x: 2000, y: 1700, route: '/games/lucky-wheel', color: '#D35400' },
+  { id: 'keno', name: 'Keno', x: 2800, y: 1700, route: '/games/keno', color: '#16A085' },
+  { id: 'roulette', name: 'Roulette', x: 3600, y: 1700, route: '/games/roulette', color: '#C0392B' },
+  // Row 4
+  { id: 'aviator', name: 'Aviator', x: 400, y: 2400, route: '/games/aviator', color: '#00BCD4' },
+  { id: 'hilo', name: 'Hi-Lo', x: 1200, y: 2400, route: '/games/hi-lo', color: '#FF5722' },
+  { id: 'limbo', name: 'Limbo', x: 2000, y: 2400, route: '/games/limbo', color: '#673AB7' },
+  { id: 'scratch', name: 'Scratch', x: 2800, y: 2400, route: '/games/scratch', color: '#CDDC39' },
+  { id: 'bullrun', name: 'Bull Run', x: 3600, y: 2400, route: '/games/bull-run', color: '#FFD700' },
 ];
 
 export default function BullWorld() {
@@ -53,7 +73,8 @@ export default function BullWorld() {
   const [userId, setUserId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [diamonds, setDiamonds] = useState<WorldDiamond[]>([]);
-  const [myPosition, setMyPosition] = useState({ x: 800, y: 500 });
+  const [myPosition, setMyPosition] = useState({ x: 2000, y: 1500 });
+  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
   const [myDirection, setMyDirection] = useState('down');
   const [myColor, setMyColor] = useState('#FFD700');
   const [username, setUsername] = useState<string | null>(null);
@@ -125,8 +146,8 @@ export default function BullWorld() {
         .eq('user_id', uid);
       setMyPosition({ x: (existing as any).x, y: (existing as any).y });
     } else {
-      const startX = 700 + Math.random() * 200;
-      const startY = 400 + Math.random() * 200;
+      const startX = 1800 + Math.random() * 400;
+      const startY = 1300 + Math.random() * 400;
       await supabase.from('world_players').insert({
         user_id: uid,
         x: startX,
@@ -156,14 +177,14 @@ export default function BullWorld() {
       .select('*')
       .is('collected_by', null);
 
-    if (!existing || existing.length < 15) {
+    if (!existing || existing.length < 50) {
       const newItems = [];
-      for (let i = 0; i < 15 - (existing?.length || 0); i++) {
+      for (let i = 0; i < 50 - (existing?.length || 0); i++) {
         // Mix of diamonds (value 1-3) and gold coins (value 5-10)
         const isGoldCoin = Math.random() > 0.6;
         newItems.push({
-          x: 150 + Math.random() * 1300,
-          y: 150 + Math.random() * 700,
+          x: 200 + Math.random() * (WORLD_WIDTH - 400),
+          y: 200 + Math.random() * (WORLD_HEIGHT - 400),
           value: isGoldCoin ? Math.floor(Math.random() * 6) + 5 : Math.floor(Math.random() * 3) + 1
         });
       }
@@ -357,34 +378,60 @@ export default function BullWorld() {
     setMyDirection(direction);
   };
 
+  // Update camera to follow player
+  useEffect(() => {
+    const canvasWidth = 1200;
+    const canvasHeight = 700;
+    const offsetX = Math.max(0, Math.min(WORLD_WIDTH - canvasWidth, myPosition.x - canvasWidth / 2));
+    const offsetY = Math.max(0, Math.min(WORLD_HEIGHT - canvasHeight, myPosition.y - canvasHeight / 2));
+    setCameraOffset({ x: offsetX, y: offsetY });
+  }, [myPosition]);
+
   // Canvas rendering
   useEffect(() => {
     if (!canvasRef.current || !gameActive) return;
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    // Terrain decorations (static positions) - expanded for larger map
-    const trees = [
-      { x: 300, y: 250 }, { x: 800, y: 180 }, { x: 500, y: 400 },
-      { x: 1100, y: 350 }, { x: 250, y: 700 }, { x: 700, y: 650 },
-      { x: 1300, y: 500 }, { x: 100, y: 400 }, { x: 600, y: 280 },
-      { x: 950, y: 750 }, { x: 1450, y: 300 }, { x: 400, y: 850 },
-      { x: 1200, y: 700 }, { x: 150, y: 200 }, { x: 1500, y: 600 },
-    ];
-    const rocks = [
-      { x: 400, y: 350 }, { x: 900, y: 450 }, { x: 550, y: 700 },
-      { x: 1050, y: 200 }, { x: 200, y: 550 }, { x: 1350, y: 400 },
-      { x: 750, y: 850 }, { x: 1100, y: 600 }, { x: 350, y: 150 },
-    ];
-    const flowers = [
-      { x: 280, y: 320 }, { x: 920, y: 280 }, { x: 480, y: 550 },
-      { x: 1120, y: 420 }, { x: 580, y: 220 }, { x: 820, y: 500 },
-      { x: 650, y: 780 }, { x: 180, y: 480 }, { x: 1000, y: 680 },
-      { x: 1300, y: 250 }, { x: 450, y: 920 }, { x: 1420, y: 750 },
-      { x: 320, y: 600 }, { x: 1180, y: 150 }, { x: 700, y: 380 },
-    ];
+    const canvasWidth = 1200;
+    const canvasHeight = 700;
+
+    // Generate terrain decorations based on world size
+    const generateDecorations = () => {
+      const trees: {x: number, y: number}[] = [];
+      const rocks: {x: number, y: number}[] = [];
+      const flowers: {x: number, y: number}[] = [];
+      
+      // Generate trees across entire map
+      for (let i = 0; i < 100; i++) {
+        trees.push({
+          x: (i * 397 + 100) % WORLD_WIDTH,
+          y: (i * 283 + 150) % WORLD_HEIGHT
+        });
+      }
+      // Generate rocks
+      for (let i = 0; i < 60; i++) {
+        rocks.push({
+          x: (i * 521 + 200) % WORLD_WIDTH,
+          y: (i * 337 + 100) % WORLD_HEIGHT
+        });
+      }
+      // Generate flowers
+      for (let i = 0; i < 150; i++) {
+        flowers.push({
+          x: (i * 173 + 50) % WORLD_WIDTH,
+          y: (i * 127 + 80) % WORLD_HEIGHT
+        });
+      }
+      return { trees, rocks, flowers };
+    };
+
+    const { trees, rocks, flowers } = generateDecorations();
 
     const render = () => {
+      ctx.save();
+      ctx.translate(-cameraOffset.x, -cameraOffset.y);
+
       // Draw grass background with gradient
       const grassGradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
       grassGradient.addColorStop(0, '#2d5a27');
@@ -393,45 +440,63 @@ export default function BullWorld() {
       ctx.fillStyle = grassGradient;
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-      // Draw dirt paths between portals - expanded for larger map
-      ctx.strokeStyle = '#8B7355';
-      ctx.lineWidth = 40;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(200, 150); ctx.lineTo(800, 500); ctx.lineTo(1400, 150);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(200, 850); ctx.lineTo(800, 500); ctx.lineTo(1400, 850);
-      ctx.stroke();
-      
-      // Path border
-      ctx.strokeStyle = '#6B5344';
-      ctx.lineWidth = 45;
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.beginPath();
-      ctx.moveTo(200, 150); ctx.lineTo(800, 500); ctx.lineTo(1400, 150);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(200, 850); ctx.lineTo(800, 500); ctx.lineTo(1400, 850);
-      ctx.stroke();
-      ctx.globalCompositeOperation = 'source-over';
+      // Draw grid lines for navigation (subtle)
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < WORLD_WIDTH; x += 400) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, WORLD_HEIGHT);
+        ctx.stroke();
+      }
+      for (let y = 0; y < WORLD_HEIGHT; y += 400) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(WORLD_WIDTH, y);
+        ctx.stroke();
+      }
 
-      // Draw grass patches - more for larger map
-      for (let i = 0; i < 60; i++) {
+      // Draw dirt paths connecting portals
+      ctx.strokeStyle = '#8B7355';
+      ctx.lineWidth = 50;
+      ctx.lineCap = 'round';
+      
+      // Horizontal paths
+      for (let row = 0; row < 4; row++) {
+        const y = 300 + row * 700;
+        ctx.beginPath();
+        ctx.moveTo(200, y);
+        ctx.lineTo(3800, y);
+        ctx.stroke();
+      }
+      // Vertical paths
+      for (let col = 0; col < 5; col++) {
+        const x = 400 + col * 800;
+        ctx.beginPath();
+        ctx.moveTo(x, 100);
+        ctx.lineTo(x, 2600);
+        ctx.stroke();
+      }
+
+      // Draw grass patches
+      for (let i = 0; i < 200; i++) {
         const gx = (i * 137 + 50) % WORLD_WIDTH;
         const gy = (i * 89 + 30) % WORLD_HEIGHT;
-        ctx.fillStyle = `rgba(34, 139, 34, ${0.3 + Math.random() * 0.2})`;
+        ctx.fillStyle = `rgba(34, 139, 34, ${0.3 + (i % 5) * 0.05})`;
         ctx.beginPath();
-        ctx.ellipse(gx, gy, 30 + Math.random() * 20, 15 + Math.random() * 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(gx, gy, 30 + (i % 3) * 10, 15 + (i % 2) * 8, 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Draw flowers
+      // Draw flowers (only visible ones)
       flowers.forEach(flower => {
+        if (flower.x < cameraOffset.x - 50 || flower.x > cameraOffset.x + canvasWidth + 50) return;
+        if (flower.y < cameraOffset.y - 50 || flower.y > cameraOffset.y + canvasHeight + 50) return;
+        
         const colors = ['#FF6B6B', '#FFE66D', '#4ECDC4', '#FF69B4', '#DDA0DD'];
         ctx.fillStyle = colors[Math.floor((flower.x + flower.y) % colors.length)];
         ctx.beginPath();
-        ctx.arc(flower.x, flower.y, 4, 0, Math.PI * 2);
+        ctx.arc(flower.x, flower.y, 5, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#FFD700';
         ctx.beginPath();
@@ -439,88 +504,114 @@ export default function BullWorld() {
         ctx.fill();
       });
 
-      // Draw rocks
+      // Draw rocks (only visible ones)
       rocks.forEach(rock => {
+        if (rock.x < cameraOffset.x - 50 || rock.x > cameraOffset.x + canvasWidth + 50) return;
+        if (rock.y < cameraOffset.y - 50 || rock.y > cameraOffset.y + canvasHeight + 50) return;
+        
         ctx.fillStyle = '#696969';
         ctx.beginPath();
-        ctx.ellipse(rock.x, rock.y, 15, 10, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(rock.x, rock.y, 18, 12, 0.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#808080';
         ctx.beginPath();
-        ctx.ellipse(rock.x - 3, rock.y - 3, 8, 5, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(rock.x - 4, rock.y - 4, 10, 6, 0.2, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // Draw trees - bigger for larger map
+      // Draw trees (only visible ones)
       trees.forEach(tree => {
+        if (tree.x < cameraOffset.x - 80 || tree.x > cameraOffset.x + canvasWidth + 80) return;
+        if (tree.y < cameraOffset.y - 100 || tree.y > cameraOffset.y + canvasHeight + 80) return;
+        
         // Tree shadow
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
         ctx.beginPath();
-        ctx.ellipse(tree.x + 8, tree.y + 40, 28, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(tree.x + 10, tree.y + 50, 35, 15, 0, 0, Math.PI * 2);
         ctx.fill();
         
         // Tree trunk
         ctx.fillStyle = '#8B4513';
-        ctx.fillRect(tree.x - 8, tree.y - 5, 16, 45);
+        ctx.fillRect(tree.x - 10, tree.y - 5, 20, 55);
         
         // Tree foliage layers
         ctx.fillStyle = '#228B22';
         ctx.beginPath();
-        ctx.arc(tree.x, tree.y - 30, 35, 0, Math.PI * 2);
+        ctx.arc(tree.x, tree.y - 40, 45, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#32CD32';
         ctx.beginPath();
-        ctx.arc(tree.x - 12, tree.y - 22, 18, 0, Math.PI * 2);
+        ctx.arc(tree.x - 15, tree.y - 30, 22, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(tree.x + 12, tree.y - 28, 15, 0, Math.PI * 2);
+        ctx.arc(tree.x + 15, tree.y - 38, 18, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // Draw game portals - bigger for larger map
+      // Draw game portals
       GAME_PORTALS.forEach(portal => {
         // Portal glow
-        const gradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, 80);
-        gradient.addColorStop(0, portal.color + '80');
+        const gradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, 100);
+        gradient.addColorStop(0, portal.color + '90');
+        gradient.addColorStop(0.5, portal.color + '40');
         gradient.addColorStop(1, 'transparent');
         ctx.fillStyle = gradient;
-        ctx.fillRect(portal.x - 80, portal.y - 80, 160, 160);
+        ctx.fillRect(portal.x - 100, portal.y - 100, 200, 200);
+
+        // Portal ring
+        ctx.strokeStyle = portal.color;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.ellipse(portal.x, portal.y, 70, 45, 0, 0, Math.PI * 2);
+        ctx.stroke();
 
         // Portal base
-        ctx.fillStyle = portal.color;
+        ctx.fillStyle = portal.color + 'CC';
         ctx.beginPath();
-        ctx.ellipse(portal.x, portal.y, 55, 32, 0, 0, Math.PI * 2);
+        ctx.ellipse(portal.x, portal.y, 65, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner glow
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(portal.x, portal.y - 10, 40, 25, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Portal name
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 16px Arial';
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(portal.name, portal.x, portal.y + 60);
-        ctx.font = '32px Arial';
-        ctx.fillText('🎮', portal.x, portal.y - 40);
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 4;
+        ctx.fillText(portal.name, portal.x, portal.y + 80);
+        ctx.shadowBlur = 0;
+        ctx.font = '40px Arial';
+        ctx.fillText('🎮', portal.x, portal.y - 50);
       });
 
       // Draw diamonds and gold coins
       diamonds.forEach(diamond => {
         const isGoldCoin = diamond.value >= 5;
-        ctx.font = '36px Arial';
+        ctx.font = '42px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(isGoldCoin ? '🪙' : '💎', diamond.x, diamond.y + 12);
+        ctx.fillText(isGoldCoin ? '🪙' : '💎', diamond.x, diamond.y + 14);
         
         // Sparkle effect
         const time = Date.now() / 200;
         ctx.fillStyle = isGoldCoin 
-          ? `rgba(255, 215, 0, ${0.3 + Math.sin(time) * 0.2})`
-          : `rgba(0, 255, 255, ${0.3 + Math.sin(time) * 0.2})`;
+          ? `rgba(255, 215, 0, ${0.3 + Math.sin(time + diamond.x) * 0.2})`
+          : `rgba(0, 255, 255, ${0.3 + Math.sin(time + diamond.y) * 0.2})`;
         ctx.beginPath();
-        ctx.arc(diamond.x, diamond.y, 22 + Math.sin(time) * 4, 0, Math.PI * 2);
+        ctx.arc(diamond.x, diamond.y, 28 + Math.sin(time) * 5, 0, Math.PI * 2);
         ctx.fill();
         
         // Value indicator
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText(`+${diamond.value}`, diamond.x, diamond.y + 35);
+        ctx.font = 'bold 14px Arial';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 2;
+        ctx.fillText(`+${diamond.value}`, diamond.x, diamond.y + 45);
+        ctx.shadowBlur = 0;
       });
 
       // Draw other players
@@ -532,11 +623,48 @@ export default function BullWorld() {
       // Draw current player
       drawBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, username, true);
 
+      ctx.restore();
+
+      // Draw minimap
+      const minimapSize = 150;
+      const minimapX = canvasWidth - minimapSize - 10;
+      const minimapY = 10;
+      
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(minimapX, minimapY, minimapSize, minimapSize * (WORLD_HEIGHT / WORLD_WIDTH));
+      
+      // Draw portals on minimap
+      GAME_PORTALS.forEach(portal => {
+        ctx.fillStyle = portal.color;
+        ctx.beginPath();
+        ctx.arc(
+          minimapX + (portal.x / WORLD_WIDTH) * minimapSize,
+          minimapY + (portal.y / WORLD_HEIGHT) * minimapSize * (WORLD_HEIGHT / WORLD_WIDTH),
+          3, 0, Math.PI * 2
+        );
+        ctx.fill();
+      });
+      
+      // Draw player on minimap
+      ctx.fillStyle = '#00FF00';
+      ctx.beginPath();
+      ctx.arc(
+        minimapX + (myPosition.x / WORLD_WIDTH) * minimapSize,
+        minimapY + (myPosition.y / WORLD_HEIGHT) * minimapSize * (WORLD_HEIGHT / WORLD_WIDTH),
+        4, 0, Math.PI * 2
+      );
+      ctx.fill();
+      
+      // Minimap border
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(minimapX, minimapY, minimapSize, minimapSize * (WORLD_HEIGHT / WORLD_WIDTH));
+
       requestAnimationFrame(render);
     };
 
     render();
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId]);
+  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, cameraOffset]);
 
   const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean = false) => {
     const scale = 2.2; // Bigger bull!
@@ -704,10 +832,10 @@ export default function BullWorld() {
         <Card className="p-2 mb-4 overflow-hidden">
           <canvas
             ref={canvasRef}
-            width={WORLD_WIDTH}
-            height={WORLD_HEIGHT}
+            width={1200}
+            height={700}
             className="w-full rounded-lg border-2 border-primary/20"
-            style={{ imageRendering: 'auto', maxHeight: '70vh' }}
+            style={{ imageRendering: 'auto' }}
           />
         </Card>
 
