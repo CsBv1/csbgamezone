@@ -47,6 +47,83 @@ export type Database = {
         }
         Relationships: []
       }
+      game_room_players: {
+        Row: {
+          bet_amount: number | null
+          cashed_out_at: number | null
+          id: string
+          is_active: boolean | null
+          joined_at: string
+          room_id: string
+          user_id: string
+          username: string | null
+          winnings: number | null
+        }
+        Insert: {
+          bet_amount?: number | null
+          cashed_out_at?: number | null
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          room_id: string
+          user_id: string
+          username?: string | null
+          winnings?: number | null
+        }
+        Update: {
+          bet_amount?: number | null
+          cashed_out_at?: number | null
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          room_id?: string
+          user_id?: string
+          username?: string | null
+          winnings?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_room_players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rooms: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          game_type: string
+          id: string
+          max_players: number | null
+          round_data: Json | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          game_type: string
+          id?: string
+          max_players?: number | null
+          round_data?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          game_type?: string
+          id?: string
+          max_players?: number | null
+          round_data?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
