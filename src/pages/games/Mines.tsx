@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Gem, Bomb } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
 
 const Mines = () => {
-  const navigate = useNavigate();
+  const { goBack, getBackLabel } = useBullWorldNavigation();
   const [grid, setGrid] = useState<(boolean | null)[]>(Array(25).fill(null));
   const [mines, setMines] = useState<number[]>([]);
   const [credits, setCredits] = useState(1000);
@@ -75,9 +75,9 @@ const Mines = () => {
     <div className="min-h-screen bull-pattern">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/games")}>
+          <Button variant="ghost" onClick={goBack}>
             <ArrowLeft className="w-5 h-5" />
-            Back to Games
+            {getBackLabel()}
           </Button>
           <h1 className="text-4xl font-bold gradient-gold bg-clip-text text-transparent mt-2">
             Mines 🐂

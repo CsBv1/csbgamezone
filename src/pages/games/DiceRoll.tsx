@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
 
 const DiceRoll = () => {
-  const navigate = useNavigate();
+  const { goBack, getBackLabel } = useBullWorldNavigation();
   const [dice, setDice] = useState([1, 1]);
   const [rolling, setRolling] = useState(false);
   const [credits, setCredits] = useState(100);
@@ -74,9 +74,9 @@ const DiceRoll = () => {
     <div className="min-h-screen bull-pattern flex flex-col">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/games")}>
+          <Button variant="ghost" onClick={goBack}>
             <ArrowLeft className="w-5 h-5" />
-            Back to Games
+            {getBackLabel()}
           </Button>
         </div>
       </header>

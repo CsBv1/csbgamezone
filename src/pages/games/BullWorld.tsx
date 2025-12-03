@@ -35,29 +35,30 @@ interface GamePortal {
   emoji: string;
 }
 
-// Optimized smaller map for better performance
-const WORLD_WIDTH = 1600;
-const WORLD_HEIGHT = 1000;
-const PLAYER_SIZE = 50;
-const MOVE_SPEED = 8;
+// Optimized for smooth performance
+const WORLD_WIDTH = 1400;
+const WORLD_HEIGHT = 900;
+const PLAYER_SIZE = 45;
+const MOVE_SPEED = 6;
+const DB_UPDATE_INTERVAL = 200; // Throttle DB updates
 
-// 12 Curated Multiplayer Games
+// 12 Curated Multiplayer Games - optimized layout
 const GAME_PORTALS: GamePortal[] = [
-  // Row 1 - Classic Casino
-  { id: 'tower', name: 'Bullish Tower', x: 250, y: 200, route: '/games/tower', color: '#00D4FF', emoji: '🏰' },
-  { id: 'crash', name: 'Bull Crash', x: 550, y: 200, route: '/games/crash', color: '#FF6B35', emoji: '🚀' },
-  { id: 'plinko', name: 'Plinko Drop', x: 850, y: 200, route: '/games/plinko', color: '#9B59B6', emoji: '🎯' },
-  { id: 'mines', name: 'Mine Field', x: 1150, y: 200, route: '/games/mines', color: '#E74C3C', emoji: '💣' },
-  // Row 2 - Multiplayer Games  
-  { id: 'blackjack', name: 'Blackjack', x: 250, y: 500, route: '/games/blackjack', color: '#2ECC71', emoji: '🃏' },
-  { id: 'roulette', name: 'Roulette', x: 550, y: 500, route: '/games/roulette', color: '#C0392B', emoji: '🎰' },
-  { id: 'dice', name: 'Dice Duel', x: 850, y: 500, route: '/games/dice-roll', color: '#F39C12', emoji: '🎲' },
-  { id: 'wheel', name: 'Fortune Wheel', x: 1150, y: 500, route: '/games/lucky-wheel', color: '#FFD700', emoji: '🎡' },
-  // Row 3 - Special Games
-  { id: 'aviator', name: 'Aviator', x: 250, y: 800, route: '/games/aviator', color: '#00BCD4', emoji: '✈️' },
-  { id: 'limbo', name: 'Limbo', x: 550, y: 800, route: '/games/limbo', color: '#673AB7', emoji: '📉' },
-  { id: 'hilo', name: 'Hi-Lo', x: 850, y: 800, route: '/games/hi-lo', color: '#FF5722', emoji: '↕️' },
-  { id: 'coinflip', name: 'Coin Flip', x: 1150, y: 800, route: '/games/coin-flip', color: '#3498DB', emoji: '🪙' },
+  // Row 1
+  { id: 'tower', name: 'Bullish Tower', x: 200, y: 180, route: '/games/tower', color: '#00D4FF', emoji: '🏰' },
+  { id: 'crash', name: 'Bull Crash', x: 450, y: 180, route: '/games/crash', color: '#FF6B35', emoji: '🚀' },
+  { id: 'plinko', name: 'Plinko Drop', x: 700, y: 180, route: '/games/plinko', color: '#9B59B6', emoji: '🎯' },
+  { id: 'mines', name: 'Mine Field', x: 950, y: 180, route: '/games/mines', color: '#E74C3C', emoji: '💣' },
+  // Row 2
+  { id: 'blackjack', name: 'Blackjack', x: 200, y: 450, route: '/games/blackjack', color: '#2ECC71', emoji: '🃏' },
+  { id: 'roulette', name: 'Roulette', x: 450, y: 450, route: '/games/roulette', color: '#C0392B', emoji: '🎰' },
+  { id: 'dice', name: 'Dice Duel', x: 700, y: 450, route: '/games/dice-roll', color: '#F39C12', emoji: '🎲' },
+  { id: 'wheel', name: 'Fortune Wheel', x: 950, y: 450, route: '/games/lucky-wheel', color: '#FFD700', emoji: '🎡' },
+  // Row 3
+  { id: 'aviator', name: 'Aviator', x: 200, y: 720, route: '/games/aviator', color: '#00BCD4', emoji: '✈️' },
+  { id: 'limbo', name: 'Limbo', x: 450, y: 720, route: '/games/limbo', color: '#673AB7', emoji: '📉' },
+  { id: 'hilo', name: 'Hi-Lo', x: 700, y: 720, route: '/games/hi-lo', color: '#FF5722', emoji: '↕️' },
+  { id: 'coinflip', name: 'Coin Flip', x: 950, y: 720, route: '/games/coin-flip', color: '#3498DB', emoji: '🪙' },
 ];
 
 export default function BullWorld() {
@@ -68,7 +69,7 @@ export default function BullWorld() {
   const [userId, setUserId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [diamonds, setDiamonds] = useState<WorldDiamond[]>([]);
-  const [myPosition, setMyPosition] = useState({ x: 800, y: 500 });
+  const [myPosition, setMyPosition] = useState({ x: 700, y: 450 });
   const [myDirection, setMyDirection] = useState('down');
   const [myColor, setMyColor] = useState('#00D4FF');
   const [username, setUsername] = useState<string | null>(null);
@@ -78,6 +79,7 @@ export default function BullWorld() {
   const [gameActive, setGameActive] = useState(false);
   const [nearPortal, setNearPortal] = useState<GamePortal | null>(null);
   const keysPressed = useRef<Set<string>>(new Set());
+  const lastDbUpdate = useRef<number>(0);
 
   // Initialize user and game
   useEffect(() => {
@@ -138,8 +140,8 @@ export default function BullWorld() {
         .eq('user_id', uid);
       setMyPosition({ x: (existing as any).x, y: (existing as any).y });
     } else {
-      const startX = 700 + Math.random() * 200;
-      const startY = 400 + Math.random() * 200;
+      const startX = 600 + Math.random() * 200;
+      const startY = 350 + Math.random() * 200;
       await supabase.from('world_players').insert({
         user_id: uid,
         x: startX,
@@ -167,14 +169,14 @@ export default function BullWorld() {
       .select('*')
       .is('collected_by', null);
 
-    if (!existing || existing.length < 20) {
+    if (!existing || existing.length < 15) {
       const newItems = [];
-      for (let i = 0; i < 20 - (existing?.length || 0); i++) {
-        const isGold = Math.random() > 0.7;
+      for (let i = 0; i < 15 - (existing?.length || 0); i++) {
+        const isGold = Math.random() > 0.75;
         newItems.push({
-          x: 100 + Math.random() * (WORLD_WIDTH - 200),
-          y: 100 + Math.random() * (WORLD_HEIGHT - 200),
-          value: isGold ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 3) + 1
+          x: 80 + Math.random() * (WORLD_WIDTH - 160),
+          y: 80 + Math.random() * (WORLD_HEIGHT - 160),
+          value: isGold ? Math.floor(Math.random() * 4) + 5 : Math.floor(Math.random() * 2) + 1
         });
       }
       if (newItems.length > 0) {
@@ -250,6 +252,7 @@ export default function BullWorld() {
     if (!gameActive || !userId) return;
 
     const gameLoop = setInterval(() => {
+      if (!document.hasFocus()) return; // Skip when tab not focused
       let dx = 0, dy = 0;
       let newDirection = myDirection;
 
@@ -260,13 +263,18 @@ export default function BullWorld() {
 
       if (dx !== 0 || dy !== 0) {
         setMyPosition(prev => {
-          const newX = Math.max(40, Math.min(WORLD_WIDTH - 40, prev.x + dx));
-          const newY = Math.max(40, Math.min(WORLD_HEIGHT - 40, prev.y + dy));
+          const newX = Math.max(35, Math.min(WORLD_WIDTH - 35, prev.x + dx));
+          const newY = Math.max(35, Math.min(WORLD_HEIGHT - 35, prev.y + dy));
           
-          supabase
-            .from('world_players')
-            .update({ x: newX, y: newY, direction: newDirection, last_seen: new Date().toISOString() })
-            .eq('user_id', userId);
+          // Throttle database updates for performance
+          const now = Date.now();
+          if (now - lastDbUpdate.current > DB_UPDATE_INTERVAL) {
+            lastDbUpdate.current = now;
+            supabase
+              .from('world_players')
+              .update({ x: newX, y: newY, direction: newDirection, last_seen: new Date().toISOString() })
+              .eq('user_id', userId);
+          }
 
           return { x: newX, y: newY };
         });
@@ -286,7 +294,7 @@ export default function BullWorld() {
         if (dist < 70) foundPortal = portal;
       });
       setNearPortal(foundPortal);
-    }, 50);
+    }, 33); // ~30fps for smooth movement
 
     return () => clearInterval(gameLoop);
   }, [gameActive, userId, myPosition, diamonds, myDirection]);
@@ -382,48 +390,45 @@ export default function BullWorld() {
         }
       }
 
-      // Glowing paths between portals
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.15)';
-      ctx.lineWidth = 40;
+      // Glowing paths between portals (simplified)
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.12)';
+      ctx.lineWidth = 30;
       ctx.lineCap = 'round';
-      // Horizontal paths
-      [200, 500, 800].forEach(y => {
+      [180, 450, 720].forEach(y => {
         ctx.beginPath();
-        ctx.moveTo(150, y);
-        ctx.lineTo(1450, y);
+        ctx.moveTo(120, y);
+        ctx.lineTo(1030, y);
         ctx.stroke();
       });
-      // Vertical paths
-      [250, 550, 850, 1150].forEach(x => {
+      [200, 450, 700, 950].forEach(x => {
         ctx.beginPath();
         ctx.moveTo(x, 100);
-        ctx.lineTo(x, 900);
+        ctx.lineTo(x, 800);
         ctx.stroke();
       });
 
       // Inner path glow
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
-      ctx.lineWidth = 8;
-      [200, 500, 800].forEach(y => {
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.22)';
+      ctx.lineWidth = 6;
+      [180, 450, 720].forEach(y => {
         ctx.beginPath();
-        ctx.moveTo(150, y);
-        ctx.lineTo(1450, y);
+        ctx.moveTo(120, y);
+        ctx.lineTo(1030, y);
         ctx.stroke();
       });
-      [250, 550, 850, 1150].forEach(x => {
+      [200, 450, 700, 950].forEach(x => {
         ctx.beginPath();
         ctx.moveTo(x, 100);
-        ctx.lineTo(x, 900);
+        ctx.lineTo(x, 800);
         ctx.stroke();
       });
 
-      // Draw floating particles (stars)
+      // Draw floating particles (stars) - reduced for performance
       const time = Date.now() / 1000;
-      for (let i = 0; i < 30; i++) {
-        const px = (i * 53 + time * 10) % WORLD_WIDTH;
-        const py = (i * 37 + Math.sin(time + i) * 20) % WORLD_HEIGHT;
-        const alpha = 0.3 + Math.sin(time * 2 + i) * 0.2;
-        ctx.fillStyle = `rgba(0, 212, 255, ${alpha})`;
+      for (let i = 0; i < 15; i++) {
+        const px = (i * 97 + time * 8) % WORLD_WIDTH;
+        const py = (i * 67 + Math.sin(time + i) * 15) % WORLD_HEIGHT;
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.35)';
         ctx.beginPath();
         ctx.arc(px, py, 2, 0, Math.PI * 2);
         ctx.fill();
@@ -529,17 +534,17 @@ export default function BullWorld() {
       // Draw current player
       drawStakeBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, username, true);
 
-      // Draw border frame (Cardano style)
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(10, 10, WORLD_WIDTH - 20, WORLD_HEIGHT - 20);
+      // Draw border frame
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(8, 8, WORLD_WIDTH - 16, WORLD_HEIGHT - 16);
       
       // Corner decorations
-      const corners = [[20, 20], [WORLD_WIDTH - 20, 20], [20, WORLD_HEIGHT - 20], [WORLD_WIDTH - 20, WORLD_HEIGHT - 20]];
+      const corners = [[16, 16], [WORLD_WIDTH - 16, 16], [16, WORLD_HEIGHT - 16], [WORLD_WIDTH - 16, WORLD_HEIGHT - 16]];
       corners.forEach(([cx, cy]) => {
         ctx.fillStyle = '#00D4FF';
         ctx.beginPath();
-        ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 6, 0, Math.PI * 2);
         ctx.fill();
       });
 
