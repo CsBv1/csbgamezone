@@ -42,23 +42,9 @@ const PLAYER_SIZE = 45;
 const MOVE_SPEED = 6;
 const DB_UPDATE_INTERVAL = 200; // Throttle DB updates
 
-// 12 Games - 4 Multiplayer (top row), 8 Single Player
+// Multiplayer Games Only - centered on the map
 const GAME_PORTALS: GamePortal[] = [
-  // Row 1 - MULTIPLAYER GAMES (with badge)
-  { id: 'mp-stampede', name: 'Stampede', x: 200, y: 180, route: '/games/bull-stampede', color: '#FF6B35', emoji: '🏃' },
-  { id: 'mp-crash', name: 'MP Crash', x: 450, y: 180, route: '/games/multiplayer-crash', color: '#00D4FF', emoji: '🚀' },
-  { id: 'mp-tower', name: 'MP Tower', x: 700, y: 180, route: '/games/tower', color: '#9B59B6', emoji: '🏰' },
-  { id: 'mp-wheel', name: 'MP Wheel', x: 950, y: 180, route: '/games/lucky-wheel', color: '#FFD700', emoji: '🎡' },
-  // Row 2 - Single Player
-  { id: 'plinko', name: 'Plinko Drop', x: 200, y: 450, route: '/games/plinko', color: '#9B59B6', emoji: '🎯' },
-  { id: 'mines', name: 'Mine Field', x: 450, y: 450, route: '/games/mines', color: '#E74C3C', emoji: '💣' },
-  { id: 'blackjack', name: 'Blackjack', x: 700, y: 450, route: '/games/blackjack', color: '#2ECC71', emoji: '🃏' },
-  { id: 'roulette', name: 'Roulette', x: 950, y: 450, route: '/games/roulette', color: '#C0392B', emoji: '🎰' },
-  // Row 3 - Single Player
-  { id: 'aviator', name: 'Aviator', x: 200, y: 720, route: '/games/aviator', color: '#00BCD4', emoji: '✈️' },
-  { id: 'limbo', name: 'Limbo', x: 450, y: 720, route: '/games/limbo', color: '#673AB7', emoji: '📉' },
-  { id: 'hilo', name: 'Hi-Lo', x: 700, y: 720, route: '/games/hi-lo', color: '#FF5722', emoji: '↕️' },
-  { id: 'coinflip', name: 'Coin Flip', x: 950, y: 720, route: '/games/coin-flip', color: '#3498DB', emoji: '🪙' },
+  { id: 'mp-stampede', name: 'Bull Maze', x: 700, y: 400, route: '/games/bull-stampede', color: '#FF6B35', emoji: '🏃' },
 ];
 
 export default function BullWorld() {
