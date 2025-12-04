@@ -45,9 +45,9 @@ const DB_UPDATE_INTERVAL = 200; // Throttle DB updates
 // 12 Games - 4 Multiplayer (top row), 8 Single Player
 const GAME_PORTALS: GamePortal[] = [
   // Row 1 - MULTIPLAYER GAMES (with badge)
-  { id: 'mp-crash', name: 'MP Crash', x: 200, y: 180, route: '/games/multiplayer-crash', color: '#FF6B35', emoji: '🚀' },
-  { id: 'mp-tower', name: 'MP Tower', x: 450, y: 180, route: '/games/tower', color: '#00D4FF', emoji: '🏰' },
-  { id: 'mp-dice', name: 'MP Dice', x: 700, y: 180, route: '/games/dice-roll', color: '#F39C12', emoji: '🎲' },
+  { id: 'mp-stampede', name: 'Stampede', x: 200, y: 180, route: '/games/bull-stampede', color: '#FF6B35', emoji: '🏃' },
+  { id: 'mp-crash', name: 'MP Crash', x: 450, y: 180, route: '/games/multiplayer-crash', color: '#00D4FF', emoji: '🚀' },
+  { id: 'mp-tower', name: 'MP Tower', x: 700, y: 180, route: '/games/tower', color: '#9B59B6', emoji: '🏰' },
   { id: 'mp-wheel', name: 'MP Wheel', x: 950, y: 180, route: '/games/lucky-wheel', color: '#FFD700', emoji: '🎡' },
   // Row 2 - Single Player
   { id: 'plinko', name: 'Plinko Drop', x: 200, y: 450, route: '/games/plinko', color: '#9B59B6', emoji: '🎯' },
@@ -105,14 +105,19 @@ export default function BullWorld() {
         setMyColor((colorsResult.data as any).color_value);
       }
 
-      if (currentKeys < 1) {
-        toast({ title: "No Keys", description: "You need 1 key to enter Bull World", variant: "destructive" });
-        navigate('/');
-        return;
+      // Only charge key on FIRST entry this session
+      const hasAccess = sessionStorage.getItem('bullWorldAccess') === 'true';
+      
+      if (!hasAccess) {
+        if (currentKeys < 1) {
+          toast({ title: "No Keys", description: "You need 1 key to enter Bull World", variant: "destructive" });
+          navigate('/');
+          return;
+        }
+        await supabase.from('user_keys').update({ balance: currentKeys - 1 }).eq('user_id', user.id);
+        setKeys(currentKeys - 1);
+        sessionStorage.setItem('bullWorldAccess', 'true');
       }
-
-      await supabase.from('user_keys').update({ balance: currentKeys - 1 }).eq('user_id', user.id);
-      setKeys(currentKeys - 1);
 
       await joinWorld(user.id, (profileResult.data as any)?.username, (colorsResult.data as any)?.color_value || '#00D4FF');
       setGameActive(true);
