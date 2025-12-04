@@ -30,25 +30,59 @@ interface Obstacle {
 
 const CANVAS_WIDTH = 900;
 const CANVAS_HEIGHT = 600;
-const PLAYER_SIZE = 30;
-const FINISH_LINE = 850;
+const PLAYER_SIZE = 20;
+const FINISH_LINE = 860;
 
-// Course obstacles
+// Maze walls
+const MAZE_WALLS = [
+  // Outer boundary
+  { x: 80, y: 50, w: 20, h: 500 },
+  { x: 80, y: 50, w: 780, h: 20 },
+  { x: 80, y: 530, w: 780, h: 20 },
+  // Maze internal walls - creating paths
+  { x: 120, y: 100, w: 20, h: 200 },
+  { x: 120, y: 350, w: 20, h: 150 },
+  { x: 160, y: 200, w: 100, h: 20 },
+  { x: 160, y: 350, w: 80, h: 20 },
+  { x: 200, y: 100, w: 20, h: 120 },
+  { x: 200, y: 400, w: 20, h: 100 },
+  { x: 260, y: 150, w: 20, h: 250 },
+  { x: 300, y: 100, w: 20, h: 80 },
+  { x: 300, y: 300, w: 80, h: 20 },
+  { x: 300, y: 450, w: 100, h: 20 },
+  { x: 340, y: 150, w: 100, h: 20 },
+  { x: 340, y: 350, w: 20, h: 120 },
+  { x: 400, y: 200, w: 20, h: 120 },
+  { x: 400, y: 400, w: 80, h: 20 },
+  { x: 440, y: 100, w: 20, h: 120 },
+  { x: 440, y: 280, w: 80, h: 20 },
+  { x: 460, y: 450, w: 20, h: 80 },
+  { x: 500, y: 150, w: 20, h: 150 },
+  { x: 500, y: 350, w: 80, h: 20 },
+  { x: 540, y: 100, w: 20, h: 80 },
+  { x: 540, y: 400, w: 20, h: 130 },
+  { x: 580, y: 200, w: 80, h: 20 },
+  { x: 580, y: 280, w: 20, h: 100 },
+  { x: 600, y: 450, w: 100, h: 20 },
+  { x: 620, y: 100, w: 20, h: 120 },
+  { x: 620, y: 350, w: 80, h: 20 },
+  { x: 680, y: 200, w: 20, h: 170 },
+  { x: 680, y: 420, w: 20, h: 80 },
+  { x: 720, y: 100, w: 20, h: 150 },
+  { x: 720, y: 300, w: 80, h: 20 },
+  { x: 760, y: 200, w: 20, h: 120 },
+  { x: 760, y: 380, w: 20, h: 150 },
+  { x: 800, y: 100, w: 20, h: 100 },
+  { x: 800, y: 250, w: 20, h: 100 },
+  { x: 800, y: 420, w: 20, h: 80 },
+];
+
+// Dynamic obstacles
 const OBSTACLES: Obstacle[] = [
-  // Spinning bars
-  { id: 'spin1', type: 'spinner', x: 200, y: 300, width: 120, height: 20, rotation: 0, speed: 2 },
-  { id: 'spin2', type: 'spinner', x: 400, y: 300, width: 120, height: 20, rotation: 45, speed: -2.5 },
-  { id: 'spin3', type: 'spinner', x: 600, y: 300, width: 150, height: 20, rotation: 90, speed: 3 },
-  // Moving platforms
-  { id: 'plat1', type: 'platform', x: 150, y: 150, width: 80, height: 30, speed: 2 },
-  { id: 'plat2', type: 'platform', x: 350, y: 450, width: 80, height: 30, speed: -2 },
-  { id: 'plat3', type: 'platform', x: 550, y: 200, width: 80, height: 30, speed: 2.5 },
-  // Pushers (horizontal obstacles)
-  { id: 'push1', type: 'pusher', x: 280, y: 100, width: 60, height: 500, speed: 1.5 },
-  { id: 'push2', type: 'pusher', x: 480, y: 100, width: 60, height: 500, speed: -1.5 },
-  // Hammers (swinging)
-  { id: 'ham1', type: 'hammer', x: 700, y: 200, width: 40, height: 100, rotation: 0, speed: 3 },
-  { id: 'ham2', type: 'hammer', x: 700, y: 400, width: 40, height: 100, rotation: 180, speed: -3 },
+  { id: 'spin1', type: 'spinner', x: 180, y: 280, width: 60, height: 15, rotation: 0, speed: 3 },
+  { id: 'spin2', type: 'spinner', x: 380, y: 250, width: 60, height: 15, rotation: 45, speed: -3.5 },
+  { id: 'spin3', type: 'spinner', x: 560, y: 320, width: 70, height: 15, rotation: 90, speed: 4 },
+  { id: 'spin4', type: 'spinner', x: 740, y: 250, width: 50, height: 15, rotation: 0, speed: -4 },
 ];
 
 const BullStampede = () => {
@@ -66,6 +100,9 @@ const BullStampede = () => {
   const [myPosition, setMyPosition] = useState({ x: 50, y: 300 });
   const [finishers, setFinishers] = useState<string[]>([]);
   const [obstacles, setObstacles] = useState<Obstacle[]>(OBSTACLES);
+  const [isSinglePlayer, setIsSinglePlayer] = useState(false);
+  const [raceTime, setRaceTime] = useState(0);
+  const raceStartTime = useRef<number>(0);
   
   const keysPressed = useRef<Set<string>>(new Set());
   const positionRef = useRef({ x: 50, y: 300 });
@@ -189,13 +226,15 @@ const BullStampede = () => {
       .eq('user_id', userId);
   };
 
-  const startGame = async () => {
-    if (!roomId || players.length < 1) return;
+  const startGame = async (singlePlayer = false) => {
+    setIsSinglePlayer(singlePlayer);
     
-    await supabase
-      .from('game_rooms')
-      .update({ status: 'playing', started_at: new Date().toISOString() })
-      .eq('id', roomId);
+    if (!singlePlayer && roomId) {
+      await supabase
+        .from('game_rooms')
+        .update({ status: 'playing', started_at: new Date().toISOString() })
+        .eq('id', roomId);
+    }
     
     startCountdown();
   };
@@ -218,9 +257,23 @@ const BullStampede = () => {
   };
 
   const startRace = () => {
+    raceStartTime.current = Date.now();
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     gameLoop();
+  };
+
+  // Check wall collision
+  const checkWallCollision = (x: number, y: number): boolean => {
+    for (const wall of MAZE_WALLS) {
+      if (x + PLAYER_SIZE/2 > wall.x && 
+          x - PLAYER_SIZE/2 < wall.x + wall.w &&
+          y + PLAYER_SIZE/2 > wall.y && 
+          y - PLAYER_SIZE/2 < wall.y + wall.h) {
+        return true;
+      }
+    }
+    return false;
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -252,28 +305,38 @@ const BullStampede = () => {
       return obs;
     }));
 
-    // Move player
+    // Update race time
+    setRaceTime(Math.floor((Date.now() - raceStartTime.current) / 1000));
+
+    // Move player with wall collision
     let dx = 0, dy = 0;
-    const speed = 5;
+    const speed = 4;
     
     if (keysPressed.current.has('arrowup') || keysPressed.current.has('w')) dy = -speed;
     if (keysPressed.current.has('arrowdown') || keysPressed.current.has('s')) dy = speed;
     if (keysPressed.current.has('arrowleft') || keysPressed.current.has('a')) dx = -speed;
     if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) dx = speed;
 
-    positionRef.current = {
-      x: Math.max(20, Math.min(CANVAS_WIDTH - 20, positionRef.current.x + dx)),
-      y: Math.max(20, Math.min(CANVAS_HEIGHT - 20, positionRef.current.y + dy))
-    };
+    const newX = Math.max(20, Math.min(CANVAS_WIDTH - 20, positionRef.current.x + dx));
+    const newY = Math.max(70, Math.min(CANVAS_HEIGHT - 40, positionRef.current.y + dy));
+
+    // Only move if no wall collision
+    if (!checkWallCollision(newX, positionRef.current.y)) {
+      positionRef.current.x = newX;
+    }
+    if (!checkWallCollision(positionRef.current.x, newY)) {
+      positionRef.current.y = newY;
+    }
     setMyPosition({ ...positionRef.current });
 
     // Check finish
     if (positionRef.current.x >= FINISH_LINE && !finishers.includes(userId || '')) {
-      const position = finishers.length + 1;
+      const finalTime = Math.floor((Date.now() - raceStartTime.current) / 1000);
       setFinishers(prev => [...prev, userId || '']);
+      setGameState('finished');
       
-      const winnings = position === 1 ? 100 : position === 2 ? 50 : position === 3 ? 25 : 10;
-      toast.success(`🏆 You finished #${position}! +${winnings} credits!`);
+      const winnings = isSinglePlayer ? Math.max(10, 100 - finalTime) : 100;
+      toast.success(`🏆 Maze Complete! Time: ${finalTime}s +${winnings} credits!`);
       
       if (userId) {
         supabase.from('user_credits')
@@ -281,28 +344,24 @@ const BullStampede = () => {
           .eq('user_id', userId);
         setCredits(c => c + winnings);
       }
+      return;
     }
 
-    // Check obstacle collisions (simplified push back)
+    // Check spinner collisions (push player away)
     obstacles.forEach(obs => {
-      if (obs.type === 'pusher') {
-        if (positionRef.current.x > obs.x - 30 && 
-            positionRef.current.x < obs.x + obs.width + 30 &&
-            positionRef.current.y > obs.y &&
-            positionRef.current.y < obs.y + obs.height) {
-          positionRef.current.x = Math.max(20, positionRef.current.x - 10);
-          setMyPosition({ ...positionRef.current });
-        }
-      }
       if (obs.type === 'spinner') {
         const dist = Math.hypot(positionRef.current.x - obs.x, positionRef.current.y - obs.y);
-        if (dist < 70) {
+        if (dist < 40) {
           const angle = Math.atan2(positionRef.current.y - obs.y, positionRef.current.x - obs.x);
-          positionRef.current.x += Math.cos(angle) * 8;
-          positionRef.current.y += Math.sin(angle) * 8;
-          positionRef.current.x = Math.max(20, Math.min(CANVAS_WIDTH - 20, positionRef.current.x));
-          positionRef.current.y = Math.max(20, Math.min(CANVAS_HEIGHT - 20, positionRef.current.y));
-          setMyPosition({ ...positionRef.current });
+          let pushX = positionRef.current.x + Math.cos(angle) * 12;
+          let pushY = positionRef.current.y + Math.sin(angle) * 12;
+          pushX = Math.max(20, Math.min(CANVAS_WIDTH - 20, pushX));
+          pushY = Math.max(70, Math.min(CANVAS_HEIGHT - 40, pushY));
+          if (!checkWallCollision(pushX, pushY)) {
+            positionRef.current.x = pushX;
+            positionRef.current.y = pushY;
+            setMyPosition({ ...positionRef.current });
+          }
         }
       }
     });
@@ -353,11 +412,20 @@ const BullStampede = () => {
         ctx.stroke();
       }
 
+      // Draw maze walls
+      ctx.fillStyle = '#1a3a5c';
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      MAZE_WALLS.forEach(wall => {
+        ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+        ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
+      });
+
       // Start zone
-      ctx.fillStyle = 'rgba(0, 255, 100, 0.2)';
-      ctx.fillRect(0, 0, 80, CANVAS_HEIGHT);
+      ctx.fillStyle = 'rgba(0, 255, 100, 0.3)';
+      ctx.fillRect(0, 50, 80, 500);
       ctx.fillStyle = '#00ff64';
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 14px Arial';
       ctx.save();
       ctx.translate(40, CANVAS_HEIGHT / 2);
       ctx.rotate(-Math.PI / 2);
@@ -366,18 +434,18 @@ const BullStampede = () => {
       ctx.restore();
 
       // Finish zone
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-      ctx.fillRect(FINISH_LINE, 0, CANVAS_WIDTH - FINISH_LINE, CANVAS_HEIGHT);
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+      ctx.fillRect(FINISH_LINE, 50, CANVAS_WIDTH - FINISH_LINE, 500);
       ctx.fillStyle = '#FFD700';
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 14px Arial';
       ctx.save();
-      ctx.translate(CANVAS_WIDTH - 25, CANVAS_HEIGHT / 2);
+      ctx.translate(CANVAS_WIDTH - 15, CANVAS_HEIGHT / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = 'center';
       ctx.fillText('FINISH 🏆', 0, 0);
       ctx.restore();
 
-      // Draw obstacles
+      // Draw spinning obstacles
       obstacles.forEach(obs => {
         ctx.save();
         
@@ -403,111 +471,83 @@ const BullStampede = () => {
           ctx.stroke();
         }
         
-        if (obs.type === 'pusher') {
-          const pushGrad = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
-          pushGrad.addColorStop(0, '#8844ff');
-          pushGrad.addColorStop(0.5, '#aa66ff');
-          pushGrad.addColorStop(1, '#8844ff');
-          ctx.fillStyle = pushGrad;
-          ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-          
-          // Warning stripes
-          ctx.fillStyle = '#ffcc00';
-          for (let i = 0; i < obs.height; i += 40) {
-            ctx.fillRect(obs.x, obs.y + i, obs.width, 10);
-          }
-        }
-        
-        if (obs.type === 'platform') {
-          ctx.fillStyle = '#00cc88';
-          ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-          ctx.strokeStyle = '#00ffaa';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
-        }
-        
-        if (obs.type === 'hammer') {
-          ctx.translate(obs.x, obs.y);
-          ctx.rotate(Math.sin((obs.rotation || 0) * Math.PI / 90) * 0.8);
-          
-          ctx.fillStyle = '#cc4400';
-          ctx.fillRect(-obs.width/2, 0, obs.width, obs.height);
-          
-          ctx.fillStyle = '#ff6600';
-          ctx.fillRect(-obs.width/2 - 10, obs.height - 30, obs.width + 20, 30);
-        }
-        
         ctx.restore();
       });
 
-      // Draw other players (simulated positions)
-      players.filter(p => p.user_id !== userId).forEach((player, i) => {
-        const pColor = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][i % 5];
+      // Draw other players (only in multiplayer)
+      if (!isSinglePlayer) {
+        players.filter(p => p.user_id !== userId).forEach((player, i) => {
+          const pColor = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][i % 5];
         
-        // Bull body
-        ctx.fillStyle = pColor;
-        ctx.beginPath();
-        ctx.ellipse(50 + Math.random() * 10, player.y, PLAYER_SIZE, PLAYER_SIZE * 0.7, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Name
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(player.username || 'Player', 50, player.y - PLAYER_SIZE);
-      });
+          ctx.fillStyle = pColor;
+          ctx.beginPath();
+          ctx.arc(50, player.y, PLAYER_SIZE, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.fillStyle = '#fff';
+          ctx.font = '10px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(player.username || 'Player', 50, player.y - PLAYER_SIZE - 5);
+        });
+      }
 
       // Draw my player (bull)
       const px = positionRef.current.x;
       const py = positionRef.current.y;
       
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.beginPath();
-      ctx.ellipse(px, py + PLAYER_SIZE, PLAYER_SIZE * 0.8, PLAYER_SIZE * 0.3, 0, 0, Math.PI * 2);
-      ctx.fill();
+      // Glow effect
+      ctx.shadowColor = '#00D4FF';
+      ctx.shadowBlur = 15;
       
       // Bull body - Cardano blue
       ctx.fillStyle = '#00D4FF';
       ctx.beginPath();
-      ctx.ellipse(px, py, PLAYER_SIZE, PLAYER_SIZE * 0.7, 0, 0, Math.PI * 2);
+      ctx.arc(px, py, PLAYER_SIZE, 0, Math.PI * 2);
       ctx.fill();
       
-      // Bull head
-      ctx.fillStyle = '#00B8E6';
-      ctx.beginPath();
-      ctx.arc(px + PLAYER_SIZE * 0.6, py, PLAYER_SIZE * 0.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.shadowBlur = 0;
       
       // Horns
       ctx.fillStyle = '#FFD700';
       ctx.beginPath();
-      ctx.moveTo(px + PLAYER_SIZE * 0.8, py - PLAYER_SIZE * 0.3);
-      ctx.lineTo(px + PLAYER_SIZE * 1.3, py - PLAYER_SIZE * 0.8);
-      ctx.lineTo(px + PLAYER_SIZE * 0.9, py - PLAYER_SIZE * 0.2);
+      ctx.moveTo(px - 8, py - PLAYER_SIZE + 5);
+      ctx.lineTo(px - 15, py - PLAYER_SIZE - 10);
+      ctx.lineTo(px - 3, py - PLAYER_SIZE + 8);
       ctx.fill();
       
       ctx.beginPath();
-      ctx.moveTo(px + PLAYER_SIZE * 0.8, py + PLAYER_SIZE * 0.3);
-      ctx.lineTo(px + PLAYER_SIZE * 1.3, py + PLAYER_SIZE * 0.8);
-      ctx.lineTo(px + PLAYER_SIZE * 0.9, py + PLAYER_SIZE * 0.2);
+      ctx.moveTo(px + 8, py - PLAYER_SIZE + 5);
+      ctx.lineTo(px + 15, py - PLAYER_SIZE - 10);
+      ctx.lineTo(px + 3, py - PLAYER_SIZE + 8);
       ctx.fill();
       
-      // Eye
+      // Eyes
       ctx.fillStyle = '#fff';
       ctx.beginPath();
-      ctx.arc(px + PLAYER_SIZE * 0.7, py - 3, 5, 0, Math.PI * 2);
+      ctx.arc(px - 5, py - 3, 4, 0, Math.PI * 2);
+      ctx.arc(px + 5, py - 3, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#000';
       ctx.beginPath();
-      ctx.arc(px + PLAYER_SIZE * 0.75, py - 3, 2, 0, Math.PI * 2);
+      ctx.arc(px - 4, py - 3, 2, 0, Math.PI * 2);
+      ctx.arc(px + 6, py - 3, 2, 0, Math.PI * 2);
       ctx.fill();
       
       // Name tag
-      ctx.fillStyle = '#00D4FF';
-      ctx.font = 'bold 14px Arial';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(username + ' (You)', px, py - PLAYER_SIZE - 10);
+      ctx.fillText(username, px, py - PLAYER_SIZE - 15);
+
+      // Timer display during race
+      if (gameState === 'racing') {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(CANVAS_WIDTH/2 - 50, 5, 100, 35);
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`⏱ ${raceTime}s`, CANVAS_WIDTH/2, 30);
+      }
 
       // Countdown overlay
       if (gameState === 'countdown') {
@@ -526,20 +566,24 @@ const BullStampede = () => {
     };
 
     render();
-  }, [obstacles, myPosition, players, gameState, countdown, username, userId]);
+  }, [obstacles, myPosition, players, gameState, countdown, username, userId, isSinglePlayer, raceTime]);
 
   const resetGame = async () => {
-    if (!roomId) return;
     setGameState('waiting');
     setFinishers([]);
+    setRaceTime(0);
+    setIsSinglePlayer(false);
+    positionRef.current = { x: 50, y: 300 };
     positionRef.current = { x: 50, y: 300 };
     setMyPosition({ x: 50, y: 300 });
     setObstacles(OBSTACLES);
     
-    await supabase
-      .from('game_rooms')
-      .update({ status: 'waiting', round_data: {} })
-      .eq('id', roomId);
+    if (roomId) {
+      await supabase
+        .from('game_rooms')
+        .update({ status: 'waiting', round_data: {} })
+        .eq('id', roomId);
+    }
   };
 
   return (
@@ -581,14 +625,20 @@ const BullStampede = () => {
             
             <div className="mt-4 flex justify-center gap-4">
               {gameState === 'waiting' && (
-                <Button size="lg" onClick={startGame} className="text-lg px-8">
-                  <Play className="w-5 h-5 mr-2" />
-                  Start Race ({players.length} player{players.length !== 1 ? 's' : ''})
-                </Button>
+                <>
+                  <Button size="lg" onClick={() => startGame(true)} className="text-lg px-6 bg-primary">
+                    <Play className="w-5 h-5 mr-2" />
+                    Solo Run
+                  </Button>
+                  <Button size="lg" onClick={() => startGame(false)} variant="outline" className="text-lg px-6">
+                    <Users className="w-5 h-5 mr-2" />
+                    Multiplayer ({players.length})
+                  </Button>
+                </>
               )}
               
               {gameState === 'finished' && (
-                <Button size="lg" onClick={resetGame} className="text-lg px-8">
+                <Button size="lg" onClick={resetGame} className="text-lg px-6">
                   <RotateCcw className="w-5 h-5 mr-2" />
                   Play Again
                 </Button>
