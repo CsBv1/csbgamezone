@@ -746,7 +746,7 @@ export default function BullWorld() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00D4FF] via-[#0095ff] to-[#00D4FF] bg-clip-text text-transparent">
             🐂 Cardano Stake Bulls World 🌍
           </h1>
-          <p className="text-[#00D4FF]/60">Explore, collect diamonds, and play 12 multiplayer games!</p>
+          <p className="text-[#00D4FF]/60">Compete with friends in Maze & Win Diamonds With Cardano Stake Bulls Community</p>
         </div>
 
         {/* Stats */}

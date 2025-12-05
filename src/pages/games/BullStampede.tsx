@@ -353,8 +353,8 @@ const BullStampede = () => {
     
     await supabase.from('maze_leaderboard').insert({
       user_id: userId,
-      username,
-      wallet_name: walletName,
+      username: username, // Save username, not wallet_name
+      wallet_name: username, // Also set wallet_name to username for display
       completion_time_ms: timeMs
     });
     
@@ -410,16 +410,27 @@ const BullStampede = () => {
       setGameState('finished');
       
       const seconds = Math.floor(completionTime / 1000);
-      const winnings = isSinglePlayer ? Math.max(10, 150 - seconds * 2) : 150;
-      toast.success(`🏆 Maze Complete! Time: ${(completionTime / 1000).toFixed(2)}s +${winnings} credits!`);
+      const diamondReward = isSinglePlayer ? Math.max(5, 50 - seconds) : 75;
+      toast.success(`🏆 Maze Complete! Time: ${(completionTime / 1000).toFixed(2)}s +${diamondReward} 💎!`);
       
       saveToLeaderboard(completionTime);
       
+      // Award diamonds to user
       if (userId) {
-        supabase.from('user_credits')
-          .update({ balance: credits + winnings })
-          .eq('user_id', userId);
-        setCredits(c => c + winnings);
+        supabase.from('user_diamonds')
+          .select('balance, total_earned')
+          .eq('user_id', userId)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              supabase.from('user_diamonds')
+                .update({ 
+                  balance: (data.balance || 0) + diamondReward,
+                  total_earned: (data.total_earned || 0) + diamondReward
+                })
+                .eq('user_id', userId);
+            }
+          });
       }
       return;
     }
@@ -749,7 +760,7 @@ const BullStampede = () => {
                     <span className="flex items-center gap-2">
                       <span className="font-bold w-5">#{i + 1}</span>
                       <span className="truncate max-w-[100px]">
-                        {entry.wallet_name || entry.username || 'Player'}
+                        {entry.username || 'Player'}
                       </span>
                     </span>
                     <span className="font-mono font-bold">{formatTime(entry.completion_time_ms)}</span>
