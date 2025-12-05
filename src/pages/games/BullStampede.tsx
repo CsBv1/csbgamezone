@@ -17,102 +17,68 @@ interface RacePlayer {
   eliminated: boolean;
 }
 
+interface LeaderboardEntry {
+  id: string;
+  username: string | null;
+  wallet_name: string | null;
+  completion_time_ms: number;
+  created_at: string;
+}
+
 const WORLD_WIDTH = 1800;
 const WORLD_HEIGHT = 1000;
 const PLAYER_SIZE = 24;
 const FINISH_LINE = 1720;
 
-// Maze walls with entry gap at start (left side around y=450-550)
+// Simplified maze walls for better performance
 const MAZE_WALLS = [
   // Outer boundary - LEFT wall with gap for entry
-  { x: 80, y: 50, w: 20, h: 380 },   // Top part of left wall
-  { x: 80, y: 570, w: 20, h: 380 },  // Bottom part of left wall (gap from 430-570)
+  { x: 80, y: 50, w: 20, h: 380 },
+  { x: 80, y: 570, w: 20, h: 380 },
   // Top and bottom walls
   { x: 80, y: 50, w: 1660, h: 20 },
   { x: 80, y: 930, w: 1660, h: 20 },
-  // Maze internal walls - simplified for better performance
-  { x: 160, y: 100, w: 20, h: 250 },
-  { x: 160, y: 450, w: 20, h: 250 },
-  { x: 160, y: 800, w: 20, h: 130 },
-  { x: 240, y: 200, w: 150, h: 20 },
-  { x: 240, y: 600, w: 150, h: 20 },
-  { x: 320, y: 350, w: 20, h: 200 },
-  { x: 320, y: 700, w: 20, h: 150 },
-  { x: 420, y: 100, w: 20, h: 200 },
-  { x: 420, y: 450, w: 150, h: 20 },
-  { x: 420, y: 750, w: 100, h: 20 },
-  { x: 500, y: 250, w: 20, h: 150 },
-  { x: 500, y: 550, w: 20, h: 150 },
-  { x: 580, y: 100, w: 20, h: 120 },
-  { x: 580, y: 350, w: 120, h: 20 },
-  { x: 580, y: 650, w: 20, h: 200 },
-  { x: 580, y: 850, w: 150, h: 20 },
-  { x: 680, y: 180, w: 20, h: 140 },
-  { x: 680, y: 500, w: 100, h: 20 },
-  { x: 680, y: 750, w: 20, h: 100 },
-  { x: 780, y: 100, w: 20, h: 100 },
-  { x: 780, y: 280, w: 100, h: 20 },
-  { x: 780, y: 400, w: 20, h: 120 },
-  { x: 780, y: 600, w: 150, h: 20 },
-  { x: 780, y: 800, w: 20, h: 130 },
-  { x: 880, y: 150, w: 20, h: 100 },
-  { x: 880, y: 350, w: 100, h: 20 },
-  { x: 880, y: 500, w: 20, h: 120 },
-  { x: 880, y: 720, w: 100, h: 20 },
-  { x: 980, y: 100, w: 20, h: 200 },
-  { x: 980, y: 450, w: 150, h: 20 },
-  { x: 980, y: 600, w: 20, h: 140 },
-  { x: 980, y: 850, w: 100, h: 20 },
-  { x: 1080, y: 250, w: 20, h: 150 },
-  { x: 1080, y: 550, w: 100, h: 20 },
-  { x: 1080, y: 750, w: 20, h: 100 },
-  { x: 1180, y: 100, w: 20, h: 120 },
-  { x: 1180, y: 320, w: 100, h: 20 },
-  { x: 1180, y: 450, w: 20, h: 120 },
-  { x: 1180, y: 650, w: 150, h: 20 },
-  { x: 1180, y: 820, w: 20, h: 110 },
-  { x: 1280, y: 180, w: 20, h: 100 },
-  { x: 1280, y: 400, w: 100, h: 20 },
-  { x: 1280, y: 550, w: 20, h: 120 },
-  { x: 1280, y: 780, w: 150, h: 20 },
-  { x: 1380, y: 100, w: 20, h: 250 },
-  { x: 1380, y: 500, w: 100, h: 20 },
-  { x: 1380, y: 650, w: 20, h: 100 },
-  { x: 1380, y: 860, w: 100, h: 20 },
-  { x: 1480, y: 300, w: 20, h: 150 },
-  { x: 1480, y: 550, w: 20, h: 120 },
-  { x: 1480, y: 750, w: 100, h: 20 },
-  { x: 1580, y: 100, w: 20, h: 150 },
-  { x: 1580, y: 350, w: 20, h: 200 },
-  { x: 1580, y: 650, w: 20, h: 150 },
-  { x: 1580, y: 880, w: 20, h: 50 },
-  // Exit gap near finish around y=450-550
-];
-
-// Floor decorations
-const FLOOR_DECORATIONS = [
-  { x: 150, y: 150, type: 'ada', size: 30 },
-  { x: 350, y: 850, type: 'ada', size: 25 },
-  { x: 550, y: 450, type: 'star', size: 20 },
-  { x: 750, y: 200, type: 'ada', size: 35 },
-  { x: 950, y: 750, type: 'star', size: 25 },
-  { x: 1150, y: 350, type: 'ada', size: 30 },
-  { x: 1350, y: 850, type: 'star', size: 20 },
-  { x: 1550, y: 450, type: 'ada', size: 25 },
-  { x: 300, y: 600, type: 'diamond', size: 22 },
-  { x: 600, y: 700, type: 'diamond', size: 28 },
-  { x: 900, y: 300, type: 'diamond', size: 24 },
-  { x: 1200, y: 500, type: 'diamond', size: 26 },
-  { x: 1500, y: 600, type: 'diamond', size: 22 },
+  // Simplified internal walls
+  { x: 180, y: 100, w: 20, h: 300 },
+  { x: 180, y: 550, w: 20, h: 300 },
+  { x: 300, y: 200, w: 200, h: 20 },
+  { x: 300, y: 700, w: 200, h: 20 },
+  { x: 400, y: 350, w: 20, h: 250 },
+  { x: 550, y: 100, w: 20, h: 200 },
+  { x: 550, y: 600, w: 20, h: 250 },
+  { x: 650, y: 300, w: 150, h: 20 },
+  { x: 650, y: 500, w: 150, h: 20 },
+  { x: 750, y: 150, w: 20, h: 120 },
+  { x: 750, y: 700, w: 20, h: 150 },
+  { x: 850, y: 250, w: 20, h: 200 },
+  { x: 850, y: 600, w: 150, h: 20 },
+  { x: 950, y: 100, w: 20, h: 150 },
+  { x: 950, y: 400, w: 200, h: 20 },
+  { x: 950, y: 750, w: 20, h: 150 },
+  { x: 1100, y: 200, w: 20, h: 150 },
+  { x: 1100, y: 550, w: 20, h: 200 },
+  { x: 1200, y: 100, w: 20, h: 100 },
+  { x: 1200, y: 350, w: 150, h: 20 },
+  { x: 1200, y: 650, w: 150, h: 20 },
+  { x: 1200, y: 800, w: 20, h: 130 },
+  { x: 1350, y: 200, w: 20, h: 250 },
+  { x: 1350, y: 550, w: 20, h: 200 },
+  { x: 1500, y: 100, w: 20, h: 200 },
+  { x: 1500, y: 450, w: 150, h: 20 },
+  { x: 1500, y: 700, w: 20, h: 150 },
+  { x: 1620, y: 300, w: 20, h: 150 },
+  { x: 1620, y: 600, w: 20, h: 150 },
 ];
 
 const BullStampede = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameLoopRef = useRef<number>(0);
+  const renderLoopRef = useRef<number>(0);
   
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("Player");
+  const [walletName, setWalletName] = useState<string | null>(null);
   const [credits, setCredits] = useState(0);
   const [bullColor, setBullColor] = useState("#00D4FF");
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -124,18 +90,22 @@ const BullStampede = () => {
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
   const [raceTime, setRaceTime] = useState(0);
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [finalTime, setFinalTime] = useState<number | null>(null);
   const raceStartTime = useRef<number>(0);
   
   const keysPressed = useRef<Set<string>>(new Set());
   const positionRef = useRef({ x: 30, y: 500 });
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+  
+  // Joystick state
+  const joystickRef = useRef<{ active: boolean; dx: number; dy: number }>({ active: false, dx: 0, dy: 0 });
+  const joystickCenterRef = useRef<{ x: number; y: number } | null>(null);
 
   // Handle window resize for responsive canvas
   useEffect(() => {
     const updateCanvasSize = () => {
       const maxWidth = Math.min(window.innerWidth - 32, 800);
-      const maxHeight = Math.min(window.innerHeight - 200, 500);
+      const maxHeight = Math.min(window.innerHeight - 280, 400);
       setCanvasSize({ width: maxWidth, height: maxHeight });
     };
     updateCanvasSize();
@@ -145,11 +115,22 @@ const BullStampede = () => {
 
   useEffect(() => {
     initUser();
+    fetchLeaderboard();
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
+      if (renderLoopRef.current) cancelAnimationFrame(renderLoopRef.current);
       leaveRoom();
     };
   }, []);
+
+  const fetchLeaderboard = async () => {
+    const { data } = await supabase
+      .from('maze_leaderboard')
+      .select('*')
+      .order('completion_time_ms', { ascending: true })
+      .limit(10);
+    if (data) setLeaderboard(data);
+  };
 
   const initUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -158,12 +139,13 @@ const BullStampede = () => {
 
     const [creditsRes, profileRes, worldPlayerRes] = await Promise.all([
       supabase.from('user_credits').select('balance').eq('user_id', user.id).single(),
-      supabase.from('profiles').select('username').eq('id', user.id).single(),
+      supabase.from('profiles').select('username, wallet_name').eq('id', user.id).single(),
       supabase.from('world_players').select('color').eq('user_id', user.id).single()
     ]);
 
     setCredits((creditsRes.data as any)?.balance || 0);
     setUsername((profileRes.data as any)?.username || 'Player');
+    setWalletName((profileRes.data as any)?.wallet_name || null);
     if (worldPlayerRes.data?.color) {
       setBullColor(worldPlayerRes.data.color);
     }
@@ -267,6 +249,7 @@ const BullStampede = () => {
 
   const startGame = async (singlePlayer = false) => {
     setIsSinglePlayer(singlePlayer);
+    setFinalTime(null);
     
     if (!singlePlayer && roomId) {
       await supabase
@@ -303,11 +286,12 @@ const BullStampede = () => {
   };
 
   const checkWallCollision = (x: number, y: number): boolean => {
+    const halfSize = PLAYER_SIZE / 2;
     for (const wall of MAZE_WALLS) {
-      if (x + PLAYER_SIZE/2 > wall.x && 
-          x - PLAYER_SIZE/2 < wall.x + wall.w &&
-          y + PLAYER_SIZE/2 > wall.y && 
-          y - PLAYER_SIZE/2 < wall.y + wall.h) {
+      if (x + halfSize > wall.x && 
+          x - halfSize < wall.x + wall.w &&
+          y + halfSize > wall.y && 
+          y - halfSize < wall.y + wall.h) {
         return true;
       }
     }
@@ -325,50 +309,70 @@ const BullStampede = () => {
     keysPressed.current.delete(e.key.toLowerCase());
   };
 
-  // Touch handlers for drag-to-move
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  // Joystick handlers
+  const handleJoystickStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (gameState !== 'racing') return;
     e.preventDefault();
-    const touch = e.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+    e.stopPropagation();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    
+    joystickCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    joystickRef.current = { active: true, dx: 0, dy: 0 };
   }, [gameState]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (gameState !== 'racing' || !lastTouchRef.current) return;
+  const handleJoystickMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!joystickRef.current.active || !joystickCenterRef.current) return;
     e.preventDefault();
-    const touch = e.touches[0];
-    const dx = (touch.clientX - lastTouchRef.current.x) * 0.8;
-    const dy = (touch.clientY - lastTouchRef.current.y) * 0.8;
+    e.stopPropagation();
     
-    const newX = Math.max(20, Math.min(WORLD_WIDTH - 20, positionRef.current.x + dx));
-    const newY = Math.max(70, Math.min(WORLD_HEIGHT - 40, positionRef.current.y + dy));
-
-    if (!checkWallCollision(newX, positionRef.current.y)) {
-      positionRef.current.x = newX;
-    }
-    if (!checkWallCollision(positionRef.current.x, newY)) {
-      positionRef.current.y = newY;
-    }
-    setMyPosition({ ...positionRef.current });
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     
-    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
-  }, [gameState]);
-
-  const handleTouchEnd = useCallback(() => {
-    touchStartRef.current = null;
-    lastTouchRef.current = null;
+    const dx = clientX - joystickCenterRef.current.x;
+    const dy = clientY - joystickCenterRef.current.y;
+    
+    const maxDist = 40;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const clampedDist = Math.min(dist, maxDist);
+    const angle = Math.atan2(dy, dx);
+    
+    joystickRef.current.dx = (Math.cos(angle) * clampedDist) / maxDist;
+    joystickRef.current.dy = (Math.sin(angle) * clampedDist) / maxDist;
   }, []);
+
+  const handleJoystickEnd = useCallback(() => {
+    joystickRef.current = { active: false, dx: 0, dy: 0 };
+    joystickCenterRef.current = null;
+  }, []);
+
+  const saveToLeaderboard = async (timeMs: number) => {
+    if (!userId) return;
+    
+    await supabase.from('maze_leaderboard').insert({
+      user_id: userId,
+      username,
+      wallet_name: walletName,
+      completion_time_ms: timeMs
+    });
+    
+    fetchLeaderboard();
+  };
 
   const gameLoop = useCallback(() => {
     if (gameState !== 'racing') return;
 
-    setRaceTime(Math.floor((Date.now() - raceStartTime.current) / 1000));
+    const now = Date.now();
+    const elapsed = now - raceStartTime.current;
+    setRaceTime(Math.floor(elapsed / 1000));
 
-    // Move player with keyboard
+    // Move player with keyboard or joystick
     let dx = 0, dy = 0;
-    const speed = 5;
+    const speed = 6;
     
+    // Keyboard input
     const up = keysPressed.current.has('arrowup') || keysPressed.current.has('w');
     const down = keysPressed.current.has('arrowdown') || keysPressed.current.has('s');
     const left = keysPressed.current.has('arrowleft') || keysPressed.current.has('a');
@@ -378,6 +382,12 @@ const BullStampede = () => {
     if (down) dy = speed;
     if (left) dx = -speed;
     if (right) dx = speed;
+    
+    // Joystick input (overrides keyboard if active)
+    if (joystickRef.current.active) {
+      dx = joystickRef.current.dx * speed;
+      dy = joystickRef.current.dy * speed;
+    }
 
     if (dx !== 0 || dy !== 0) {
       const newX = Math.max(20, Math.min(WORLD_WIDTH - 20, positionRef.current.x + dx));
@@ -394,12 +404,16 @@ const BullStampede = () => {
 
     // Check finish
     if (positionRef.current.x >= FINISH_LINE && !finishers.includes(userId || '')) {
-      const finalTime = Math.floor((Date.now() - raceStartTime.current) / 1000);
+      const completionTime = Date.now() - raceStartTime.current;
+      setFinalTime(completionTime);
       setFinishers(prev => [...prev, userId || '']);
       setGameState('finished');
       
-      const winnings = isSinglePlayer ? Math.max(10, 150 - finalTime * 2) : 150;
-      toast.success(`🏆 Maze Complete! Time: ${finalTime}s +${winnings} credits!`);
+      const seconds = Math.floor(completionTime / 1000);
+      const winnings = isSinglePlayer ? Math.max(10, 150 - seconds * 2) : 150;
+      toast.success(`🏆 Maze Complete! Time: ${(completionTime / 1000).toFixed(2)}s +${winnings} credits!`);
+      
+      saveToLeaderboard(completionTime);
       
       if (userId) {
         supabase.from('user_credits')
@@ -411,7 +425,7 @@ const BullStampede = () => {
     }
 
     gameLoopRef.current = requestAnimationFrame(gameLoop);
-  }, [gameState, finishers, userId, credits, isSinglePlayer]);
+  }, [gameState, finishers, userId, credits, isSinglePlayer, username, walletName]);
 
   useEffect(() => {
     if (gameState === 'racing') {
@@ -424,14 +438,24 @@ const BullStampede = () => {
     };
   }, [gameState, gameLoop]);
 
-  // Render canvas with camera follow
+  // Optimized render loop - separate from game logic
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const render = () => {
+    let lastRenderTime = 0;
+    const targetFPS = 30; // Limit to 30 FPS for performance
+    const frameInterval = 1000 / targetFPS;
+
+    const render = (timestamp: number) => {
+      if (timestamp - lastRenderTime < frameInterval) {
+        renderLoopRef.current = requestAnimationFrame(render);
+        return;
+      }
+      lastRenderTime = timestamp;
+
       // Camera follow player
       const cameraX = Math.max(0, Math.min(WORLD_WIDTH - canvasSize.width, positionRef.current.x - canvasSize.width / 2));
       const cameraY = Math.max(0, Math.min(WORLD_HEIGHT - canvasSize.height, positionRef.current.y - canvasSize.height / 2));
@@ -439,121 +463,55 @@ const BullStampede = () => {
       ctx.save();
       ctx.translate(-cameraX, -cameraY);
 
-      // Beautiful gradient background
-      const grad = ctx.createLinearGradient(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-      grad.addColorStop(0, '#0a1628');
-      grad.addColorStop(0.3, '#0d2847');
-      grad.addColorStop(0.6, '#0f3a5f');
-      grad.addColorStop(1, '#1a4a6f');
-      ctx.fillStyle = grad;
+      // Simple gradient background
+      ctx.fillStyle = '#0a1628';
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-      // Floor grid pattern
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
+      // Simple floor grid (reduced density)
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
       ctx.lineWidth = 1;
-      for (let x = 0; x < WORLD_WIDTH; x += 40) {
+      for (let x = 0; x < WORLD_WIDTH; x += 80) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, WORLD_HEIGHT);
         ctx.stroke();
       }
-      for (let y = 0; y < WORLD_HEIGHT; y += 40) {
+      for (let y = 0; y < WORLD_HEIGHT; y += 80) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(WORLD_WIDTH, y);
         ctx.stroke();
       }
 
-      // Floor decorations
-      FLOOR_DECORATIONS.forEach(dec => {
-        ctx.save();
-        ctx.translate(dec.x, dec.y);
-        ctx.globalAlpha = 0.3;
-        
-        if (dec.type === 'ada') {
-          ctx.strokeStyle = '#00D4FF';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(0, 0, dec.size, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(-dec.size * 0.6, -dec.size * 0.3);
-          ctx.lineTo(0, -dec.size * 0.8);
-          ctx.lineTo(dec.size * 0.6, -dec.size * 0.3);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(-dec.size * 0.4, dec.size * 0.3);
-          ctx.lineTo(dec.size * 0.4, dec.size * 0.3);
-          ctx.stroke();
-        } else if (dec.type === 'star') {
-          ctx.fillStyle = '#FFD700';
-          ctx.beginPath();
-          for (let i = 0; i < 5; i++) {
-            const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
-            const r = i % 2 === 0 ? dec.size : dec.size * 0.5;
-            if (i === 0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
-            else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
-          }
-          ctx.closePath();
-          ctx.fill();
-        } else if (dec.type === 'diamond') {
-          ctx.fillStyle = '#00FFAA';
-          ctx.beginPath();
-          ctx.moveTo(0, -dec.size);
-          ctx.lineTo(dec.size * 0.6, 0);
-          ctx.lineTo(0, dec.size);
-          ctx.lineTo(-dec.size * 0.6, 0);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.restore();
-      });
-
-      // Draw maze walls
+      // Draw maze walls (simplified rendering)
+      ctx.fillStyle = '#1a4a6f';
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
       MAZE_WALLS.forEach(wall => {
-        const wallGrad = ctx.createLinearGradient(wall.x, wall.y, wall.x + wall.w, wall.y + wall.h);
-        wallGrad.addColorStop(0, '#1a3a5c');
-        wallGrad.addColorStop(0.5, '#2a5a8c');
-        wallGrad.addColorStop(1, '#1a3a5c');
-        ctx.fillStyle = wallGrad;
         ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-        
-        ctx.strokeStyle = '#00D4FF';
-        ctx.lineWidth = 2;
         ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
-        
-        ctx.shadowColor = '#00D4FF';
-        ctx.shadowBlur = 8;
-        ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
-        ctx.shadowBlur = 0;
       });
 
-      // Start zone (before maze entry)
-      const startGrad = ctx.createLinearGradient(0, 50, 80, 50);
-      startGrad.addColorStop(0, 'rgba(0, 255, 100, 0.4)');
-      startGrad.addColorStop(1, 'rgba(0, 255, 100, 0.1)');
-      ctx.fillStyle = startGrad;
+      // Start zone
+      ctx.fillStyle = 'rgba(0, 255, 100, 0.3)';
       ctx.fillRect(0, 50, 80, WORLD_HEIGHT - 100);
       ctx.fillStyle = '#00ff64';
-      ctx.font = 'bold 16px Arial';
+      ctx.font = 'bold 18px Arial';
       ctx.save();
       ctx.translate(40, WORLD_HEIGHT / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = 'center';
-      ctx.fillText('🏁 START', 0, 0);
+      ctx.fillText('START', 0, 0);
       ctx.restore();
 
-      // Entry arrow indicator
+      // Entry arrow
       ctx.fillStyle = '#00ff64';
-      ctx.font = 'bold 24px Arial';
+      ctx.font = 'bold 30px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('→', 60, 500);
+      ctx.fillText('→', 55, 500);
 
       // Finish zone
-      const finishGrad = ctx.createLinearGradient(FINISH_LINE, 50, WORLD_WIDTH, 50);
-      finishGrad.addColorStop(0, 'rgba(255, 215, 0, 0.1)');
-      finishGrad.addColorStop(1, 'rgba(255, 215, 0, 0.4)');
-      ctx.fillStyle = finishGrad;
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
       ctx.fillRect(FINISH_LINE, 50, WORLD_WIDTH - FINISH_LINE, WORLD_HEIGHT - 100);
       ctx.fillStyle = '#FFD700';
       ctx.font = 'bold 18px Arial';
@@ -561,23 +519,20 @@ const BullStampede = () => {
       ctx.translate(WORLD_WIDTH - 30, WORLD_HEIGHT / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = 'center';
-      ctx.fillText('🏆 FINISH 🏆', 0, 0);
+      ctx.fillText('FINISH', 0, 0);
       ctx.restore();
 
-      // Draw my player (bull) with user's color
+      // Draw player (simplified bull)
       const px = positionRef.current.x;
       const py = positionRef.current.y;
       
-      // Glow effect
+      // Bull body with glow
       ctx.shadowColor = bullColor;
-      ctx.shadowBlur = 20;
-      
-      // Bull body
+      ctx.shadowBlur = 15;
       ctx.fillStyle = bullColor;
       ctx.beginPath();
       ctx.arc(px, py, PLAYER_SIZE, 0, Math.PI * 2);
       ctx.fill();
-      
       ctx.shadowBlur = 0;
       
       // Horns
@@ -587,7 +542,6 @@ const BullStampede = () => {
       ctx.lineTo(px - 18, py - PLAYER_SIZE - 12);
       ctx.lineTo(px - 4, py - PLAYER_SIZE + 8);
       ctx.fill();
-      
       ctx.beginPath();
       ctx.moveTo(px + 10, py - PLAYER_SIZE + 5);
       ctx.lineTo(px + 18, py - PLAYER_SIZE - 12);
@@ -606,13 +560,6 @@ const BullStampede = () => {
       ctx.arc(px + 7, py - 3, 2.5, 0, Math.PI * 2);
       ctx.fill();
       
-      // Nose ring
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(px, py + 8, 6, 0.2 * Math.PI, 0.8 * Math.PI);
-      ctx.stroke();
-      
       // Name tag
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 12px Arial';
@@ -621,52 +568,50 @@ const BullStampede = () => {
 
       ctx.restore();
 
-      // UI overlay (fixed position)
+      // UI overlay (fixed position) - only during racing
       if (gameState === 'racing') {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(canvasSize.width/2 - 60, 10, 120, 40);
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillRect(canvasSize.width/2 - 50, 8, 100, 32);
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 22px Arial';
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`⏱ ${raceTime}s`, canvasSize.width/2, 38);
+        ctx.fillText(`${raceTime}s`, canvasSize.width/2, 32);
         
         // Progress bar
         const progress = Math.min(1, positionRef.current.x / FINISH_LINE);
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(10, 55, canvasSize.width - 20, 8);
+        ctx.fillRect(10, 48, canvasSize.width - 20, 6);
         ctx.fillStyle = '#00D4FF';
-        ctx.fillRect(10, 55, (canvasSize.width - 20) * progress, 8);
-        
-        // Touch hint
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Drag to move', canvasSize.width/2, canvasSize.height - 10);
+        ctx.fillRect(10, 48, (canvasSize.width - 20) * progress, 6);
       }
 
       // Countdown overlay
       if (gameState === 'countdown') {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
         ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 100px Arial';
+        ctx.font = 'bold 80px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(countdown.toString(), canvasSize.width / 2, canvasSize.height / 2 + 30);
-        ctx.font = 'bold 28px Arial';
+        ctx.fillText(countdown.toString(), canvasSize.width / 2, canvasSize.height / 2 + 25);
+        ctx.font = 'bold 24px Arial';
         ctx.fillStyle = '#00D4FF';
-        ctx.fillText('GET READY!', canvasSize.width / 2, canvasSize.height / 2 - 70);
+        ctx.fillText('GET READY!', canvasSize.width / 2, canvasSize.height / 2 - 50);
       }
 
-      requestAnimationFrame(render);
+      renderLoopRef.current = requestAnimationFrame(render);
     };
 
-    render();
-  }, [myPosition, players, gameState, countdown, username, userId, isSinglePlayer, raceTime, canvasSize, bullColor]);
+    renderLoopRef.current = requestAnimationFrame(render);
+    return () => {
+      if (renderLoopRef.current) cancelAnimationFrame(renderLoopRef.current);
+    };
+  }, [myPosition, gameState, countdown, username, raceTime, canvasSize, bullColor]);
 
   const resetGame = async () => {
     setGameState('waiting');
     setFinishers([]);
     setRaceTime(0);
+    setFinalTime(null);
     setIsSinglePlayer(false);
     positionRef.current = { x: 30, y: 500 };
     setMyPosition({ x: 30, y: 500 });
@@ -679,10 +624,15 @@ const BullStampede = () => {
     }
   };
 
+  const formatTime = (ms: number) => {
+    const seconds = ms / 1000;
+    return seconds.toFixed(2) + 's';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
-        <div className="container mx-auto px-3 py-3 flex items-center justify-between">
+        <div className="container mx-auto px-3 py-2 flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={goBack}>
             <ArrowLeft className="w-4 h-4 mr-1" />
             <span className="hidden sm:inline">{getBackLabel()}</span>
@@ -697,75 +647,118 @@ const BullStampede = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-2 py-3">
-        <div className="text-center mb-3">
-          <h1 className="text-2xl sm:text-3xl font-bold gradient-gold bg-clip-text text-transparent mb-1">
+      <main className="container mx-auto px-2 py-2">
+        <div className="text-center mb-2">
+          <h1 className="text-xl sm:text-2xl font-bold gradient-gold bg-clip-text text-transparent">
             🐂 Bull Maze 🏆
           </h1>
-          <p className="text-muted-foreground text-sm">
-            Drag on screen or use arrow keys to navigate!
-          </p>
         </div>
 
-        <div className="flex flex-col items-center gap-3">
-          <Card className="p-2 bg-card/95 w-full max-w-[832px]">
-            <canvas
-              ref={canvasRef}
-              width={canvasSize.width}
-              height={canvasSize.height}
-              className="rounded-lg border-2 border-primary/30 w-full touch-none"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            />
-            
-            <div className="mt-3 flex justify-center gap-3">
-              {gameState === 'waiting' && (
-                <>
-                  <Button size="lg" onClick={() => startGame(true)} className="text-base px-5 bg-primary">
-                    <Play className="w-5 h-5 mr-2" />
-                    Solo Run
-                  </Button>
-                  <Button size="lg" onClick={() => startGame(false)} variant="outline" className="text-base px-5">
-                    <Users className="w-5 h-5 mr-2" />
-                    Multiplayer ({players.length})
-                  </Button>
-                </>
+        <div className="flex flex-col lg:flex-row items-start justify-center gap-3">
+          <div className="flex flex-col items-center gap-2 w-full lg:w-auto">
+            <Card className="p-2 bg-card/95 w-full max-w-[832px]">
+              <canvas
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                className="rounded-lg border-2 border-primary/30 w-full touch-none"
+              />
+              
+              {/* Joystick Control - only show during racing on touch devices */}
+              {gameState === 'racing' && (
+                <div className="flex justify-center mt-2">
+                  <div
+                    className="relative w-28 h-28 rounded-full bg-black/50 border-2 border-primary/50 flex items-center justify-center select-none"
+                    onTouchStart={handleJoystickStart}
+                    onTouchMove={handleJoystickMove}
+                    onTouchEnd={handleJoystickEnd}
+                    onMouseDown={handleJoystickStart}
+                    onMouseMove={handleJoystickMove}
+                    onMouseUp={handleJoystickEnd}
+                    onMouseLeave={handleJoystickEnd}
+                  >
+                    <div 
+                      className="w-12 h-12 rounded-full bg-primary/80 border-2 border-primary shadow-lg transition-transform"
+                      style={{
+                        transform: joystickRef.current.active 
+                          ? `translate(${joystickRef.current.dx * 30}px, ${joystickRef.current.dy * 30}px)` 
+                          : 'translate(0, 0)'
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="absolute top-1 text-xl">↑</span>
+                      <span className="absolute bottom-1 text-xl">↓</span>
+                      <span className="absolute left-1 text-xl">←</span>
+                      <span className="absolute right-1 text-xl">→</span>
+                    </div>
+                  </div>
+                </div>
               )}
               
-              {gameState === 'finished' && (
-                <Button size="lg" onClick={resetGame} className="text-base px-5">
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  Play Again
-                </Button>
-              )}
-            </div>
-          </Card>
+              <div className="mt-2 flex justify-center gap-2">
+                {gameState === 'waiting' && (
+                  <>
+                    <Button size="lg" onClick={() => startGame(true)} className="text-sm px-4 bg-primary">
+                      <Play className="w-4 h-4 mr-1" />
+                      Solo Run
+                    </Button>
+                    <Button size="lg" onClick={() => startGame(false)} variant="outline" className="text-sm px-4">
+                      <Users className="w-4 h-4 mr-1" />
+                      Multi ({players.length})
+                    </Button>
+                  </>
+                )}
+                
+                {gameState === 'finished' && (
+                  <Button size="lg" onClick={resetGame} className="text-sm px-4">
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Play Again
+                  </Button>
+                )}
+              </div>
+            </Card>
 
-          <Card className="p-3 bg-card/95 w-full max-w-[400px]">
+            {/* Results */}
+            {gameState === 'finished' && finalTime && (
+              <Card className="p-3 bg-card/95 w-full max-w-[400px]">
+                <h2 className="text-lg font-bold mb-2 text-center text-yellow-500">
+                  🏆 Your Time: {formatTime(finalTime)}
+                </h2>
+              </Card>
+            )}
+          </div>
+
+          {/* Leaderboard */}
+          <Card className="p-3 bg-card/95 w-full lg:w-72">
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" /> Results
+              <Trophy className="w-5 h-5 text-yellow-500" /> Fastest Times
             </h2>
             
-            {finishers.length > 0 ? (
-              <div className="space-y-1">
-                {finishers.map((fid, i) => {
-                  const player = players.find(p => p.user_id === fid);
-                  return (
-                    <div key={fid} className={`p-2 rounded ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-muted/50'}`}>
-                      <span className="font-bold">#{i + 1}</span> {player?.username || 'Player'}
-                      {fid === userId && ' (You)'}
-                    </div>
-                  );
-                })}
+            {leaderboard.length > 0 ? (
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {leaderboard.map((entry, i) => (
+                  <div 
+                    key={entry.id} 
+                    className={`p-2 rounded text-sm flex justify-between items-center ${
+                      i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 
+                      i === 1 ? 'bg-gray-400/20 text-gray-300' :
+                      i === 2 ? 'bg-orange-600/20 text-orange-400' : 
+                      'bg-muted/30'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="font-bold w-5">#{i + 1}</span>
+                      <span className="truncate max-w-[100px]">
+                        {entry.wallet_name || entry.username || 'Player'}
+                      </span>
+                    </span>
+                    <span className="font-mono font-bold">{formatTime(entry.completion_time_ms)}</span>
+                  </div>
+                ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">Complete the maze to see your time!</p>
+              <p className="text-muted-foreground text-sm">No times yet. Be the first!</p>
             )}
-
-            <div className="mt-3 p-2 bg-muted/30 rounded-lg text-xs">
-              <p className="font-bold">💰 Prizes: Faster = More credits!</p>
-            </div>
           </Card>
         </div>
       </main>

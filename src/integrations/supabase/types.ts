@@ -124,6 +124,33 @@ export type Database = {
         }
         Relationships: []
       }
+      maze_leaderboard: {
+        Row: {
+          completion_time_ms: number
+          created_at: string
+          id: string
+          user_id: string
+          username: string | null
+          wallet_name: string | null
+        }
+        Insert: {
+          completion_time_ms: number
+          created_at?: string
+          id?: string
+          user_id: string
+          username?: string | null
+          wallet_name?: string | null
+        }
+        Update: {
+          completion_time_ms?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+          username?: string | null
+          wallet_name?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
