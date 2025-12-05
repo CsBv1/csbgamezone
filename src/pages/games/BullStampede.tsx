@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, Trophy, Play, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
@@ -17,111 +17,76 @@ interface RacePlayer {
   eliminated: boolean;
 }
 
-interface Obstacle {
-  id: string;
-  type: 'spinner' | 'pusher' | 'platform' | 'hammer';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation?: number;
-  speed?: number;
-}
-
 const WORLD_WIDTH = 1800;
 const WORLD_HEIGHT = 1000;
 const PLAYER_SIZE = 24;
 const FINISH_LINE = 1720;
 
-// Larger maze for more challenge
+// Maze walls with entry gap at start (left side around y=450-550)
 const MAZE_WALLS = [
-  // Outer boundary
-  { x: 80, y: 50, w: 20, h: 900 },
+  // Outer boundary - LEFT wall with gap for entry
+  { x: 80, y: 50, w: 20, h: 380 },   // Top part of left wall
+  { x: 80, y: 570, w: 20, h: 380 },  // Bottom part of left wall (gap from 430-570)
+  // Top and bottom walls
   { x: 80, y: 50, w: 1660, h: 20 },
   { x: 80, y: 930, w: 1660, h: 20 },
-  // Maze internal walls
-  { x: 140, y: 100, w: 20, h: 300 },
-  { x: 140, y: 500, w: 20, h: 350 },
-  { x: 200, y: 200, w: 150, h: 20 },
-  { x: 200, y: 400, w: 100, h: 20 },
-  { x: 200, y: 650, w: 120, h: 20 },
-  { x: 280, y: 100, w: 20, h: 120 },
-  { x: 280, y: 500, w: 20, h: 180 },
-  { x: 280, y: 780, w: 20, h: 150 },
-  { x: 350, y: 280, w: 20, h: 200 },
-  { x: 350, y: 550, w: 150, h: 20 },
-  { x: 350, y: 700, w: 100, h: 20 },
+  // Maze internal walls - simplified for better performance
+  { x: 160, y: 100, w: 20, h: 250 },
+  { x: 160, y: 450, w: 20, h: 250 },
+  { x: 160, y: 800, w: 20, h: 130 },
+  { x: 240, y: 200, w: 150, h: 20 },
+  { x: 240, y: 600, w: 150, h: 20 },
+  { x: 320, y: 350, w: 20, h: 200 },
+  { x: 320, y: 700, w: 20, h: 150 },
   { x: 420, y: 100, w: 20, h: 200 },
-  { x: 420, y: 380, w: 100, h: 20 },
-  { x: 420, y: 800, w: 20, h: 130 },
-  { x: 500, y: 200, w: 20, h: 200 },
-  { x: 500, y: 480, w: 20, h: 100 },
-  { x: 500, y: 680, w: 150, h: 20 },
-  { x: 570, y: 100, w: 20, h: 150 },
-  { x: 570, y: 320, w: 150, h: 20 },
-  { x: 570, y: 550, w: 20, h: 150 },
-  { x: 570, y: 800, w: 200, h: 20 },
-  { x: 650, y: 180, w: 20, h: 160 },
-  { x: 650, y: 420, w: 100, h: 20 },
-  { x: 650, y: 650, w: 20, h: 170 },
-  { x: 720, y: 100, w: 20, h: 100 },
-  { x: 720, y: 500, w: 150, h: 20 },
-  { x: 720, y: 720, w: 20, h: 100 },
-  { x: 800, y: 250, w: 20, h: 200 },
-  { x: 800, y: 580, w: 20, h: 160 },
-  { x: 800, y: 850, w: 150, h: 20 },
-  { x: 880, y: 100, w: 20, h: 180 },
-  { x: 880, y: 350, w: 120, h: 20 },
-  { x: 880, y: 480, w: 20, h: 120 },
-  { x: 880, y: 700, w: 100, h: 20 },
-  { x: 960, y: 200, w: 20, h: 180 },
-  { x: 960, y: 550, w: 150, h: 20 },
-  { x: 960, y: 780, w: 20, h: 150 },
-  { x: 1040, y: 100, w: 20, h: 120 },
-  { x: 1040, y: 300, w: 100, h: 20 },
-  { x: 1040, y: 420, w: 20, h: 150 },
-  { x: 1040, y: 680, w: 150, h: 20 },
-  { x: 1040, y: 850, w: 100, h: 20 },
-  { x: 1120, y: 180, w: 20, h: 140 },
-  { x: 1120, y: 500, w: 20, h: 200 },
-  { x: 1120, y: 780, w: 20, h: 100 },
-  { x: 1200, y: 100, w: 20, h: 100 },
-  { x: 1200, y: 280, w: 150, h: 20 },
-  { x: 1200, y: 400, w: 20, h: 120 },
-  { x: 1200, y: 600, w: 100, h: 20 },
-  { x: 1200, y: 720, w: 20, h: 130 },
-  { x: 1280, y: 150, w: 20, h: 150 },
-  { x: 1280, y: 480, w: 150, h: 20 },
-  { x: 1280, y: 680, w: 20, h: 100 },
-  { x: 1280, y: 850, w: 150, h: 20 },
-  { x: 1360, y: 250, w: 20, h: 250 },
-  { x: 1360, y: 580, w: 100, h: 20 },
-  { x: 1360, y: 780, w: 20, h: 100 },
-  { x: 1440, y: 100, w: 20, h: 170 },
-  { x: 1440, y: 350, w: 20, h: 150 },
-  { x: 1440, y: 680, w: 150, h: 20 },
-  { x: 1440, y: 850, w: 20, h: 80 },
-  { x: 1520, y: 200, w: 20, h: 180 },
-  { x: 1520, y: 480, w: 100, h: 20 },
-  { x: 1520, y: 580, w: 20, h: 120 },
-  { x: 1520, y: 780, w: 150, h: 20 },
-  { x: 1600, y: 100, w: 20, h: 120 },
-  { x: 1600, y: 300, w: 20, h: 200 },
-  { x: 1600, y: 600, w: 20, h: 100 },
-  { x: 1600, y: 800, w: 20, h: 130 },
-];
-
-// Dynamic obstacles
-const OBSTACLES: Obstacle[] = [
-  { id: 'spin1', type: 'spinner', x: 240, y: 350, width: 70, height: 15, rotation: 0, speed: 3 },
-  { id: 'spin2', type: 'spinner', x: 450, y: 550, width: 70, height: 15, rotation: 45, speed: -3.5 },
-  { id: 'spin3', type: 'spinner', x: 620, y: 250, width: 80, height: 15, rotation: 90, speed: 4 },
-  { id: 'spin4', type: 'spinner', x: 780, y: 450, width: 60, height: 15, rotation: 0, speed: -4 },
-  { id: 'spin5', type: 'spinner', x: 950, y: 650, width: 70, height: 15, rotation: 30, speed: 3.5 },
-  { id: 'spin6', type: 'spinner', x: 1100, y: 350, width: 80, height: 15, rotation: 60, speed: -3 },
-  { id: 'spin7', type: 'spinner', x: 1280, y: 550, width: 70, height: 15, rotation: 0, speed: 4 },
-  { id: 'spin8', type: 'spinner', x: 1450, y: 250, width: 60, height: 15, rotation: 45, speed: -4.5 },
-  { id: 'spin9', type: 'spinner', x: 1560, y: 700, width: 70, height: 15, rotation: 90, speed: 3 },
+  { x: 420, y: 450, w: 150, h: 20 },
+  { x: 420, y: 750, w: 100, h: 20 },
+  { x: 500, y: 250, w: 20, h: 150 },
+  { x: 500, y: 550, w: 20, h: 150 },
+  { x: 580, y: 100, w: 20, h: 120 },
+  { x: 580, y: 350, w: 120, h: 20 },
+  { x: 580, y: 650, w: 20, h: 200 },
+  { x: 580, y: 850, w: 150, h: 20 },
+  { x: 680, y: 180, w: 20, h: 140 },
+  { x: 680, y: 500, w: 100, h: 20 },
+  { x: 680, y: 750, w: 20, h: 100 },
+  { x: 780, y: 100, w: 20, h: 100 },
+  { x: 780, y: 280, w: 100, h: 20 },
+  { x: 780, y: 400, w: 20, h: 120 },
+  { x: 780, y: 600, w: 150, h: 20 },
+  { x: 780, y: 800, w: 20, h: 130 },
+  { x: 880, y: 150, w: 20, h: 100 },
+  { x: 880, y: 350, w: 100, h: 20 },
+  { x: 880, y: 500, w: 20, h: 120 },
+  { x: 880, y: 720, w: 100, h: 20 },
+  { x: 980, y: 100, w: 20, h: 200 },
+  { x: 980, y: 450, w: 150, h: 20 },
+  { x: 980, y: 600, w: 20, h: 140 },
+  { x: 980, y: 850, w: 100, h: 20 },
+  { x: 1080, y: 250, w: 20, h: 150 },
+  { x: 1080, y: 550, w: 100, h: 20 },
+  { x: 1080, y: 750, w: 20, h: 100 },
+  { x: 1180, y: 100, w: 20, h: 120 },
+  { x: 1180, y: 320, w: 100, h: 20 },
+  { x: 1180, y: 450, w: 20, h: 120 },
+  { x: 1180, y: 650, w: 150, h: 20 },
+  { x: 1180, y: 820, w: 20, h: 110 },
+  { x: 1280, y: 180, w: 20, h: 100 },
+  { x: 1280, y: 400, w: 100, h: 20 },
+  { x: 1280, y: 550, w: 20, h: 120 },
+  { x: 1280, y: 780, w: 150, h: 20 },
+  { x: 1380, y: 100, w: 20, h: 250 },
+  { x: 1380, y: 500, w: 100, h: 20 },
+  { x: 1380, y: 650, w: 20, h: 100 },
+  { x: 1380, y: 860, w: 100, h: 20 },
+  { x: 1480, y: 300, w: 20, h: 150 },
+  { x: 1480, y: 550, w: 20, h: 120 },
+  { x: 1480, y: 750, w: 100, h: 20 },
+  { x: 1580, y: 100, w: 20, h: 150 },
+  { x: 1580, y: 350, w: 20, h: 200 },
+  { x: 1580, y: 650, w: 20, h: 150 },
+  { x: 1580, y: 880, w: 20, h: 50 },
+  // Exit gap near finish around y=450-550
 ];
 
 // Floor decorations
@@ -154,23 +119,23 @@ const BullStampede = () => {
   const [players, setPlayers] = useState<RacePlayer[]>([]);
   const [gameState, setGameState] = useState<'waiting' | 'countdown' | 'racing' | 'finished'>('waiting');
   const [countdown, setCountdown] = useState(3);
-  const [myPosition, setMyPosition] = useState({ x: 50, y: 500 });
+  const [myPosition, setMyPosition] = useState({ x: 30, y: 500 });
   const [finishers, setFinishers] = useState<string[]>([]);
-  const [obstacles, setObstacles] = useState<Obstacle[]>(OBSTACLES);
   const [isSinglePlayer, setIsSinglePlayer] = useState(false);
   const [raceTime, setRaceTime] = useState(0);
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
   const raceStartTime = useRef<number>(0);
   
   const keysPressed = useRef<Set<string>>(new Set());
-  const positionRef = useRef({ x: 50, y: 500 });
-  const touchControlsRef = useRef<Set<string>>(new Set());
+  const positionRef = useRef({ x: 30, y: 500 });
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
 
   // Handle window resize for responsive canvas
   useEffect(() => {
     const updateCanvasSize = () => {
       const maxWidth = Math.min(window.innerWidth - 32, 800);
-      const maxHeight = Math.min(window.innerHeight - 280, 500);
+      const maxHeight = Math.min(window.innerHeight - 200, 500);
       setCanvasSize({ width: maxWidth, height: maxHeight });
     };
     updateCanvasSize();
@@ -233,7 +198,6 @@ const BullStampede = () => {
         .eq('room_id', existingRoom.id)
         .eq('user_id', uid);
 
-      const startY = 200 + Math.random() * 600;
       await supabase
         .from('game_room_players')
         .insert({
@@ -244,14 +208,14 @@ const BullStampede = () => {
           is_active: true
         });
 
-      positionRef.current = { x: 50, y: startY };
-      setMyPosition({ x: 50, y: startY });
+      positionRef.current = { x: 30, y: 500 };
+      setMyPosition({ x: 30, y: 500 });
       subscribeToRoom(existingRoom.id);
     }
   };
 
   const subscribeToRoom = (rid: string) => {
-    const channel = supabase
+    supabase
       .channel(`stampede-${rid}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${rid}` }, (payload) => {
         if (payload.new) {
@@ -282,7 +246,7 @@ const BullStampede = () => {
         id: p.id,
         user_id: p.user_id,
         username: p.username,
-        x: p.user_id === userId ? positionRef.current.x : 50,
+        x: p.user_id === userId ? positionRef.current.x : 30,
         y: 200 + i * 100,
         finished: false,
         finish_position: null,
@@ -361,41 +325,22 @@ const BullStampede = () => {
     keysPressed.current.delete(e.key.toLowerCase());
   };
 
-  // Touch controls handlers
-  const handleTouchStart = (direction: string) => {
-    touchControlsRef.current.add(direction);
-  };
-  const handleTouchEnd = (direction: string) => {
-    touchControlsRef.current.delete(direction);
-  };
-
-  const gameLoop = useCallback(() => {
+  // Touch handlers for drag-to-move
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (gameState !== 'racing') return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+  }, [gameState]);
 
-    // Update obstacles
-    setObstacles(prev => prev.map(obs => {
-      if (obs.type === 'spinner' || obs.type === 'hammer') {
-        return { ...obs, rotation: ((obs.rotation || 0) + (obs.speed || 0)) % 360 };
-      }
-      return obs;
-    }));
-
-    setRaceTime(Math.floor((Date.now() - raceStartTime.current) / 1000));
-
-    // Move player with wall collision - combine keyboard and touch
-    let dx = 0, dy = 0;
-    const speed = 5;
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (gameState !== 'racing' || !lastTouchRef.current) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const dx = (touch.clientX - lastTouchRef.current.x) * 0.8;
+    const dy = (touch.clientY - lastTouchRef.current.y) * 0.8;
     
-    const up = keysPressed.current.has('arrowup') || keysPressed.current.has('w') || touchControlsRef.current.has('up');
-    const down = keysPressed.current.has('arrowdown') || keysPressed.current.has('s') || touchControlsRef.current.has('down');
-    const left = keysPressed.current.has('arrowleft') || keysPressed.current.has('a') || touchControlsRef.current.has('left');
-    const right = keysPressed.current.has('arrowright') || keysPressed.current.has('d') || touchControlsRef.current.has('right');
-    
-    if (up) dy = -speed;
-    if (down) dy = speed;
-    if (left) dx = -speed;
-    if (right) dx = speed;
-
     const newX = Math.max(20, Math.min(WORLD_WIDTH - 20, positionRef.current.x + dx));
     const newY = Math.max(70, Math.min(WORLD_HEIGHT - 40, positionRef.current.y + dy));
 
@@ -406,6 +351,46 @@ const BullStampede = () => {
       positionRef.current.y = newY;
     }
     setMyPosition({ ...positionRef.current });
+    
+    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+  }, [gameState]);
+
+  const handleTouchEnd = useCallback(() => {
+    touchStartRef.current = null;
+    lastTouchRef.current = null;
+  }, []);
+
+  const gameLoop = useCallback(() => {
+    if (gameState !== 'racing') return;
+
+    setRaceTime(Math.floor((Date.now() - raceStartTime.current) / 1000));
+
+    // Move player with keyboard
+    let dx = 0, dy = 0;
+    const speed = 5;
+    
+    const up = keysPressed.current.has('arrowup') || keysPressed.current.has('w');
+    const down = keysPressed.current.has('arrowdown') || keysPressed.current.has('s');
+    const left = keysPressed.current.has('arrowleft') || keysPressed.current.has('a');
+    const right = keysPressed.current.has('arrowright') || keysPressed.current.has('d');
+    
+    if (up) dy = -speed;
+    if (down) dy = speed;
+    if (left) dx = -speed;
+    if (right) dx = speed;
+
+    if (dx !== 0 || dy !== 0) {
+      const newX = Math.max(20, Math.min(WORLD_WIDTH - 20, positionRef.current.x + dx));
+      const newY = Math.max(70, Math.min(WORLD_HEIGHT - 40, positionRef.current.y + dy));
+
+      if (!checkWallCollision(newX, positionRef.current.y)) {
+        positionRef.current.x = newX;
+      }
+      if (!checkWallCollision(positionRef.current.x, newY)) {
+        positionRef.current.y = newY;
+      }
+      setMyPosition({ ...positionRef.current });
+    }
 
     // Check finish
     if (positionRef.current.x >= FINISH_LINE && !finishers.includes(userId || '')) {
@@ -425,27 +410,8 @@ const BullStampede = () => {
       return;
     }
 
-    // Check spinner collisions
-    obstacles.forEach(obs => {
-      if (obs.type === 'spinner') {
-        const dist = Math.hypot(positionRef.current.x - obs.x, positionRef.current.y - obs.y);
-        if (dist < 50) {
-          const angle = Math.atan2(positionRef.current.y - obs.y, positionRef.current.x - obs.x);
-          let pushX = positionRef.current.x + Math.cos(angle) * 15;
-          let pushY = positionRef.current.y + Math.sin(angle) * 15;
-          pushX = Math.max(20, Math.min(WORLD_WIDTH - 20, pushX));
-          pushY = Math.max(70, Math.min(WORLD_HEIGHT - 40, pushY));
-          if (!checkWallCollision(pushX, pushY)) {
-            positionRef.current.x = pushX;
-            positionRef.current.y = pushY;
-            setMyPosition({ ...positionRef.current });
-          }
-        }
-      }
-    });
-
     gameLoopRef.current = requestAnimationFrame(gameLoop);
-  }, [gameState, obstacles, finishers, userId, credits]);
+  }, [gameState, finishers, userId, credits, isSinglePlayer]);
 
   useEffect(() => {
     if (gameState === 'racing') {
@@ -482,7 +448,7 @@ const BullStampede = () => {
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-      // Beautiful floor pattern
+      // Floor grid pattern
       ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
       ctx.lineWidth = 1;
       for (let x = 0; x < WORLD_WIDTH; x += 40) {
@@ -505,7 +471,6 @@ const BullStampede = () => {
         ctx.globalAlpha = 0.3;
         
         if (dec.type === 'ada') {
-          // ADA symbol
           ctx.strokeStyle = '#00D4FF';
           ctx.lineWidth = 2;
           ctx.beginPath();
@@ -521,7 +486,6 @@ const BullStampede = () => {
           ctx.lineTo(dec.size * 0.4, dec.size * 0.3);
           ctx.stroke();
         } else if (dec.type === 'star') {
-          // Star
           ctx.fillStyle = '#FFD700';
           ctx.beginPath();
           for (let i = 0; i < 5; i++) {
@@ -533,7 +497,6 @@ const BullStampede = () => {
           ctx.closePath();
           ctx.fill();
         } else if (dec.type === 'diamond') {
-          // Diamond
           ctx.fillStyle = '#00FFAA';
           ctx.beginPath();
           ctx.moveTo(0, -dec.size);
@@ -546,7 +509,7 @@ const BullStampede = () => {
         ctx.restore();
       });
 
-      // Draw maze walls with gradient effect
+      // Draw maze walls
       MAZE_WALLS.forEach(wall => {
         const wallGrad = ctx.createLinearGradient(wall.x, wall.y, wall.x + wall.w, wall.y + wall.h);
         wallGrad.addColorStop(0, '#1a3a5c');
@@ -559,27 +522,32 @@ const BullStampede = () => {
         ctx.lineWidth = 2;
         ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
         
-        // Wall glow
         ctx.shadowColor = '#00D4FF';
         ctx.shadowBlur = 8;
         ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
         ctx.shadowBlur = 0;
       });
 
-      // Start zone
+      // Start zone (before maze entry)
       const startGrad = ctx.createLinearGradient(0, 50, 80, 50);
       startGrad.addColorStop(0, 'rgba(0, 255, 100, 0.4)');
       startGrad.addColorStop(1, 'rgba(0, 255, 100, 0.1)');
       ctx.fillStyle = startGrad;
       ctx.fillRect(0, 50, 80, WORLD_HEIGHT - 100);
       ctx.fillStyle = '#00ff64';
-      ctx.font = 'bold 18px Arial';
+      ctx.font = 'bold 16px Arial';
       ctx.save();
       ctx.translate(40, WORLD_HEIGHT / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = 'center';
-      ctx.fillText('🏁 START 🏁', 0, 0);
+      ctx.fillText('🏁 START', 0, 0);
       ctx.restore();
+
+      // Entry arrow indicator
+      ctx.fillStyle = '#00ff64';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('→', 60, 500);
 
       // Finish zone
       const finishGrad = ctx.createLinearGradient(FINISH_LINE, 50, WORLD_WIDTH, 50);
@@ -595,36 +563,6 @@ const BullStampede = () => {
       ctx.textAlign = 'center';
       ctx.fillText('🏆 FINISH 🏆', 0, 0);
       ctx.restore();
-
-      // Draw spinning obstacles
-      obstacles.forEach(obs => {
-        ctx.save();
-        
-        if (obs.type === 'spinner') {
-          ctx.translate(obs.x, obs.y);
-          ctx.rotate((obs.rotation || 0) * Math.PI / 180);
-          
-          const armGrad = ctx.createLinearGradient(-obs.width/2, 0, obs.width/2, 0);
-          armGrad.addColorStop(0, '#ff4444');
-          armGrad.addColorStop(0.5, '#ff6666');
-          armGrad.addColorStop(1, '#ff4444');
-          ctx.fillStyle = armGrad;
-          ctx.shadowColor = '#ff4444';
-          ctx.shadowBlur = 10;
-          ctx.fillRect(-obs.width/2, -obs.height/2, obs.width, obs.height);
-          
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = '#ffcc00';
-          ctx.beginPath();
-          ctx.arc(0, 0, 18, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#ff8800';
-          ctx.lineWidth = 3;
-          ctx.stroke();
-        }
-        
-        ctx.restore();
-      });
 
       // Draw my player (bull) with user's color
       const px = positionRef.current.x;
@@ -686,47 +624,52 @@ const BullStampede = () => {
       // UI overlay (fixed position)
       if (gameState === 'racing') {
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(canvasSize.width/2 - 60 + cameraX, 10 + cameraY, 120, 40);
+        ctx.fillRect(canvasSize.width/2 - 60, 10, 120, 40);
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 22px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`⏱ ${raceTime}s`, canvasSize.width/2 + cameraX, 38 + cameraY);
+        ctx.fillText(`⏱ ${raceTime}s`, canvasSize.width/2, 38);
         
-        // Mini progress bar
+        // Progress bar
         const progress = Math.min(1, positionRef.current.x / FINISH_LINE);
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(10 + cameraX, 10 + cameraY, canvasSize.width - 20, 8);
+        ctx.fillRect(10, 55, canvasSize.width - 20, 8);
         ctx.fillStyle = '#00D4FF';
-        ctx.fillRect(10 + cameraX, 10 + cameraY, (canvasSize.width - 20) * progress, 8);
+        ctx.fillRect(10, 55, (canvasSize.width - 20) * progress, 8);
+        
+        // Touch hint
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Drag to move', canvasSize.width/2, canvasSize.height - 10);
       }
 
       // Countdown overlay
       if (gameState === 'countdown') {
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(cameraX, cameraY, canvasSize.width, canvasSize.height);
+        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 100px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(countdown.toString(), canvasSize.width / 2 + cameraX, canvasSize.height / 2 + 30 + cameraY);
+        ctx.fillText(countdown.toString(), canvasSize.width / 2, canvasSize.height / 2 + 30);
         ctx.font = 'bold 28px Arial';
         ctx.fillStyle = '#00D4FF';
-        ctx.fillText('GET READY!', canvasSize.width / 2 + cameraX, canvasSize.height / 2 - 70 + cameraY);
+        ctx.fillText('GET READY!', canvasSize.width / 2, canvasSize.height / 2 - 70);
       }
 
       requestAnimationFrame(render);
     };
 
     render();
-  }, [obstacles, myPosition, players, gameState, countdown, username, userId, isSinglePlayer, raceTime, canvasSize, bullColor]);
+  }, [myPosition, players, gameState, countdown, username, userId, isSinglePlayer, raceTime, canvasSize, bullColor]);
 
   const resetGame = async () => {
     setGameState('waiting');
     setFinishers([]);
     setRaceTime(0);
     setIsSinglePlayer(false);
-    positionRef.current = { x: 50, y: 500 };
-    setMyPosition({ x: 50, y: 500 });
-    setObstacles(OBSTACLES);
+    positionRef.current = { x: 30, y: 500 };
+    setMyPosition({ x: 30, y: 500 });
     
     if (roomId) {
       await supabase
@@ -760,7 +703,7 @@ const BullStampede = () => {
             🐂 Bull Maze 🏆
           </h1>
           <p className="text-muted-foreground text-sm">
-            Race through the maze! Use arrows or touch controls.
+            Drag on screen or use arrow keys to navigate!
           </p>
         </div>
 
@@ -770,66 +713,11 @@ const BullStampede = () => {
               ref={canvasRef}
               width={canvasSize.width}
               height={canvasSize.height}
-              className="rounded-lg border-2 border-primary/30 w-full"
+              className="rounded-lg border-2 border-primary/30 w-full touch-none"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             />
-            
-            {/* Touch controls for mobile */}
-            {gameState === 'racing' && (
-              <div className="mt-3 flex justify-center">
-                <div className="grid grid-cols-3 gap-1 w-36">
-                  <div />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-12 w-12 active:bg-primary active:text-primary-foreground"
-                    onTouchStart={() => handleTouchStart('up')}
-                    onTouchEnd={() => handleTouchEnd('up')}
-                    onMouseDown={() => handleTouchStart('up')}
-                    onMouseUp={() => handleTouchEnd('up')}
-                    onMouseLeave={() => handleTouchEnd('up')}
-                  >
-                    <ChevronUp className="w-6 h-6" />
-                  </Button>
-                  <div />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-12 w-12 active:bg-primary active:text-primary-foreground"
-                    onTouchStart={() => handleTouchStart('left')}
-                    onTouchEnd={() => handleTouchEnd('left')}
-                    onMouseDown={() => handleTouchStart('left')}
-                    onMouseUp={() => handleTouchEnd('left')}
-                    onMouseLeave={() => handleTouchEnd('left')}
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-12 w-12 active:bg-primary active:text-primary-foreground"
-                    onTouchStart={() => handleTouchStart('down')}
-                    onTouchEnd={() => handleTouchEnd('down')}
-                    onMouseDown={() => handleTouchStart('down')}
-                    onMouseUp={() => handleTouchEnd('down')}
-                    onMouseLeave={() => handleTouchEnd('down')}
-                  >
-                    <ChevronDown className="w-6 h-6" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-12 w-12 active:bg-primary active:text-primary-foreground"
-                    onTouchStart={() => handleTouchStart('right')}
-                    onTouchEnd={() => handleTouchEnd('right')}
-                    onMouseDown={() => handleTouchStart('right')}
-                    onMouseUp={() => handleTouchEnd('right')}
-                    onMouseLeave={() => handleTouchEnd('right')}
-                  >
-                    <ChevronRight className="w-6 h-6" />
-                  </Button>
-                </div>
-              </div>
-            )}
             
             <div className="mt-3 flex justify-center gap-3">
               {gameState === 'waiting' && (
