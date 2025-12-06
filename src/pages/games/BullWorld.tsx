@@ -60,7 +60,10 @@ export default function BullWorld() {
   const [myColor, setMyColor] = useState('#00D4FF');
   const [username, setUsername] = useState<string | null>(null);
   const [keys, setKeys] = useState(0);
-  const [collectedDiamonds, setCollectedDiamonds] = useState(0);
+  const [collectedDiamonds, setCollectedDiamonds] = useState(() => {
+    // Load maze diamonds from sessionStorage on init
+    return parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [gameActive, setGameActive] = useState(false);
   const [nearPortal, setNearPortal] = useState<GamePortal | null>(null);
@@ -111,7 +114,20 @@ export default function BullWorld() {
     };
     init();
 
+    // Refresh collected diamonds when returning from games
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const mazeDiamonds = parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+        setCollectedDiamonds(mazeDiamonds);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Also check on mount in case we're returning from navigation
+    const mazeDiamonds = parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+    if (mazeDiamonds > 0) setCollectedDiamonds(mazeDiamonds);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (userId) leaveWorld();
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
