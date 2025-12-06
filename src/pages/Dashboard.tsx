@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users } from "lucide-react";
+import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelector } from "@/components/ColorSelector";
@@ -725,6 +725,98 @@ const Dashboard = () => {
                 Free Game Zone →
               </Button>
             </Card>
+          </div>
+
+          {/* Community Links */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-6 text-center gradient-gold bg-clip-text text-transparent">
+              🐂 Cardano Stake Bulls Community 🐂
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+              <a
+                href="https://www.cardanostakebulls.space/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="p-4 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40 hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-full bg-primary/20">
+                      <TrendingUp className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Stake Platform</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Stake your ADA with our pool and earn rewards!</p>
+                  <div className="flex items-center gap-1 text-primary text-xs mt-2">
+                    <span>Visit Site</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
+                </Card>
+              </a>
+
+              <a
+                href="https://discord.gg/FCyYYwryYW"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="p-4 bg-gradient-to-br from-indigo-500/20 to-card border-2 border-indigo-500/40 hover:border-indigo-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-full bg-indigo-500/20">
+                      <MessageCircle className="w-6 h-6 text-indigo-400" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Discord</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Join our community and chat with fellow bulls!</p>
+                  <div className="flex items-center gap-1 text-indigo-400 text-xs mt-2">
+                    <span>Join Server</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
+                </Card>
+              </a>
+
+              <a
+                href="https://cardano-bulls-shop.lovable.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="p-4 bg-gradient-to-br from-pink-500/20 to-card border-2 border-pink-500/40 hover:border-pink-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-full bg-pink-500/20">
+                      <ShoppingBag className="w-6 h-6 text-pink-400" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Merch Store</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Get exclusive Bull merchandise and apparel!</p>
+                  <div className="flex items-center gap-1 text-pink-400 text-xs mt-2">
+                    <span>Shop Now</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
+                </Card>
+              </a>
+
+              <a
+                href="https://stake-bulls-library.lovable.app/#library"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="p-4 bg-gradient-to-br from-emerald-500/20 to-card border-2 border-emerald-500/40 hover:border-emerald-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-full bg-emerald-500/20">
+                      <Book className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Library</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Browse our collection of resources and guides!</p>
+                  <div className="flex items-center gap-1 text-emerald-400 text-xs mt-2">
+                    <span>Explore</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
+                </Card>
+              </a>
+            </div>
           </div>
         </div>
       </main>
