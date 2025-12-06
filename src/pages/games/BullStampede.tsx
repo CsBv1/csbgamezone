@@ -30,44 +30,134 @@ const WORLD_HEIGHT = 1000;
 const PLAYER_SIZE = 24;
 const FINISH_LINE = 1720;
 
-// Simplified maze walls for better performance
-const MAZE_WALLS = [
-  // Outer boundary - LEFT wall with gap for entry
-  { x: 80, y: 50, w: 20, h: 380 },
-  { x: 80, y: 570, w: 20, h: 380 },
-  // Top and bottom walls
-  { x: 80, y: 50, w: 1660, h: 20 },
-  { x: 80, y: 930, w: 1660, h: 20 },
-  // Simplified internal walls
-  { x: 180, y: 100, w: 20, h: 300 },
-  { x: 180, y: 550, w: 20, h: 300 },
-  { x: 300, y: 200, w: 200, h: 20 },
-  { x: 300, y: 700, w: 200, h: 20 },
-  { x: 400, y: 350, w: 20, h: 250 },
-  { x: 550, y: 100, w: 20, h: 200 },
-  { x: 550, y: 600, w: 20, h: 250 },
-  { x: 650, y: 300, w: 150, h: 20 },
-  { x: 650, y: 500, w: 150, h: 20 },
-  { x: 750, y: 150, w: 20, h: 120 },
-  { x: 750, y: 700, w: 20, h: 150 },
-  { x: 850, y: 250, w: 20, h: 200 },
-  { x: 850, y: 600, w: 150, h: 20 },
-  { x: 950, y: 100, w: 20, h: 150 },
-  { x: 950, y: 400, w: 200, h: 20 },
-  { x: 950, y: 750, w: 20, h: 150 },
-  { x: 1100, y: 200, w: 20, h: 150 },
-  { x: 1100, y: 550, w: 20, h: 200 },
-  { x: 1200, y: 100, w: 20, h: 100 },
-  { x: 1200, y: 350, w: 150, h: 20 },
-  { x: 1200, y: 650, w: 150, h: 20 },
-  { x: 1200, y: 800, w: 20, h: 130 },
-  { x: 1350, y: 200, w: 20, h: 250 },
-  { x: 1350, y: 550, w: 20, h: 200 },
-  { x: 1500, y: 100, w: 20, h: 200 },
-  { x: 1500, y: 450, w: 150, h: 20 },
-  { x: 1500, y: 700, w: 20, h: 150 },
-  { x: 1620, y: 300, w: 20, h: 150 },
-  { x: 1620, y: 600, w: 20, h: 150 },
+// Maze level configurations
+interface MazeLevel {
+  id: number;
+  name: string;
+  bgColor: string;
+  wallColor: string;
+  glowColor: string;
+  walls: { x: number; y: number; w: number; h: number }[];
+}
+
+const MAZE_LEVELS: MazeLevel[] = [
+  {
+    id: 1,
+    name: "Classic Arena",
+    bgColor: "#0a1628",
+    wallColor: "#1a4a6f",
+    glowColor: "#00D4FF",
+    walls: [
+      { x: 80, y: 50, w: 20, h: 380 }, { x: 80, y: 570, w: 20, h: 380 },
+      { x: 80, y: 50, w: 1660, h: 20 }, { x: 80, y: 930, w: 1660, h: 20 },
+      { x: 180, y: 100, w: 20, h: 300 }, { x: 180, y: 550, w: 20, h: 300 },
+      { x: 300, y: 200, w: 200, h: 20 }, { x: 300, y: 700, w: 200, h: 20 },
+      { x: 400, y: 350, w: 20, h: 250 }, { x: 550, y: 100, w: 20, h: 200 },
+      { x: 550, y: 600, w: 20, h: 250 }, { x: 650, y: 300, w: 150, h: 20 },
+      { x: 650, y: 500, w: 150, h: 20 }, { x: 750, y: 150, w: 20, h: 120 },
+      { x: 750, y: 700, w: 20, h: 150 }, { x: 850, y: 250, w: 20, h: 200 },
+      { x: 850, y: 600, w: 150, h: 20 }, { x: 950, y: 100, w: 20, h: 150 },
+      { x: 950, y: 400, w: 200, h: 20 }, { x: 950, y: 750, w: 20, h: 150 },
+      { x: 1100, y: 200, w: 20, h: 150 }, { x: 1100, y: 550, w: 20, h: 200 },
+      { x: 1200, y: 100, w: 20, h: 100 }, { x: 1200, y: 350, w: 150, h: 20 },
+      { x: 1200, y: 650, w: 150, h: 20 }, { x: 1200, y: 800, w: 20, h: 130 },
+      { x: 1350, y: 200, w: 20, h: 250 }, { x: 1350, y: 550, w: 20, h: 200 },
+      { x: 1500, y: 100, w: 20, h: 200 }, { x: 1500, y: 450, w: 150, h: 20 },
+      { x: 1500, y: 700, w: 20, h: 150 }, { x: 1620, y: 300, w: 20, h: 150 },
+      { x: 1620, y: 600, w: 20, h: 150 },
+    ]
+  },
+  {
+    id: 2,
+    name: "Volcanic Pit",
+    bgColor: "#1a0a0a",
+    wallColor: "#6b2020",
+    glowColor: "#ff4444",
+    walls: [
+      { x: 80, y: 50, w: 20, h: 400 }, { x: 80, y: 550, w: 20, h: 400 },
+      { x: 80, y: 50, w: 1660, h: 20 }, { x: 80, y: 930, w: 1660, h: 20 },
+      { x: 200, y: 150, w: 20, h: 350 }, { x: 200, y: 600, w: 20, h: 280 },
+      { x: 350, y: 100, w: 150, h: 20 }, { x: 350, y: 800, w: 200, h: 20 },
+      { x: 450, y: 300, w: 20, h: 350 }, { x: 600, y: 150, w: 20, h: 200 },
+      { x: 600, y: 550, w: 20, h: 300 }, { x: 750, y: 200, w: 200, h: 20 },
+      { x: 750, y: 700, w: 200, h: 20 }, { x: 900, y: 300, w: 20, h: 200 },
+      { x: 900, y: 600, w: 20, h: 200 }, { x: 1050, y: 100, w: 20, h: 300 },
+      { x: 1050, y: 500, w: 20, h: 350 }, { x: 1200, y: 250, w: 150, h: 20 },
+      { x: 1200, y: 650, w: 150, h: 20 }, { x: 1350, y: 150, w: 20, h: 250 },
+      { x: 1350, y: 500, w: 20, h: 300 }, { x: 1500, y: 300, w: 150, h: 20 },
+      { x: 1500, y: 600, w: 150, h: 20 }, { x: 1600, y: 400, w: 20, h: 150 },
+    ]
+  },
+  {
+    id: 3,
+    name: "Jungle Temple",
+    bgColor: "#0a1a0a",
+    wallColor: "#2a5a2a",
+    glowColor: "#44ff44",
+    walls: [
+      { x: 80, y: 50, w: 20, h: 350 }, { x: 80, y: 600, w: 20, h: 350 },
+      { x: 80, y: 50, w: 1660, h: 20 }, { x: 80, y: 930, w: 1660, h: 20 },
+      { x: 150, y: 200, w: 100, h: 20 }, { x: 150, y: 750, w: 100, h: 20 },
+      { x: 250, y: 100, w: 20, h: 250 }, { x: 250, y: 600, w: 20, h: 250 },
+      { x: 350, y: 350, w: 150, h: 20 }, { x: 350, y: 550, w: 150, h: 20 },
+      { x: 500, y: 150, w: 20, h: 150 }, { x: 500, y: 650, w: 20, h: 200 },
+      { x: 600, y: 250, w: 100, h: 20 }, { x: 600, y: 700, w: 100, h: 20 },
+      { x: 700, y: 400, w: 20, h: 200 }, { x: 800, y: 100, w: 20, h: 250 },
+      { x: 800, y: 550, w: 20, h: 300 }, { x: 900, y: 300, w: 150, h: 20 },
+      { x: 900, y: 600, w: 150, h: 20 }, { x: 1050, y: 150, w: 20, h: 200 },
+      { x: 1050, y: 700, w: 20, h: 150 }, { x: 1150, y: 350, w: 100, h: 20 },
+      { x: 1150, y: 550, w: 100, h: 20 }, { x: 1300, y: 200, w: 20, h: 300 },
+      { x: 1300, y: 600, w: 20, h: 250 }, { x: 1450, y: 100, w: 150, h: 20 },
+      { x: 1450, y: 800, w: 150, h: 20 }, { x: 1550, y: 300, w: 20, h: 200 },
+      { x: 1550, y: 550, w: 20, h: 200 }, { x: 1650, y: 400, w: 20, h: 120 },
+    ]
+  },
+  {
+    id: 4,
+    name: "Frozen Depths",
+    bgColor: "#0a1428",
+    wallColor: "#2a4a6a",
+    glowColor: "#88ddff",
+    walls: [
+      { x: 80, y: 50, w: 20, h: 420 }, { x: 80, y: 530, w: 20, h: 420 },
+      { x: 80, y: 50, w: 1660, h: 20 }, { x: 80, y: 930, w: 1660, h: 20 },
+      { x: 180, y: 180, w: 20, h: 280 }, { x: 180, y: 580, w: 20, h: 280 },
+      { x: 280, y: 100, w: 180, h: 20 }, { x: 280, y: 820, w: 180, h: 20 },
+      { x: 400, y: 300, w: 20, h: 180 }, { x: 400, y: 520, w: 20, h: 180 },
+      { x: 520, y: 200, w: 150, h: 20 }, { x: 520, y: 720, w: 150, h: 20 },
+      { x: 650, y: 400, w: 20, h: 200 }, { x: 780, y: 150, w: 20, h: 220 },
+      { x: 780, y: 600, w: 20, h: 250 }, { x: 900, y: 350, w: 120, h: 20 },
+      { x: 900, y: 580, w: 120, h: 20 }, { x: 1020, y: 200, w: 20, h: 180 },
+      { x: 1020, y: 680, w: 20, h: 180 }, { x: 1150, y: 100, w: 20, h: 250 },
+      { x: 1150, y: 550, w: 20, h: 300 }, { x: 1280, y: 300, w: 180, h: 20 },
+      { x: 1280, y: 650, w: 180, h: 20 }, { x: 1450, y: 180, w: 20, h: 200 },
+      { x: 1450, y: 600, w: 20, h: 200 }, { x: 1580, y: 350, w: 20, h: 100 },
+      { x: 1580, y: 520, w: 20, h: 100 }, { x: 1650, y: 420, w: 20, h: 140 },
+    ]
+  },
+  {
+    id: 5,
+    name: "Golden Palace",
+    bgColor: "#1a1408",
+    wallColor: "#6b5a2a",
+    glowColor: "#ffd700",
+    walls: [
+      { x: 80, y: 50, w: 20, h: 380 }, { x: 80, y: 570, w: 20, h: 380 },
+      { x: 80, y: 50, w: 1660, h: 20 }, { x: 80, y: 930, w: 1660, h: 20 },
+      { x: 200, y: 150, w: 150, h: 20 }, { x: 200, y: 780, w: 150, h: 20 },
+      { x: 300, y: 280, w: 20, h: 200 }, { x: 300, y: 520, w: 20, h: 200 },
+      { x: 450, y: 100, w: 20, h: 200 }, { x: 450, y: 650, w: 20, h: 230 },
+      { x: 550, y: 350, w: 180, h: 20 }, { x: 550, y: 580, w: 180, h: 20 },
+      { x: 700, y: 200, w: 20, h: 150 }, { x: 700, y: 700, w: 20, h: 150 },
+      { x: 850, y: 100, w: 150, h: 20 }, { x: 850, y: 850, w: 150, h: 20 },
+      { x: 950, y: 300, w: 20, h: 250 }, { x: 950, y: 500, w: 20, h: 250 },
+      { x: 1100, y: 200, w: 100, h: 20 }, { x: 1100, y: 730, w: 100, h: 20 },
+      { x: 1200, y: 350, w: 20, h: 150 }, { x: 1200, y: 550, w: 20, h: 150 },
+      { x: 1350, y: 150, w: 20, h: 280 }, { x: 1350, y: 580, w: 20, h: 280 },
+      { x: 1480, y: 350, w: 150, h: 20 }, { x: 1480, y: 600, w: 150, h: 20 },
+      { x: 1600, y: 250, w: 20, h: 100 }, { x: 1600, y: 620, w: 20, h: 120 },
+    ]
+  }
 ];
 
 const BullStampede = () => {
@@ -92,6 +182,7 @@ const BullStampede = () => {
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [finalTime, setFinalTime] = useState<number | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<MazeLevel>(MAZE_LEVELS[0]);
   const raceStartTime = useRef<number>(0);
   
   const keysPressed = useRef<Set<string>>(new Set());
@@ -287,7 +378,7 @@ const BullStampede = () => {
 
   const checkWallCollision = (x: number, y: number): boolean => {
     const halfSize = PLAYER_SIZE / 2;
-    for (const wall of MAZE_WALLS) {
+    for (const wall of selectedLevel.walls) {
       if (x + halfSize > wall.x && 
           x - halfSize < wall.x + wall.w &&
           y + halfSize > wall.y && 
@@ -479,11 +570,15 @@ const BullStampede = () => {
       ctx.translate(-cameraX, -cameraY);
 
       // Simple gradient background
-      ctx.fillStyle = '#0a1628';
+      ctx.fillStyle = selectedLevel.bgColor;
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
       // Simple floor grid (reduced density)
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
+      const gridColor = selectedLevel.glowColor.replace('#', '');
+      const r = parseInt(gridColor.substring(0,2), 16);
+      const g = parseInt(gridColor.substring(2,4), 16);
+      const b = parseInt(gridColor.substring(4,6), 16);
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.1)`;
       ctx.lineWidth = 1;
       for (let x = 0; x < WORLD_WIDTH; x += 80) {
         ctx.beginPath();
@@ -499,10 +594,10 @@ const BullStampede = () => {
       }
 
       // Draw maze walls (simplified rendering)
-      ctx.fillStyle = '#1a4a6f';
-      ctx.strokeStyle = '#00D4FF';
+      ctx.fillStyle = selectedLevel.wallColor;
+      ctx.strokeStyle = selectedLevel.glowColor;
       ctx.lineWidth = 2;
-      MAZE_WALLS.forEach(wall => {
+      selectedLevel.walls.forEach(wall => {
         ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
         ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
       });
@@ -620,7 +715,7 @@ const BullStampede = () => {
     return () => {
       if (renderLoopRef.current) cancelAnimationFrame(renderLoopRef.current);
     };
-  }, [myPosition, gameState, countdown, username, raceTime, canvasSize, bullColor]);
+  }, [myPosition, gameState, countdown, username, raceTime, canvasSize, bullColor, selectedLevel]);
 
   const resetGame = async () => {
     setGameState('waiting');
@@ -706,6 +801,31 @@ const BullStampede = () => {
                       <span className="absolute left-1 text-xl">←</span>
                       <span className="absolute right-1 text-xl">→</span>
                     </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Level Selector - only show when waiting */}
+              {gameState === 'waiting' && (
+                <div className="mb-3">
+                  <p className="text-center text-sm text-muted-foreground mb-2">Select Maze Level:</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {MAZE_LEVELS.map((level) => (
+                      <Button
+                        key={level.id}
+                        size="sm"
+                        variant={selectedLevel.id === level.id ? "default" : "outline"}
+                        onClick={() => setSelectedLevel(level)}
+                        className="text-xs"
+                        style={{ 
+                          borderColor: level.glowColor,
+                          backgroundColor: selectedLevel.id === level.id ? level.glowColor : 'transparent',
+                          color: selectedLevel.id === level.id ? '#000' : level.glowColor
+                        }}
+                      >
+                        {level.name}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               )}
