@@ -431,6 +431,10 @@ const BullStampede = () => {
                 .eq('user_id', userId);
             }
           });
+        
+        // Store maze diamonds in sessionStorage so BullWorld can show them
+        const currentMazeDiamonds = parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+        sessionStorage.setItem('mazeDiamondsCollected', String(currentMazeDiamonds + diamondReward));
       }
       return;
     }
