@@ -5,6 +5,7 @@ import { CreditBar } from "@/components/CreditBar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Gem, Users, Gamepad2, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight } from "lucide-react";
+import { WorldChat } from "@/components/WorldChat";
 import { useToast } from "@/hooks/use-toast";
 
 interface Player {
@@ -847,6 +848,9 @@ export default function BullWorld() {
           ))}
         </div>
       </div>
+
+      {/* Global Chat */}
+      {userId && <WorldChat userId={userId} username={username} />}
     </div>
   );
 }

@@ -289,6 +289,33 @@ export type Database = {
         }
         Relationships: []
       }
+      world_chat: {
+        Row: {
+          created_at: string
+          id: string
+          is_emote: boolean
+          message: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_emote?: boolean
+          message: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_emote?: boolean
+          message?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       world_diamonds: {
         Row: {
           collected_at: string | null
@@ -401,6 +428,7 @@ export type Database = {
       }
     }
     Functions: {
+      cleanup_old_chat_messages: { Args: never; Returns: undefined }
       handle_wallet_auth: {
         Args: {
           _nickname?: string
