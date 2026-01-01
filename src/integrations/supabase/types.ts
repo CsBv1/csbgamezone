@@ -151,6 +151,75 @@ export type Database = {
         }
         Relationships: []
       }
+      maze_tournaments: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          max_players: number
+          name: string
+          prize_pool: number
+          round_number: number
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          max_players?: number
+          name: string
+          prize_pool?: number
+          round_number?: number
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          max_players?: number
+          name?: string
+          prize_pool?: number
+          round_number?: number
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      player_emotes: {
+        Row: {
+          created_at: string
+          emote: string
+          expires_at: string
+          id: string
+          user_id: string
+          username: string | null
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          emote: string
+          expires_at?: string
+          id?: string
+          user_id: string
+          username?: string | null
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          emote?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+          username?: string | null
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -183,6 +252,47 @@ export type Database = {
           wallet_name?: string | null
         }
         Relationships: []
+      }
+      tournament_players: {
+        Row: {
+          completion_time_ms: number | null
+          id: string
+          joined_at: string
+          round_eliminated: number | null
+          status: string
+          tournament_id: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          completion_time_ms?: number | null
+          id?: string
+          joined_at?: string
+          round_eliminated?: number | null
+          status?: string
+          tournament_id: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          completion_time_ms?: number | null
+          id?: string
+          joined_at?: string
+          round_eliminated?: number | null
+          status?: string
+          tournament_id?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_players_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "maze_tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_colors: {
         Row: {
@@ -284,6 +394,39 @@ export type Database = {
           balance?: number
           created_at?: string
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_nft_bonuses: {
+        Row: {
+          bulls_owned: number
+          created_at: string
+          highest_rarity: string | null
+          id: string
+          last_scanned_at: string
+          rarity_bonus: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bulls_owned?: number
+          created_at?: string
+          highest_rarity?: string | null
+          id?: string
+          last_scanned_at?: string
+          rarity_bonus?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bulls_owned?: number
+          created_at?: string
+          highest_rarity?: string | null
+          id?: string
+          last_scanned_at?: string
+          rarity_bonus?: number
           updated_at?: string
           user_id?: string
         }

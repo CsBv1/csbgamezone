@@ -5,7 +5,10 @@ import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarS
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelector } from "@/components/ColorSelector";
+import { CSBGameMaster } from "@/components/CSBGameMaster";
+import { NFTBonusDisplay } from "@/components/NFTBonusDisplay";
 import { useCardanoWallet } from "@/hooks/useCardanoWallet";
+import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -13,9 +16,14 @@ import { Leaderboard } from "@/components/Leaderboard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isConnected } = useCardanoWallet();
+  const { isConnected, connectedWallet } = useCardanoWallet();
   const { toast } = useToast();
   const [isSwapping, setIsSwapping] = useState(false);
+  
+  // NFT bonuses from wallet scan
+  const { bullsOwned, rarityBonus, highestRarity, isScanning, rescan } = useNFTBonuses(
+    connectedWallet?.address || null
+  );
 
   const games = [
     { id: "slots", name: "Bull Slots 🐂", icon: CircleDollarSign, description: "Spin the reels for jackpot rewards", color: "from-yellow-500 to-orange-500" },
@@ -820,6 +828,13 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* CSB Game Master AI Assistant */}
+      <CSBGameMaster 
+        bullsOwned={bullsOwned} 
+        rarityBonus={rarityBonus} 
+        context="Dashboard - browsing games" 
+      />
     </div>
   );
 };
