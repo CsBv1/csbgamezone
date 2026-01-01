@@ -32,9 +32,11 @@ const EMOTES = [
 interface WorldChatProps {
   userId: string;
   username: string | null;
+  playerPosition?: { x: number; y: number };
+  onEmoteSent?: (emote: string, x: number, y: number) => void;
 }
 
-export function WorldChat({ userId, username }: WorldChatProps) {
+export function WorldChat({ userId, username, playerPosition, onEmoteSent }: WorldChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [showEmotes, setShowEmotes] = useState(false);
@@ -100,6 +102,20 @@ export function WorldChat({ userId, username }: WorldChatProps) {
       message: text.trim(),
       is_emote: isEmote,
     });
+
+    // If it's an emote and we have position, broadcast to player_emotes for bubble display
+    if (isEmote && playerPosition && onEmoteSent) {
+      onEmoteSent(text.trim(), playerPosition.x, playerPosition.y);
+      
+      // Also insert into player_emotes table for other players to see
+      await supabase.from('player_emotes').insert({
+        user_id: userId,
+        username: username,
+        emote: text.trim(),
+        x: playerPosition.x,
+        y: playerPosition.y,
+      });
+    }
 
     setInputText("");
     setShowEmotes(false);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Gem, Users, Gamepad2, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight } from "lucide-react";
 import { WorldChat } from "@/components/WorldChat";
+import { EmoteBubble } from "@/components/EmoteBubble";
 import { useToast } from "@/hooks/use-toast";
 
 interface Player {
@@ -34,6 +35,15 @@ interface GamePortal {
   route: string;
   color: string;
   emoji: string;
+}
+
+interface ActiveEmote {
+  id: string;
+  emote: string;
+  x: number;
+  y: number;
+  username?: string;
+  timestamp: number;
 }
 
 // Optimized for smooth performance
@@ -68,6 +78,7 @@ export default function BullWorld() {
   const [isLoading, setIsLoading] = useState(true);
   const [gameActive, setGameActive] = useState(false);
   const [nearPortal, setNearPortal] = useState<GamePortal | null>(null);
+  const [activeEmotes, setActiveEmotes] = useState<ActiveEmote[]>([]);
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
 
@@ -207,14 +218,30 @@ export default function BullWorld() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'world_diamonds' }, fetchDiamonds)
       .subscribe();
 
+    // Subscribe to emote bubbles from other players
+    const emotesChannel = supabase
+      .channel('player-emotes-channel')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'player_emotes' },
+        (payload) => {
+          const emoteData = payload.new as any;
+          if (emoteData.user_id !== userId) {
+            addEmoteBubble(emoteData.emote, emoteData.x, emoteData.y, emoteData.username);
+          }
+        }
+      )
+      .subscribe();
+
     fetchPlayers();
     fetchDiamonds();
 
     return () => {
       supabase.removeChannel(playersChannel);
       supabase.removeChannel(diamondsChannel);
+      supabase.removeChannel(emotesChannel);
     };
-  }, [gameActive]);
+  }, [gameActive, userId]);
 
   const fetchPlayers = async () => {
     const { data } = await supabase.from('world_players').select('*').eq('is_online', true);
@@ -225,6 +252,40 @@ export default function BullWorld() {
     const { data } = await supabase.from('world_diamonds').select('*').is('collected_by', null);
     if (data) setDiamonds(data as WorldDiamond[]);
   };
+
+  // Add emote bubble with auto-cleanup
+  const addEmoteBubble = (emote: string, x: number, y: number, emoterUsername?: string) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    const newEmote: ActiveEmote = {
+      id,
+      emote,
+      x,
+      y,
+      username: emoterUsername || undefined,
+      timestamp: Date.now(),
+    };
+    
+    setActiveEmotes(prev => [...prev, newEmote]);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      setActiveEmotes(prev => prev.filter(e => e.id !== id));
+    }, 3000);
+  };
+
+  // Handle emote sent from chat
+  const handleEmoteSent = (emote: string, x: number, y: number) => {
+    addEmoteBubble(emote, x, y, username || undefined);
+  };
+
+  // Clean up old emotes periodically
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      setActiveEmotes(prev => prev.filter(e => now - e.timestamp < 3000));
+    }, 1000);
+    return () => clearInterval(cleanup);
+  }, []);
 
   // Movement controls
   useEffect(() => {
@@ -850,7 +911,25 @@ export default function BullWorld() {
       </div>
 
       {/* Global Chat */}
-      {userId && <WorldChat userId={userId} username={username} />}
+      {userId && (
+        <WorldChat 
+          userId={userId} 
+          username={username} 
+          playerPosition={myPosition}
+          onEmoteSent={handleEmoteSent}
+        />
+      )}
+
+      {/* Floating Emote Bubbles */}
+      {activeEmotes.map(emote => (
+        <EmoteBubble
+          key={emote.id}
+          emote={emote.emote}
+          x={emote.x}
+          y={emote.y}
+          username={emote.username}
+        />
+      ))}
     </div>
   );
 }
