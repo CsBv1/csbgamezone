@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, Trophy, Play, RotateCcw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Users, Trophy, Play, RotateCcw, Medal } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
-
+import { TournamentLobby } from "@/components/TournamentLobby";
+import { TournamentBracket } from "@/components/TournamentBracket";
 interface RacePlayer {
   id: string;
   user_id: string;
@@ -183,6 +185,10 @@ const BullStampede = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [finalTime, setFinalTime] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<MazeLevel>(MAZE_LEVELS[0]);
+  const [activeTab, setActiveTab] = useState<"freeplay" | "tournament">("freeplay");
+  const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
+  const [tournamentPlayers, setTournamentPlayers] = useState<any[]>([]);
+  const [currentTournamentRound, setCurrentTournamentRound] = useState(1);
   const raceStartTime = useRef<number>(0);
   
   const keysPressed = useRef<Set<string>>(new Set());
@@ -739,6 +745,114 @@ const BullStampede = () => {
     return seconds.toFixed(2) + 's';
   };
 
+  const handleJoinTournament = (tournamentId: string) => {
+    setActiveTournamentId(tournamentId);
+    // Reset game state for tournament play
+    positionRef.current = { x: 30, y: 500 };
+    setMyPosition({ x: 30, y: 500 });
+    setGameState('waiting');
+    setFinalTime(null);
+  };
+
+  const handleStartTournamentRound = async (tournamentId: string, roundNumber: number) => {
+    setActiveTournamentId(tournamentId);
+    setCurrentTournamentRound(roundNumber);
+    
+    // Fetch tournament players
+    const { data } = await supabase
+      .from('tournament_players')
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'active');
+    
+    if (data) setTournamentPlayers(data);
+    
+    // Start the race
+    startGame(false);
+  };
+
+  const submitTournamentTime = async () => {
+    if (!activeTournamentId || !userId || !finalTime) return;
+
+    // Update player's completion time
+    await supabase
+      .from('tournament_players')
+      .update({ completion_time_ms: finalTime })
+      .eq('tournament_id', activeTournamentId)
+      .eq('user_id', userId);
+
+    // Fetch all player times
+    const { data: allPlayers } = await supabase
+      .from('tournament_players')
+      .select('*')
+      .eq('tournament_id', activeTournamentId)
+      .eq('status', 'active');
+
+    if (allPlayers) {
+      setTournamentPlayers(allPlayers);
+
+      // Check if all players have finished
+      const allFinished = allPlayers.every(p => p.completion_time_ms !== null);
+      
+      if (allFinished) {
+        // Sort by time and eliminate slowest half
+        const sorted = [...allPlayers].sort((a, b) => 
+          (a.completion_time_ms || Infinity) - (b.completion_time_ms || Infinity)
+        );
+        
+        const halfPoint = Math.ceil(sorted.length / 2);
+        const eliminated = sorted.slice(halfPoint);
+
+        // Mark eliminated players
+        for (const player of eliminated) {
+          await supabase
+            .from('tournament_players')
+            .update({ 
+              status: 'eliminated',
+              round_eliminated: currentTournamentRound
+            })
+            .eq('id', player.id);
+        }
+
+        // Check if tournament is over (only 1 player left)
+        const remaining = sorted.length - eliminated.length;
+        if (remaining <= 1) {
+          // End tournament, award prizes
+          await supabase
+            .from('maze_tournaments')
+            .update({ status: 'finished', ended_at: new Date().toISOString() })
+            .eq('id', activeTournamentId);
+          
+          toast.success('🏆 Tournament Complete!');
+        } else {
+          // Next round
+          const nextRound = currentTournamentRound + 1;
+          await supabase
+            .from('maze_tournaments')
+            .update({ round_number: nextRound })
+            .eq('id', activeTournamentId);
+          
+          // Reset completion times for next round
+          await supabase
+            .from('tournament_players')
+            .update({ completion_time_ms: null })
+            .eq('tournament_id', activeTournamentId)
+            .eq('status', 'active');
+
+          setCurrentTournamentRound(nextRound);
+          toast.success(`Round ${currentTournamentRound} complete! Next round starting...`);
+        }
+      }
+    }
+  };
+
+  // Submit time when tournament game finishes
+  useEffect(() => {
+    if (gameState === 'finished' && activeTournamentId && finalTime) {
+      submitTournamentTime();
+    }
+  }, [gameState, activeTournamentId, finalTime]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
@@ -764,138 +878,171 @@ const BullStampede = () => {
           </h1>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-start justify-center gap-3">
-          <div className="flex flex-col items-center gap-2 w-full lg:w-auto">
-            <Card className="p-2 bg-card/95 w-full max-w-[832px]">
-              <canvas
-                ref={canvasRef}
-                width={canvasSize.width}
-                height={canvasSize.height}
-                className="rounded-lg border-2 border-primary/30 w-full touch-none"
+        {/* Mode Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-4">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="freeplay" className="flex items-center gap-2">
+              <Play className="w-4 h-4" />
+              Free Play
+            </TabsTrigger>
+            <TabsTrigger value="tournament" className="flex items-center gap-2">
+              <Medal className="w-4 h-4" />
+              Tournament
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tournament" className="mt-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <TournamentLobby 
+                onJoinTournament={handleJoinTournament}
+                onStartRound={handleStartTournamentRound}
               />
-              
-              {/* Joystick Control - only show during racing on touch devices */}
-              {gameState === 'racing' && (
-                <div className="flex justify-center mt-2">
-                  <div
-                    className="relative w-28 h-28 rounded-full bg-black/50 border-2 border-primary/50 flex items-center justify-center select-none"
-                    onTouchStart={handleJoystickStart}
-                    onTouchMove={handleJoystickMove}
-                    onTouchEnd={handleJoystickEnd}
-                    onMouseDown={handleJoystickStart}
-                    onMouseMove={handleJoystickMove}
-                    onMouseUp={handleJoystickEnd}
-                    onMouseLeave={handleJoystickEnd}
-                  >
-                    <div 
-                      className="w-12 h-12 rounded-full bg-primary/80 border-2 border-primary shadow-lg transition-transform"
-                      style={{
-                        transform: joystickRef.current.active 
-                          ? `translate(${joystickRef.current.dx * 30}px, ${joystickRef.current.dy * 30}px)` 
-                          : 'translate(0, 0)'
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="absolute top-1 text-xl">↑</span>
-                      <span className="absolute bottom-1 text-xl">↓</span>
-                      <span className="absolute left-1 text-xl">←</span>
-                      <span className="absolute right-1 text-xl">→</span>
-                    </div>
-                  </div>
-                </div>
+              {activeTournamentId && tournamentPlayers.length > 0 && (
+                <TournamentBracket
+                  players={tournamentPlayers}
+                  currentRound={currentTournamentRound}
+                  totalRounds={Math.ceil(Math.log2(tournamentPlayers.length))}
+                  prizePool={1000}
+                />
               )}
-              
-              {/* Level Selector - only show when waiting */}
-              {gameState === 'waiting' && (
-                <div className="mb-3">
-                  <p className="text-center text-sm text-muted-foreground mb-2">Select Maze Level:</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {MAZE_LEVELS.map((level) => (
-                      <Button
-                        key={level.id}
-                        size="sm"
-                        variant={selectedLevel.id === level.id ? "default" : "outline"}
-                        onClick={() => setSelectedLevel(level)}
-                        className="text-xs"
-                        style={{ 
-                          borderColor: level.glowColor,
-                          backgroundColor: selectedLevel.id === level.id ? level.glowColor : 'transparent',
-                          color: selectedLevel.id === level.id ? '#000' : level.glowColor
-                        }}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="freeplay" className="mt-4">
+            <div className="flex flex-col lg:flex-row items-start justify-center gap-3">
+              <div className="flex flex-col items-center gap-2 w-full lg:w-auto">
+                <Card className="p-2 bg-card/95 w-full max-w-[832px]">
+                  <canvas
+                    ref={canvasRef}
+                    width={canvasSize.width}
+                    height={canvasSize.height}
+                    className="rounded-lg border-2 border-primary/30 w-full touch-none"
+                  />
+                  
+                  {/* Joystick Control - only show during racing on touch devices */}
+                  {gameState === 'racing' && (
+                    <div className="flex justify-center mt-2">
+                      <div
+                        className="relative w-28 h-28 rounded-full bg-black/50 border-2 border-primary/50 flex items-center justify-center select-none"
+                        onTouchStart={handleJoystickStart}
+                        onTouchMove={handleJoystickMove}
+                        onTouchEnd={handleJoystickEnd}
+                        onMouseDown={handleJoystickStart}
+                        onMouseMove={handleJoystickMove}
+                        onMouseUp={handleJoystickEnd}
+                        onMouseLeave={handleJoystickEnd}
                       >
-                        {level.name}
+                        <div 
+                          className="w-12 h-12 rounded-full bg-primary/80 border-2 border-primary shadow-lg transition-transform"
+                          style={{
+                            transform: joystickRef.current.active 
+                              ? `translate(${joystickRef.current.dx * 30}px, ${joystickRef.current.dy * 30}px)` 
+                              : 'translate(0, 0)'
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="absolute top-1 text-xl">↑</span>
+                          <span className="absolute bottom-1 text-xl">↓</span>
+                          <span className="absolute left-1 text-xl">←</span>
+                          <span className="absolute right-1 text-xl">→</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Level Selector - only show when waiting */}
+                  {gameState === 'waiting' && (
+                    <div className="mb-3">
+                      <p className="text-center text-sm text-muted-foreground mb-2">Select Maze Level:</p>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {MAZE_LEVELS.map((level) => (
+                          <Button
+                            key={level.id}
+                            size="sm"
+                            variant={selectedLevel.id === level.id ? "default" : "outline"}
+                            onClick={() => setSelectedLevel(level)}
+                            className="text-xs"
+                            style={{ 
+                              borderColor: level.glowColor,
+                              backgroundColor: selectedLevel.id === level.id ? level.glowColor : 'transparent',
+                              color: selectedLevel.id === level.id ? '#000' : level.glowColor
+                            }}
+                          >
+                            {level.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-2 flex justify-center gap-2">
+                    {gameState === 'waiting' && (
+                      <>
+                        <Button size="lg" onClick={() => startGame(true)} className="text-sm px-4 bg-primary">
+                          <Play className="w-4 h-4 mr-1" />
+                          Solo Run
+                        </Button>
+                        <Button size="lg" onClick={() => startGame(false)} variant="outline" className="text-sm px-4">
+                          <Users className="w-4 h-4 mr-1" />
+                          Multi ({players.length})
+                        </Button>
+                      </>
+                    )}
+                    
+                    {gameState === 'finished' && (
+                      <Button size="lg" onClick={resetGame} className="text-sm px-4">
+                        <RotateCcw className="w-4 h-4 mr-1" />
+                        Play Again
                       </Button>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Results */}
+                {gameState === 'finished' && finalTime && (
+                  <Card className="p-3 bg-card/95 w-full max-w-[400px]">
+                    <h2 className="text-lg font-bold mb-2 text-center text-yellow-500">
+                      🏆 Your Time: {formatTime(finalTime)}
+                    </h2>
+                  </Card>
+                )}
+              </div>
+
+              {/* Leaderboard */}
+              <Card className="p-3 bg-card/95 w-full lg:w-72">
+                <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-500" /> Fastest Times
+                </h2>
+                
+                {leaderboard.length > 0 ? (
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {leaderboard.map((entry, i) => (
+                      <div 
+                        key={entry.id} 
+                        className={`p-2 rounded text-sm flex justify-between items-center ${
+                          i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 
+                          i === 1 ? 'bg-gray-400/20 text-gray-300' :
+                          i === 2 ? 'bg-orange-600/20 text-orange-400' : 
+                          'bg-muted/30'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="font-bold w-5">#{i + 1}</span>
+                          <span className="truncate max-w-[100px]">
+                            {entry.username || 'Player'}
+                          </span>
+                        </span>
+                        <span className="font-mono font-bold">{formatTime(entry.completion_time_ms)}</span>
+                      </div>
                     ))}
                   </div>
-                </div>
-              )}
-              
-              <div className="mt-2 flex justify-center gap-2">
-                {gameState === 'waiting' && (
-                  <>
-                    <Button size="lg" onClick={() => startGame(true)} className="text-sm px-4 bg-primary">
-                      <Play className="w-4 h-4 mr-1" />
-                      Solo Run
-                    </Button>
-                    <Button size="lg" onClick={() => startGame(false)} variant="outline" className="text-sm px-4">
-                      <Users className="w-4 h-4 mr-1" />
-                      Multi ({players.length})
-                    </Button>
-                  </>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No times yet. Be the first!</p>
                 )}
-                
-                {gameState === 'finished' && (
-                  <Button size="lg" onClick={resetGame} className="text-sm px-4">
-                    <RotateCcw className="w-4 h-4 mr-1" />
-                    Play Again
-                  </Button>
-                )}
-              </div>
-            </Card>
-
-            {/* Results */}
-            {gameState === 'finished' && finalTime && (
-              <Card className="p-3 bg-card/95 w-full max-w-[400px]">
-                <h2 className="text-lg font-bold mb-2 text-center text-yellow-500">
-                  🏆 Your Time: {formatTime(finalTime)}
-                </h2>
               </Card>
-            )}
-          </div>
-
-          {/* Leaderboard */}
-          <Card className="p-3 bg-card/95 w-full lg:w-72">
-            <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" /> Fastest Times
-            </h2>
-            
-            {leaderboard.length > 0 ? (
-              <div className="space-y-1 max-h-64 overflow-y-auto">
-                {leaderboard.map((entry, i) => (
-                  <div 
-                    key={entry.id} 
-                    className={`p-2 rounded text-sm flex justify-between items-center ${
-                      i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 
-                      i === 1 ? 'bg-gray-400/20 text-gray-300' :
-                      i === 2 ? 'bg-orange-600/20 text-orange-400' : 
-                      'bg-muted/30'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-bold w-5">#{i + 1}</span>
-                      <span className="truncate max-w-[100px]">
-                        {entry.username || 'Player'}
-                      </span>
-                    </span>
-                    <span className="font-mono font-bold">{formatTime(entry.completion_time_ms)}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">No times yet. Be the first!</p>
-            )}
-          </Card>
-        </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
