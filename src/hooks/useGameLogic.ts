@@ -8,6 +8,8 @@ export const useGameLogic = (gameName: string) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialCredits, setInitialCredits] = useState(0);
+  const [rarityBonus, setRarityBonus] = useState(0);
+  const [bullsOwned, setBullsOwned] = useState(0);
 
   useEffect(() => {
     loadUserData();
@@ -42,6 +44,18 @@ export const useGameLogic = (gameName: string) => {
 
       if (diamondsData as any) {
         setDiamonds((diamondsData as any).balance);
+      }
+
+      // Load NFT bonuses
+      const { data: nftData } = await supabase
+        .from('user_nft_bonuses' as any)
+        .select('rarity_bonus, bulls_owned')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (nftData) {
+        setRarityBonus(Number((nftData as any).rarity_bonus) || 0);
+        setBullsOwned((nftData as any).bulls_owned || 0);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -87,8 +101,12 @@ export const useGameLogic = (gameName: string) => {
 
       if (!currentData) return;
 
-      const newBalance = (currentData as any).balance + amount;
-      const newTotal = (currentData as any).total_earned + amount;
+      // Apply NFT rarity bonus to diamond earnings
+      const bonusMultiplier = 1 + (rarityBonus / 100);
+      const finalAmount = Math.floor(amount * bonusMultiplier);
+
+      const newBalance = (currentData as any).balance + finalAmount;
+      const newTotal = (currentData as any).total_earned + finalAmount;
 
       const { error } = await supabase
         .from('user_diamonds' as any)
@@ -109,11 +127,12 @@ export const useGameLogic = (gameName: string) => {
           user_id: userId,
           game_name: gameName,
           result: 'win',
-          diamonds_won: amount,
-          multiplier: multiplier
+          diamonds_won: finalAmount,
+          multiplier: multiplier * bonusMultiplier
         });
 
-      toast.success(`🐂 Won ${amount} diamonds!`);
+      const bonusText = rarityBonus > 0 ? ` (+${rarityBonus}% NFT bonus!)` : '';
+      toast.success(`🐂 Won ${finalAmount} diamonds!${bonusText}`);
     } catch (error) {
       console.error('Error awarding diamonds:', error);
     }
@@ -131,7 +150,11 @@ export const useGameLogic = (gameName: string) => {
 
       if (!currentData) return;
 
-      const newBalance = (currentData as any).balance + amount;
+      // Apply NFT bonus to credit winnings too
+      const bonusMultiplier = 1 + (rarityBonus / 100);
+      const finalAmount = Math.floor(amount * bonusMultiplier);
+
+      const newBalance = (currentData as any).balance + finalAmount;
 
       const { error } = await supabase
         .from('user_credits' as any)
@@ -153,7 +176,8 @@ export const useGameLogic = (gameName: string) => {
           diamonds_won: 0
         });
 
-      toast.success(`💰 Won ${amount} credits!`);
+      const bonusText = rarityBonus > 0 ? ` (+${rarityBonus}% NFT bonus!)` : '';
+      toast.success(`💰 Won ${finalAmount} credits!${bonusText}`);
     } catch (error) {
       console.error('Error awarding credits:', error);
     }
@@ -212,6 +236,8 @@ export const useGameLogic = (gameName: string) => {
     diamonds,
     loading,
     initialCredits,
+    rarityBonus,
+    bullsOwned,
     deductCredits,
     awardCredits,
     awardDiamonds,
