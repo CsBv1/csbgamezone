@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle } from "lucide-react";
+import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle, Key } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelector } from "@/components/ColorSelector";
@@ -757,6 +757,27 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">Stake your ADA with our pool and earn rewards!</p>
                   <div className="flex items-center gap-1 text-primary text-xs mt-2">
                     <span>Visit Site</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
+                </Card>
+              </a>
+
+              <a
+                href="https://www.jpg.store/collection/cardanostakebulls?tab=items"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-card border-2 border-amber-500/40 hover:border-amber-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-full bg-amber-500/20">
+                      <Key className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Mint Bull Key 🔑</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Get your CSB Bulls on JPG.Store!</p>
+                  <div className="flex items-center gap-1 text-amber-400 text-xs mt-2">
+                    <span>Mint Now</span>
                     <ExternalLink className="w-3 h-3" />
                   </div>
                 </Card>
