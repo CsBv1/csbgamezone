@@ -312,16 +312,8 @@ serve(async (req) => {
 
           console.log("*** FOUND CSB BULL ***:", assetName, "qty:", quantity);
 
-          // Determine rarity from name
-          let rarity = "common";
-          const lowerName = assetName.toLowerCase();
-          if (lowerName.includes("legendary") || lowerName.includes("gold") || lowerName.includes("1/1")) {
-            rarity = "legendary";
-          } else if (lowerName.includes("epic") || lowerName.includes("diamond") || lowerName.includes("mythic")) {
-            rarity = "epic";
-          } else if (lowerName.includes("rare") || lowerName.includes("silver") || lowerName.includes("special")) {
-            rarity = "rare";
-          }
+          // All CSB Bulls from this collection are Legendary by default
+          const rarity = "legendary";
 
           const bonus = RARITY_BONUSES[rarity] || 0;
           if (bonus > highestBonus) {
