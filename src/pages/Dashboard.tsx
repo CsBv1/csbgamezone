@@ -735,14 +735,36 @@ const Dashboard = () => {
             </Card>
           </div>
 
+          {/* CSB Game Master Section */}
+          <div className="mt-8">
+            <Card className="p-6 bg-gradient-to-br from-purple-500/20 to-card border-2 border-purple-500/40 max-w-2xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-full bg-purple-500/20">
+                    <Sparkles className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">🤖 CSB Game Master</h3>
+                    <p className="text-sm text-muted-foreground">Your AI assistant for tips, strategies & bonuses!</p>
+                  </div>
+                </div>
+              </div>
+              <CSBGameMaster 
+                bullsOwned={bullsOwned} 
+                rarityBonus={rarityBonus} 
+                context="Dashboard - browsing games" 
+              />
+            </Card>
+          </div>
+
           {/* Community Links */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-6 text-center gradient-gold bg-clip-text text-transparent">
               🐂 Cardano Stake Bulls Community 🐂
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
               <a
-                href="https://www.cardanostakebulls.space/"
+                href="https://arena2.cardanostakebulls.space/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group"
@@ -805,7 +827,7 @@ const Dashboard = () => {
               </a>
 
               <a
-                href="https://cardano-bulls-shop.lovable.app/"
+                href="https://csbmerch.lovable.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group"
@@ -826,7 +848,7 @@ const Dashboard = () => {
               </a>
 
               <a
-                href="https://stake-bulls-library.lovable.app/#library"
+                href="https://csbpubliclibrary.lovable.app/#library"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group"
@@ -849,13 +871,6 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
-
-      {/* CSB Game Master AI Assistant */}
-      <CSBGameMaster 
-        bullsOwned={bullsOwned} 
-        rarityBonus={rarityBonus} 
-        context="Dashboard - browsing games" 
-      />
     </div>
   );
 };
