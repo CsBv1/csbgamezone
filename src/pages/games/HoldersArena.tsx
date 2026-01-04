@@ -1,13 +1,85 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Crown, Gem, Zap, Target, Coins } from "lucide-react";
+import { ArrowLeft, Crown, Sword, Shield, Key, Flame, Skull, Heart, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreditBar } from "@/components/CreditBar";
 
-type GameType = 'menu' | 'gem-tap' | 'bull-slots' | 'lucky-pick';
+type GameType = 'menu' | 'bull-quest' | 'battle-arena' | 'treasure-hunt';
+
+// Sound effects using Web Audio API
+const playSound = (type: 'hit' | 'collect' | 'win' | 'lose' | 'click' | 'power') => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    switch(type) {
+      case 'hit':
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+        break;
+      case 'collect':
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.15);
+        break;
+      case 'win':
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(1047, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.5);
+        break;
+      case 'lose':
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+        break;
+      case 'click':
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.05);
+        break;
+      case 'power':
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+        break;
+    }
+  } catch (e) {
+    // Audio not supported
+  }
+};
+
+// Haptic feedback
+const vibrate = (pattern: number | number[]) => {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(pattern);
+  }
+};
 
 export default function HoldersArena() {
   const navigate = useNavigate();
@@ -17,11 +89,6 @@ export default function HoldersArena() {
   const [isLoading, setIsLoading] = useState(true);
   const [bullsOwned, setBullsOwned] = useState(0);
   const [currentGame, setCurrentGame] = useState<GameType>('menu');
-  
-  // Game states
-  const [score, setScore] = useState(0);
-  const [gameActive, setGameActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
 
   useEffect(() => {
     const init = async () => {
@@ -57,37 +124,46 @@ export default function HoldersArena() {
     init();
   }, []);
 
-  const awardDiamonds = async (amount: number) => {
+  const awardKeys = async (amount: number) => {
     if (!userId || amount <= 0) return;
     
     const { data: current } = await supabase
-      .from('user_diamonds')
-      .select('balance, total_earned')
+      .from('user_keys')
+      .select('balance')
       .eq('user_id', userId)
       .single();
     
     if (current) {
       await supabase
-        .from('user_diamonds')
-        .update({ 
-          balance: ((current as any).balance || 0) + amount,
-          total_earned: ((current as any).total_earned || 0) + amount
-        })
+        .from('user_keys')
+        .update({ balance: ((current as any).balance || 0) + amount })
         .eq('user_id', userId);
-      
-      toast({ title: `+${amount} 💎`, description: "Diamonds added!" });
+    } else {
+      await supabase
+        .from('user_keys')
+        .insert({ user_id: userId, balance: amount });
     }
+    
+    playSound('win');
+    vibrate([100, 50, 100, 50, 200]);
+    toast({ title: `+${amount} 🔑`, description: "Keys earned!" });
   };
 
   const goBack = () => {
+    playSound('click');
+    vibrate(30);
     if (currentGame !== 'menu') {
       setCurrentGame('menu');
-      setGameActive(false);
-      setScore(0);
     } else {
       const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
       navigate(fromBullWorld ? '/games/bull-world' : '/');
     }
+  };
+
+  const selectGame = (game: GameType) => {
+    playSound('click');
+    vibrate(50);
+    setCurrentGame(game);
   };
 
   if (isLoading) {
@@ -119,31 +195,23 @@ export default function HoldersArena() {
             Holders Arena
             <Crown className="w-6 h-6 text-[#FFD700]" />
           </h1>
-          <p className="text-[#FFD700]/60 text-sm">Exclusive for {bullsOwned} Bull holders!</p>
+          <p className="text-[#FFD700]/60 text-sm">Exclusive RPG for {bullsOwned} Bull Holders!</p>
         </div>
 
         {currentGame === 'menu' && (
-          <GameMenu onSelectGame={setCurrentGame} />
+          <GameMenu onSelectGame={selectGame} />
         )}
         
-        {currentGame === 'gem-tap' && (
-          <GemTapGame 
-            score={score} 
-            setScore={setScore}
-            gameActive={gameActive}
-            setGameActive={setGameActive}
-            timeLeft={timeLeft}
-            setTimeLeft={setTimeLeft}
-            onEnd={awardDiamonds}
-          />
+        {currentGame === 'bull-quest' && (
+          <BullQuestGame onWin={awardKeys} />
         )}
         
-        {currentGame === 'bull-slots' && (
-          <BullSlotsGame onWin={awardDiamonds} />
+        {currentGame === 'battle-arena' && (
+          <BattleArenaGame onWin={awardKeys} />
         )}
         
-        {currentGame === 'lucky-pick' && (
-          <LuckyPickGame onWin={awardDiamonds} />
+        {currentGame === 'treasure-hunt' && (
+          <TreasureHuntGame onWin={awardKeys} />
         )}
       </div>
     </div>
@@ -153,13 +221,19 @@ export default function HoldersArena() {
 // Game Menu Component
 function GameMenu({ onSelectGame }: { onSelectGame: (game: GameType) => void }) {
   const games = [
-    { id: 'gem-tap' as GameType, name: 'Gem Tap', icon: Gem, desc: 'Tap gems as fast as you can!', color: '#00D4FF' },
-    { id: 'bull-slots' as GameType, name: 'Bull Slots', icon: Coins, desc: 'Spin for diamond rewards!', color: '#FFD700' },
-    { id: 'lucky-pick' as GameType, name: 'Lucky Pick', icon: Target, desc: 'Pick the winning card!', color: '#22c55e' },
+    { id: 'bull-quest' as GameType, name: 'Bull Quest', icon: Sword, desc: 'Navigate obstacles & collect treasures', color: '#FF6B35' },
+    { id: 'battle-arena' as GameType, name: 'Battle Arena', icon: Shield, desc: 'Turn-based combat vs enemy bulls', color: '#E63946' },
+    { id: 'treasure-hunt' as GameType, name: 'Treasure Hunt', icon: Key, desc: 'Explore & dig for hidden keys', color: '#2ECC71' },
   ];
 
   return (
     <div className="space-y-4">
+      <div className="text-center mb-6 p-4 bg-gradient-to-r from-[#FFD700]/10 to-[#FFA500]/10 rounded-xl border border-[#FFD700]/30">
+        <Key className="w-8 h-8 text-[#FFD700] mx-auto mb-2" />
+        <p className="text-[#FFD700] font-semibold">Earn Keys 🔑 in these RPG games!</p>
+        <p className="text-gray-400 text-sm">Use keys to unlock premium content</p>
+      </div>
+      
       {games.map(game => (
         <Card 
           key={game.id}
@@ -178,7 +252,7 @@ function GameMenu({ onSelectGame }: { onSelectGame: (game: GameType) => void }) 
               <h3 className="text-lg font-bold text-white">{game.name}</h3>
               <p className="text-sm text-gray-400">{game.desc}</p>
             </div>
-            <Zap className="w-5 h-5 text-[#FFD700]" />
+            <Key className="w-5 h-5 text-[#FFD700]" />
           </div>
         </Card>
       ))}
@@ -186,271 +260,579 @@ function GameMenu({ onSelectGame }: { onSelectGame: (game: GameType) => void }) 
   );
 }
 
-// Game 1: Gem Tap - Tap appearing gems
-function GemTapGame({ 
-  score, setScore, gameActive, setGameActive, timeLeft, setTimeLeft, onEnd 
-}: {
-  score: number;
-  setScore: (s: number | ((p: number) => number)) => void;
-  gameActive: boolean;
-  setGameActive: (a: boolean) => void;
-  timeLeft: number;
-  setTimeLeft: (t: number | ((p: number) => number)) => void;
-  onEnd: (diamonds: number) => void;
-}) {
-  const [gems, setGems] = useState<{id: number; x: number; y: number; value: number}[]>([]);
+// Game 1: Bull Quest - Navigate through obstacles and collect treasures
+function BullQuestGame({ onWin }: { onWin: (keys: number) => void }) {
+  const [playerPos, setPlayerPos] = useState({ x: 1, y: 1 });
+  const [treasures, setTreasures] = useState<{x: number; y: number; collected: boolean}[]>([]);
+  const [obstacles, setObstacles] = useState<{x: number; y: number}[]>([]);
+  const [enemies, setEnemies] = useState<{x: number; y: number}[]>([]);
+  const [hp, setHp] = useState(3);
+  const [keysCollected, setKeysCollected] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [level, setLevel] = useState(1);
+  const gridSize = 6;
 
-  const startGame = () => {
-    setScore(0);
-    setTimeLeft(30);
-    setGameActive(true);
-    spawnGem();
-  };
-
-  const spawnGem = () => {
-    const newGem = {
-      id: Date.now(),
-      x: 10 + Math.random() * 80,
-      y: 10 + Math.random() * 70,
-      value: Math.random() > 0.8 ? 5 : 1
-    };
-    setGems(prev => [...prev.slice(-4), newGem]);
-  };
-
-  const tapGem = (gemId: number, value: number) => {
-    if (!gameActive) return;
-    setGems(prev => prev.filter(g => g.id !== gemId));
-    setScore(prev => prev + value);
-    spawnGem();
-  };
+  const initLevel = useCallback(() => {
+    setPlayerPos({ x: 0, y: 0 });
+    setHp(3);
+    setGameOver(false);
+    
+    // Generate treasures (keys)
+    const newTreasures: {x: number; y: number; collected: boolean}[] = [];
+    for (let i = 0; i < 3 + level; i++) {
+      let pos;
+      do {
+        pos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+      } while ((pos.x === 0 && pos.y === 0) || newTreasures.some(t => t.x === pos.x && t.y === pos.y));
+      newTreasures.push({ ...pos, collected: false });
+    }
+    setTreasures(newTreasures);
+    
+    // Generate obstacles
+    const newObstacles: {x: number; y: number}[] = [];
+    for (let i = 0; i < 4 + level; i++) {
+      let pos;
+      do {
+        pos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+      } while (
+        (pos.x === 0 && pos.y === 0) || 
+        newTreasures.some(t => t.x === pos.x && t.y === pos.y) ||
+        newObstacles.some(o => o.x === pos.x && o.y === pos.y)
+      );
+      newObstacles.push(pos);
+    }
+    setObstacles(newObstacles);
+    
+    // Generate enemies
+    const newEnemies: {x: number; y: number}[] = [];
+    for (let i = 0; i < Math.min(level, 3); i++) {
+      let pos;
+      do {
+        pos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+      } while (
+        (pos.x === 0 && pos.y === 0) || 
+        newTreasures.some(t => t.x === pos.x && t.y === pos.y) ||
+        newObstacles.some(o => o.x === pos.x && o.y === pos.y) ||
+        newEnemies.some(e => e.x === pos.x && e.y === pos.y)
+      );
+      newEnemies.push(pos);
+    }
+    setEnemies(newEnemies);
+  }, [level]);
 
   useEffect(() => {
-    if (!gameActive) return;
+    initLevel();
+  }, [level, initLevel]);
+
+  const move = (dx: number, dy: number) => {
+    if (gameOver) return;
     
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          setGameActive(false);
-          const reward = Math.floor(score / 3);
-          onEnd(reward);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    const spawner = setInterval(spawnGem, 1500);
+    const newX = Math.max(0, Math.min(gridSize - 1, playerPos.x + dx));
+    const newY = Math.max(0, Math.min(gridSize - 1, playerPos.y + dy));
     
-    return () => {
-      clearInterval(timer);
-      clearInterval(spawner);
-    };
-  }, [gameActive, score]);
-
-  return (
-    <Card className="p-4 bg-[#0d2137] border-[#00D4FF]/30">
-      <div className="flex justify-between mb-4">
-        <span className="text-white font-bold">Score: {score}</span>
-        <span className="text-[#00D4FF] font-bold">⏱️ {timeLeft}s</span>
-      </div>
-      
-      <div className="relative w-full h-80 bg-[#0a1628] rounded-xl overflow-hidden border border-[#00D4FF]/20">
-        {!gameActive && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Button 
-              onClick={startGame}
-              className="bg-[#00D4FF] hover:bg-[#00D4FF]/80 text-black font-bold text-lg px-8 py-6"
-            >
-              {timeLeft === 0 ? `Play Again (Won ${Math.floor(score/3)}💎)` : 'Start Game'}
-            </Button>
-          </div>
-        )}
-        
-        {gameActive && gems.map(gem => (
-          <button
-            key={gem.id}
-            onClick={() => tapGem(gem.id, gem.value)}
-            className="absolute w-14 h-14 text-3xl animate-pulse hover:scale-125 transition-transform"
-            style={{ left: `${gem.x}%`, top: `${gem.y}%` }}
-          >
-            {gem.value > 1 ? '💎' : '✨'}
-          </button>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-// Game 2: Bull Slots - Simple slot machine
-function BullSlotsGame({ onWin }: { onWin: (diamonds: number) => void }) {
-  const symbols = ['🐂', '💎', '🪙', '⭐', '👑'];
-  const [reels, setReels] = useState(['🐂', '🐂', '🐂']);
-  const [spinning, setSpinning] = useState(false);
-  const [lastWin, setLastWin] = useState(0);
-
-  const spin = () => {
-    if (spinning) return;
-    setSpinning(true);
-    setLastWin(0);
-    
-    let spins = 0;
-    const maxSpins = 15;
-    
-    const interval = setInterval(() => {
-      setReels([
-        symbols[Math.floor(Math.random() * symbols.length)],
-        symbols[Math.floor(Math.random() * symbols.length)],
-        symbols[Math.floor(Math.random() * symbols.length)]
-      ]);
-      spins++;
-      
-      if (spins >= maxSpins) {
-        clearInterval(interval);
-        
-        // Final result with weighted odds
-        const finalReels = [
-          symbols[Math.floor(Math.random() * symbols.length)],
-          symbols[Math.floor(Math.random() * symbols.length)],
-          symbols[Math.floor(Math.random() * symbols.length)]
-        ];
-        
-        // 15% chance for a match
-        if (Math.random() < 0.15) {
-          const winner = symbols[Math.floor(Math.random() * symbols.length)];
-          finalReels[0] = winner;
-          finalReels[1] = winner;
-          finalReels[2] = winner;
-        }
-        
-        setReels(finalReels);
-        setSpinning(false);
-        
-        // Check win
-        if (finalReels[0] === finalReels[1] && finalReels[1] === finalReels[2]) {
-          const prize = finalReels[0] === '💎' ? 25 : finalReels[0] === '👑' ? 50 : 10;
-          setLastWin(prize);
-          onWin(prize);
-        }
-      }
-    }, 100);
-  };
-
-  return (
-    <Card className="p-6 bg-[#0d2137] border-[#FFD700]/30 text-center">
-      <h3 className="text-xl font-bold text-[#FFD700] mb-4">🎰 Bull Slots 🎰</h3>
-      
-      <div className="flex justify-center gap-3 mb-6">
-        {reels.map((symbol, i) => (
-          <div 
-            key={i}
-            className={`w-20 h-20 bg-[#0a1628] rounded-xl border-2 border-[#FFD700]/50 flex items-center justify-center text-4xl ${spinning ? 'animate-bounce' : ''}`}
-          >
-            {symbol}
-          </div>
-        ))}
-      </div>
-      
-      {lastWin > 0 && (
-        <p className="text-2xl font-bold text-[#22c55e] mb-4 animate-pulse">
-          🎉 WIN: +{lastWin} 💎
-        </p>
-      )}
-      
-      <Button 
-        onClick={spin}
-        disabled={spinning}
-        className="bg-[#FFD700] hover:bg-[#FFD700]/80 text-black font-bold text-lg px-12 py-6"
-      >
-        {spinning ? 'Spinning...' : 'SPIN FREE'}
-      </Button>
-      
-      <p className="text-gray-400 text-sm mt-4">Match 3 to win diamonds!</p>
-    </Card>
-  );
-}
-
-// Game 3: Lucky Pick - Pick a card
-function LuckyPickGame({ onWin }: { onWin: (diamonds: number) => void }) {
-  const [cards, setCards] = useState([false, false, false, false]);
-  const [revealed, setRevealed] = useState<number | null>(null);
-  const [winningCard, setWinningCard] = useState(0);
-  const [prize, setPrize] = useState(0);
-  const [canPick, setCanPick] = useState(true);
-
-  const resetGame = () => {
-    setCards([false, false, false, false]);
-    setRevealed(null);
-    setWinningCard(Math.floor(Math.random() * 4));
-    setPrize([5, 10, 15, 25][Math.floor(Math.random() * 4)]);
-    setCanPick(true);
-  };
-
-  useEffect(() => {
-    resetGame();
-  }, []);
-
-  const pickCard = (index: number) => {
-    if (!canPick || revealed !== null) return;
-    setCanPick(false);
-    setRevealed(index);
-    
-    if (index === winningCard) {
-      onWin(prize);
+    // Check obstacle collision
+    if (obstacles.some(o => o.x === newX && o.y === newY)) {
+      playSound('hit');
+      vibrate(100);
+      return;
     }
     
-    // Reveal all after delay
-    setTimeout(() => {
-      setCards([true, true, true, true]);
-    }, 1000);
+    setPlayerPos({ x: newX, y: newY });
+    playSound('click');
+    vibrate(20);
+    
+    // Check treasure collection
+    const treasureIndex = treasures.findIndex(t => t.x === newX && t.y === newY && !t.collected);
+    if (treasureIndex !== -1) {
+      playSound('collect');
+      vibrate([50, 30, 50]);
+      setTreasures(prev => prev.map((t, i) => i === treasureIndex ? { ...t, collected: true } : t));
+      setKeysCollected(prev => prev + 1);
+      
+      // Check level complete
+      const remaining = treasures.filter((t, i) => i !== treasureIndex && !t.collected).length;
+      if (remaining === 0) {
+        playSound('win');
+        vibrate([100, 50, 100, 50, 200]);
+        setTimeout(() => setLevel(prev => prev + 1), 500);
+      }
+    }
+    
+    // Check enemy collision
+    if (enemies.some(e => e.x === newX && e.y === newY)) {
+      playSound('lose');
+      vibrate([200, 100, 200]);
+      setHp(prev => {
+        const newHp = prev - 1;
+        if (newHp <= 0) {
+          setGameOver(true);
+          if (keysCollected > 0) {
+            onWin(keysCollected);
+          }
+        }
+        return newHp;
+      });
+    }
+  };
+
+  const getCellContent = (x: number, y: number) => {
+    if (playerPos.x === x && playerPos.y === y) return '🐂';
+    if (treasures.some(t => t.x === x && t.y === y && !t.collected)) return '🔑';
+    if (obstacles.some(o => o.x === x && o.y === y)) return '🪨';
+    if (enemies.some(e => e.x === x && e.y === y)) return '👹';
+    return '';
   };
 
   return (
-    <Card className="p-6 bg-[#0d2137] border-[#22c55e]/30 text-center">
-      <h3 className="text-xl font-bold text-[#22c55e] mb-2">🎯 Lucky Pick 🎯</h3>
-      <p className="text-gray-400 text-sm mb-4">Pick the winning card to win {prize} 💎</p>
-      
-      <div className="grid grid-cols-2 gap-3 mb-6 max-w-xs mx-auto">
-        {cards.map((isRevealed, i) => (
-          <button
-            key={i}
-            onClick={() => pickCard(i)}
-            disabled={!canPick}
-            className={`h-24 rounded-xl text-4xl transition-all ${
-              isRevealed || revealed === i
-                ? i === winningCard
-                  ? 'bg-[#22c55e] scale-105'
-                  : 'bg-red-500/50'
-                : 'bg-[#0a1628] border-2 border-[#22c55e]/50 hover:border-[#22c55e] hover:scale-105'
-            }`}
-          >
-            {isRevealed || revealed === i ? (
-              i === winningCard ? '💎' : '❌'
-            ) : (
-              '❓'
-            )}
-          </button>
-        ))}
+    <Card className="p-4 bg-[#0d2137] border-[#FF6B35]/30">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-1">
+          {[...Array(3)].map((_, i) => (
+            <Heart key={i} className={`w-5 h-5 ${i < hp ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
+          ))}
+        </div>
+        <span className="text-[#FFD700] font-bold">Level {level}</span>
+        <span className="text-white font-bold">🔑 {keysCollected}</span>
       </div>
       
-      {revealed !== null && (
-        <div className="mb-4">
-          {revealed === winningCard ? (
-            <p className="text-2xl font-bold text-[#22c55e] animate-pulse">
-              🎉 YOU WON +{prize} 💎!
-            </p>
-          ) : (
-            <p className="text-lg text-red-400">Try again!</p>
-          )}
+      {/* Game Grid */}
+      <div className="grid gap-1 mb-4 mx-auto" style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)`, maxWidth: '300px' }}>
+        {[...Array(gridSize)].map((_, y) =>
+          [...Array(gridSize)].map((_, x) => (
+            <div 
+              key={`${x}-${y}`}
+              className={`aspect-square rounded flex items-center justify-center text-xl
+                ${playerPos.x === x && playerPos.y === y ? 'bg-[#FF6B35]/40' : 'bg-[#0a1628]'}
+                border border-[#FF6B35]/20`}
+            >
+              {getCellContent(x, y)}
+            </div>
+          ))
+        )}
+      </div>
+      
+      {/* Mobile Controls */}
+      <div className="grid grid-cols-3 gap-2 max-w-[180px] mx-auto">
+        <div />
+        <Button size="sm" className="bg-[#FF6B35] hover:bg-[#FF6B35]/80" onClick={() => move(0, -1)}>↑</Button>
+        <div />
+        <Button size="sm" className="bg-[#FF6B35] hover:bg-[#FF6B35]/80" onClick={() => move(-1, 0)}>←</Button>
+        <Button size="sm" className="bg-[#FF6B35] hover:bg-[#FF6B35]/80" onClick={() => move(0, 1)}>↓</Button>
+        <Button size="sm" className="bg-[#FF6B35] hover:bg-[#FF6B35]/80" onClick={() => move(1, 0)}>→</Button>
+      </div>
+      
+      {gameOver && (
+        <div className="mt-4 text-center">
+          <p className="text-xl text-red-400 mb-2">Game Over!</p>
+          <p className="text-[#FFD700]">Earned {keysCollected} 🔑</p>
+          <Button className="mt-2 bg-[#FF6B35]" onClick={() => { setLevel(1); setKeysCollected(0); initLevel(); }}>
+            Play Again
+          </Button>
         </div>
       )}
+    </Card>
+  );
+}
+
+// Game 2: Battle Arena - Turn-based combat
+function BattleArenaGame({ onWin }: { onWin: (keys: number) => void }) {
+  const [playerHp, setPlayerHp] = useState(100);
+  const [enemyHp, setEnemyHp] = useState(100);
+  const [playerTurn, setPlayerTurn] = useState(true);
+  const [message, setMessage] = useState('Choose your action!');
+  const [wins, setWins] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [playerPower, setPlayerPower] = useState(0);
+  const [shield, setShield] = useState(0);
+
+  const resetBattle = (keepWins = false) => {
+    setPlayerHp(100);
+    setEnemyHp(100);
+    setPlayerTurn(true);
+    setMessage('A wild enemy bull appears! Choose your action!');
+    setPlayerPower(0);
+    setShield(0);
+    if (!keepWins) setWins(0);
+  };
+
+  useEffect(() => {
+    resetBattle();
+  }, []);
+
+  const playerAction = (action: 'attack' | 'power' | 'defend') => {
+    if (!playerTurn || isAnimating || enemyHp <= 0 || playerHp <= 0) return;
+    
+    setIsAnimating(true);
+    playSound('click');
+    vibrate(30);
+    
+    let damage = 0;
+    
+    switch(action) {
+      case 'attack':
+        damage = 15 + Math.floor(Math.random() * 15) + playerPower;
+        playSound('hit');
+        vibrate([50, 30, 100]);
+        setMessage(`You charge and deal ${damage} damage!`);
+        setEnemyHp(prev => Math.max(0, prev - damage));
+        setPlayerPower(0);
+        break;
+      case 'power':
+        const powerGain = 10 + Math.floor(Math.random() * 10);
+        playSound('power');
+        vibrate([30, 20, 30, 20, 50]);
+        setPlayerPower(prev => prev + powerGain);
+        setMessage(`You charge power! +${powerGain} to next attack!`);
+        break;
+      case 'defend':
+        const shieldAmount = 20 + Math.floor(Math.random() * 15);
+        playSound('power');
+        vibrate(100);
+        setShield(shieldAmount);
+        setMessage(`You raise your shield! Block ${shieldAmount} damage!`);
+        break;
+    }
+    
+    setTimeout(() => {
+      setPlayerTurn(false);
+      setIsAnimating(false);
       
-      {revealed !== null && (
-        <Button 
-          onClick={resetGame}
-          className="bg-[#22c55e] hover:bg-[#22c55e]/80 text-black font-bold"
-        >
-          Play Again
-        </Button>
+      // Check if enemy defeated
+      if (enemyHp - damage <= 0) {
+        playSound('win');
+        vibrate([100, 50, 100, 50, 200]);
+        const newWins = wins + 1;
+        setWins(newWins);
+        setMessage(`Victory! You've won ${newWins} battle${newWins > 1 ? 's' : ''}!`);
+        
+        if (newWins >= 3) {
+          onWin(1);
+          setMessage(`Champion! You earned 1 🔑!`);
+        }
+      } else {
+        // Enemy turn
+        setTimeout(() => enemyTurn(), 800);
+      }
+    }, 500);
+  };
+
+  const enemyTurn = () => {
+    if (playerHp <= 0) return;
+    
+    const baseDamage = 10 + Math.floor(Math.random() * 20);
+    const actualDamage = Math.max(0, baseDamage - shield);
+    
+    playSound('hit');
+    vibrate([100, 50, 100]);
+    
+    if (shield > 0) {
+      setMessage(`Enemy attacks for ${baseDamage}! Shield blocks ${Math.min(shield, baseDamage)}! You take ${actualDamage} damage!`);
+    } else {
+      setMessage(`Enemy charges and deals ${actualDamage} damage!`);
+    }
+    
+    setPlayerHp(prev => Math.max(0, prev - actualDamage));
+    setShield(0);
+    
+    setTimeout(() => {
+      if (playerHp - actualDamage <= 0) {
+        playSound('lose');
+        vibrate([200, 100, 200, 100, 200]);
+        setMessage(`Defeated! You won ${wins} battles. ${wins > 0 ? `Earned ${Math.floor(wins / 3)} 🔑` : ''}`);
+        if (wins >= 3) onWin(Math.floor(wins / 3));
+      } else {
+        setPlayerTurn(true);
+      }
+    }, 500);
+  };
+
+  const healthBarColor = (hp: number) => {
+    if (hp > 60) return 'bg-green-500';
+    if (hp > 30) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  return (
+    <Card className="p-4 bg-[#0d2137] border-[#E63946]/30">
+      <div className="text-center mb-4">
+        <p className="text-gray-300 text-sm">Win 3 battles = 1 🔑</p>
+        <p className="text-[#FFD700] font-bold">Wins: {wins}/3</p>
+      </div>
+      
+      {/* Battle Scene */}
+      <div className="flex justify-between items-center mb-6">
+        {/* Player */}
+        <div className="text-center flex-1">
+          <div className="text-4xl mb-2 animate-pulse">🐂</div>
+          <p className="text-sm text-gray-400">You</p>
+          <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden mt-1">
+            <div className={`h-full transition-all ${healthBarColor(playerHp)}`} style={{ width: `${playerHp}%` }} />
+          </div>
+          <p className="text-xs text-white mt-1">{playerHp}/100</p>
+          {playerPower > 0 && <p className="text-xs text-[#FFD700]">⚡ +{playerPower}</p>}
+          {shield > 0 && <p className="text-xs text-blue-400">🛡️ {shield}</p>}
+        </div>
+        
+        <div className="text-2xl mx-4">⚔️</div>
+        
+        {/* Enemy */}
+        <div className="text-center flex-1">
+          <div className={`text-4xl mb-2 ${!playerTurn && !isAnimating ? 'animate-bounce' : ''}`}>👹</div>
+          <p className="text-sm text-gray-400">Enemy Bull</p>
+          <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden mt-1">
+            <div className={`h-full transition-all ${healthBarColor(enemyHp)}`} style={{ width: `${enemyHp}%` }} />
+          </div>
+          <p className="text-xs text-white mt-1">{enemyHp}/100</p>
+        </div>
+      </div>
+      
+      {/* Message */}
+      <div className="bg-[#0a1628] rounded-lg p-3 mb-4 min-h-[60px] flex items-center justify-center">
+        <p className="text-center text-gray-200">{message}</p>
+      </div>
+      
+      {/* Actions */}
+      {playerHp > 0 && enemyHp > 0 ? (
+        <div className="grid grid-cols-3 gap-2">
+          <Button 
+            onClick={() => playerAction('attack')}
+            disabled={!playerTurn || isAnimating}
+            className="bg-[#E63946] hover:bg-[#E63946]/80 flex flex-col items-center py-4"
+          >
+            <Sword className="w-5 h-5 mb-1" />
+            <span className="text-xs">Attack</span>
+          </Button>
+          <Button 
+            onClick={() => playerAction('power')}
+            disabled={!playerTurn || isAnimating}
+            className="bg-[#FFD700] hover:bg-[#FFD700]/80 text-black flex flex-col items-center py-4"
+          >
+            <Flame className="w-5 h-5 mb-1" />
+            <span className="text-xs">Power</span>
+          </Button>
+          <Button 
+            onClick={() => playerAction('defend')}
+            disabled={!playerTurn || isAnimating}
+            className="bg-blue-500 hover:bg-blue-500/80 flex flex-col items-center py-4"
+          >
+            <Shield className="w-5 h-5 mb-1" />
+            <span className="text-xs">Defend</span>
+          </Button>
+        </div>
+      ) : (
+        <div className="text-center">
+          <Button 
+            onClick={() => resetBattle(enemyHp <= 0 && wins < 3)}
+            className="bg-[#E63946] hover:bg-[#E63946]/80"
+          >
+            {enemyHp <= 0 && wins < 3 ? 'Next Battle' : 'Play Again'}
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// Game 3: Treasure Hunt - Explore and dig for keys
+function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
+  const gridSize = 5;
+  const [grid, setGrid] = useState<('hidden' | 'empty' | 'key' | 'trap' | 'bonus')[][]>([]);
+  const [digsLeft, setDigsLeft] = useState(8);
+  const [keysFound, setKeysFound] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
+
+  const initGame = () => {
+    const newGrid: ('hidden' | 'empty' | 'key' | 'trap' | 'bonus')[][] = 
+      Array(gridSize).fill(null).map(() => Array(gridSize).fill('hidden'));
+    
+    // Place 2 keys
+    let keysPlaced = 0;
+    while (keysPlaced < 2) {
+      const x = Math.floor(Math.random() * gridSize);
+      const y = Math.floor(Math.random() * gridSize);
+      if (newGrid[y][x] === 'hidden') {
+        newGrid[y][x] = 'key';
+        keysPlaced++;
+      }
+    }
+    
+    // Place 3 traps
+    let trapsPlaced = 0;
+    while (trapsPlaced < 3) {
+      const x = Math.floor(Math.random() * gridSize);
+      const y = Math.floor(Math.random() * gridSize);
+      if (newGrid[y][x] === 'hidden') {
+        newGrid[y][x] = 'trap';
+        trapsPlaced++;
+      }
+    }
+    
+    // Place 1 bonus
+    let bonusPlaced = false;
+    while (!bonusPlaced) {
+      const x = Math.floor(Math.random() * gridSize);
+      const y = Math.floor(Math.random() * gridSize);
+      if (newGrid[y][x] === 'hidden') {
+        newGrid[y][x] = 'bonus';
+        bonusPlaced = true;
+      }
+    }
+    
+    // Mark remaining as empty (but still show as hidden)
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        if (newGrid[y][x] === 'hidden') {
+          newGrid[y][x] = 'empty';
+        }
+      }
+    }
+    
+    // Reset all to hidden for display
+    const hiddenGrid: ('hidden' | 'empty' | 'key' | 'trap' | 'bonus')[][] = 
+      Array(gridSize).fill(null).map(() => Array(gridSize).fill('hidden'));
+    
+    setGrid(hiddenGrid);
+    setDigsLeft(8);
+    setKeysFound(0);
+    setGameOver(false);
+    setHintsUsed(0);
+    
+    // Store actual values
+    (window as any).__treasureGrid = newGrid;
+  };
+
+  useEffect(() => {
+    initGame();
+  }, []);
+
+  const dig = (x: number, y: number) => {
+    if (gameOver || digsLeft <= 0) return;
+    if (grid[y][x] !== 'hidden') return;
+    
+    playSound('click');
+    vibrate(30);
+    
+    const actualGrid = (window as any).__treasureGrid;
+    const cellValue = actualGrid[y][x];
+    
+    setGrid(prev => {
+      const newGrid = [...prev.map(row => [...row])];
+      newGrid[y][x] = cellValue;
+      return newGrid;
+    });
+    
+    setDigsLeft(prev => prev - 1);
+    
+    switch (cellValue) {
+      case 'key':
+        playSound('collect');
+        vibrate([50, 30, 50, 30, 100]);
+        setKeysFound(prev => {
+          const newFound = prev + 1;
+          if (newFound >= 2) {
+            setGameOver(true);
+            onWin(1);
+          }
+          return newFound;
+        });
+        break;
+      case 'trap':
+        playSound('lose');
+        vibrate([200, 100, 200]);
+        setDigsLeft(prev => Math.max(0, prev - 2));
+        break;
+      case 'bonus':
+        playSound('win');
+        vibrate([100, 50, 100]);
+        setDigsLeft(prev => prev + 3);
+        break;
+      default:
+        playSound('hit');
+    }
+    
+    // Check game over
+    if (digsLeft - 1 <= 0 && keysFound < 2 && cellValue !== 'key') {
+      setGameOver(true);
+      if (keysFound > 0) {
+        onWin(keysFound);
+      }
+    }
+  };
+
+  const getCellDisplay = (x: number, y: number) => {
+    const cell = grid[y][x];
+    switch (cell) {
+      case 'hidden': return '❓';
+      case 'key': return '🔑';
+      case 'trap': return '💀';
+      case 'bonus': return '⭐';
+      case 'empty': return '🕳️';
+      default: return '❓';
+    }
+  };
+
+  const getCellStyle = (x: number, y: number) => {
+    const cell = grid[y][x];
+    switch (cell) {
+      case 'key': return 'bg-[#FFD700]/30 border-[#FFD700]';
+      case 'trap': return 'bg-red-500/30 border-red-500';
+      case 'bonus': return 'bg-purple-500/30 border-purple-500';
+      case 'empty': return 'bg-gray-600/30 border-gray-600';
+      default: return 'bg-[#0a1628] border-[#2ECC71]/30 hover:border-[#2ECC71] hover:bg-[#2ECC71]/10';
+    }
+  };
+
+  return (
+    <Card className="p-4 bg-[#0d2137] border-[#2ECC71]/30">
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-white">
+          <span className="text-sm">Digs Left:</span>
+          <span className="font-bold ml-2 text-[#2ECC71]">{digsLeft}</span>
+        </div>
+        <div className="text-[#FFD700] font-bold">
+          🔑 {keysFound}/2
+        </div>
+      </div>
+      
+      <div className="mb-4 text-center">
+        <p className="text-gray-400 text-sm">Find 2 keys to win! Avoid traps 💀</p>
+      </div>
+      
+      {/* Dig Grid */}
+      <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}>
+        {grid.map((row, y) =>
+          row.map((_, x) => (
+            <button
+              key={`${x}-${y}`}
+              onClick={() => dig(x, y)}
+              disabled={gameOver || grid[y][x] !== 'hidden'}
+              className={`aspect-square rounded-lg text-2xl flex items-center justify-center border-2 transition-all
+                ${getCellStyle(x, y)}
+                ${grid[y][x] === 'hidden' ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
+            >
+              {getCellDisplay(x, y)}
+            </button>
+          ))
+        )}
+      </div>
+      
+      <div className="text-center text-xs text-gray-500 mb-4">
+        <span className="mx-2">🔑 Key</span>
+        <span className="mx-2">💀 Trap (-2 digs)</span>
+        <span className="mx-2">⭐ Bonus (+3 digs)</span>
+      </div>
+      
+      {gameOver && (
+        <div className="text-center">
+          <p className={`text-xl mb-2 ${keysFound >= 2 ? 'text-[#2ECC71]' : 'text-red-400'}`}>
+            {keysFound >= 2 ? '🎉 You found all keys!' : 'Game Over!'}
+          </p>
+          {keysFound > 0 && <p className="text-[#FFD700]">Earned {keysFound >= 2 ? 1 : 0} 🔑</p>}
+          <Button onClick={initGame} className="mt-2 bg-[#2ECC71] hover:bg-[#2ECC71]/80">
+            Play Again
+          </Button>
+        </div>
       )}
     </Card>
   );
