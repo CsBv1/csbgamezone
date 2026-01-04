@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreditBar } from "@/components/CreditBar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Gem, Users, Gamepad2, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight } from "lucide-react";
+import { ArrowLeft, Gem, Users, Gamepad2, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight, Lock, Crown } from "lucide-react";
 import { WorldChat } from "@/components/WorldChat";
 import { EmoteBubble } from "@/components/EmoteBubble";
 import { useToast } from "@/hooks/use-toast";
+import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 
 interface Player {
   id: string;
@@ -35,6 +36,7 @@ interface GamePortal {
   route: string;
   color: string;
   emoji: string;
+  holdersOnly?: boolean;
 }
 
 interface ActiveEmote {
@@ -55,7 +57,8 @@ const DB_UPDATE_INTERVAL = 200; // Throttle DB updates
 
 // Multiplayer Games Only - centered on the map
 const GAME_PORTALS: GamePortal[] = [
-  { id: 'mp-stampede', name: 'Bull Maze', x: 700, y: 400, route: '/games/bull-stampede', color: '#FF6B35', emoji: '🏃' },
+  { id: 'mp-stampede', name: 'Bull Maze', x: 500, y: 400, route: '/games/bull-stampede', color: '#FF6B35', emoji: '🏃' },
+  { id: 'mp-holders-arena', name: 'Holders Arena', x: 900, y: 400, route: '/games/holders-arena', color: '#FFD700', emoji: '👑', holdersOnly: true },
 ];
 
 export default function BullWorld() {
@@ -64,6 +67,7 @@ export default function BullWorld() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [diamonds, setDiamonds] = useState<WorldDiamond[]>([]);
   const [myPosition, setMyPosition] = useState({ x: 700, y: 450 });
@@ -82,6 +86,9 @@ export default function BullWorld() {
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
 
+  // NFT bonuses hook
+  const { bullsOwned } = useNFTBonuses(walletAddress);
+
   // Initialize user and game
   useEffect(() => {
     const init = async () => {
@@ -95,9 +102,14 @@ export default function BullWorld() {
 
       const [keysResult, profileResult, colorsResult] = await Promise.all([
         supabase.from('user_keys').select('balance').eq('user_id', user.id).single(),
-        supabase.from('profiles').select('username').eq('id', user.id).single(),
+        supabase.from('profiles').select('username, wallet_address').eq('id', user.id).single(),
         supabase.from('user_colors').select('color_value').eq('user_id', user.id).eq('active', true).single()
       ]);
+
+      // Set wallet address for NFT scanning
+      if ((profileResult.data as any)?.wallet_address) {
+        setWalletAddress((profileResult.data as any).wallet_address);
+      }
 
       const currentKeys = (keysResult.data as any)?.balance || 0;
       setKeys(currentKeys);
@@ -403,6 +415,16 @@ export default function BullWorld() {
   };
 
   const enterPortal = (portal: GamePortal) => {
+    // Check if portal requires holding bulls
+    if (portal.holdersOnly && bullsOwned === 0) {
+      toast({ 
+        title: "🔒 Holders Only", 
+        description: "You need to hold a CSB Bull NFT in your wallet to enter the Holders Arena!", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     sessionStorage.setItem('bullWorldAccess', 'true');
     sessionStorage.setItem('fromBullWorld', 'true');
     leaveWorld();
@@ -563,6 +585,26 @@ export default function BullWorld() {
           ctx.fillStyle = '#00FF88';
           ctx.font = 'bold 10px Arial';
           ctx.fillText('👥 MULTIPLAYER', portal.x, portal.y - 55);
+        }
+
+        // HOLDERS ONLY badge with lock/crown
+        if (portal.holdersOnly) {
+          const hasAccess = bullsOwned > 0;
+          ctx.fillStyle = hasAccess ? '#FFD700' : '#FF4444';
+          ctx.font = 'bold 10px Arial';
+          ctx.fillText(hasAccess ? '👑 EXCLUSIVE' : '🔒 HOLDERS ONLY', portal.x, portal.y - 70);
+          
+          // Glow effect for accessible holders portal
+          if (hasAccess) {
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 15;
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(portal.x, portal.y, 60, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
         }
 
         // "Press SPACE" indicator

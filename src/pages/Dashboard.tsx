@@ -737,13 +737,31 @@ const Dashboard = () => {
 
           {/* CSB Game Master Section */}
           <div className="mt-8">
-            <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-card border-2 border-amber-500/40 max-w-2xl mx-auto overflow-hidden">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-full bg-amber-500/20">
-                  <Sparkles className="w-8 h-8 text-amber-400" />
+            <Card className={`p-6 bg-gradient-to-br from-amber-500/10 to-card border-2 max-w-2xl mx-auto overflow-hidden relative ${
+              bullsOwned > 0 
+                ? 'border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.4)] animate-pulse-glow' 
+                : 'border-amber-500/40'
+            }`}>
+              {/* Animated glow overlay for NFT holders */}
+              {bullsOwned > 0 && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 animate-shimmer" />
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-scan" />
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-4 relative z-10">
+                <div className={`p-3 rounded-full ${bullsOwned > 0 ? 'bg-amber-500/30 animate-pulse' : 'bg-amber-500/20'}`}>
+                  <Sparkles className={`w-8 h-8 ${bullsOwned > 0 ? 'text-amber-300' : 'text-amber-400'}`} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">🤖 CSB Game Master</h3>
+                  <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    🤖 CSB Game Master
+                    {bullsOwned > 0 && (
+                      <span className="text-xs px-2 py-0.5 bg-amber-500/30 text-amber-300 rounded-full animate-pulse">
+                        🐂 HOLDER BOOST
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-sm text-muted-foreground">Your AI assistant for tips, strategies & bonuses!</p>
                 </div>
               </div>
