@@ -14,6 +14,7 @@ interface CSBGameMasterProps {
   bullsOwned?: number;
   rarityBonus?: number;
   context?: string;
+  embedded?: boolean;
 }
 
 const QUICK_PROMPTS = [
@@ -23,7 +24,7 @@ const QUICK_PROMPTS = [
   "Best strategy for Crash?",
 ];
 
-export function CSBGameMaster({ bullsOwned = 0, rarityBonus = 0, context = "Dashboard" }: CSBGameMasterProps) {
+export function CSBGameMaster({ bullsOwned = 0, rarityBonus = 0, context = "Dashboard", embedded = false }: CSBGameMasterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -82,7 +83,31 @@ export function CSBGameMaster({ bullsOwned = 0, rarityBonus = 0, context = "Dash
     sendMessage(input);
   };
 
-  if (!isOpen) {
+  // Embedded closed state - clickable box
+  if (embedded && !isOpen) {
+    return (
+      <div 
+        onClick={() => setIsOpen(true)}
+        className="cursor-pointer group"
+      >
+        <div className="flex items-center justify-center gap-3 py-4">
+          <div className="p-3 rounded-full bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">
+            <Bot className="w-8 h-8 text-amber-400" />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-semibold text-amber-400 group-hover:text-amber-300 transition-colors">
+              Click to Chat with Game Master
+            </p>
+            <p className="text-sm text-muted-foreground">Get tips, strategies & bonus info!</p>
+          </div>
+          <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  // Floating button (non-embedded mode)
+  if (!embedded && !isOpen) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
@@ -95,8 +120,13 @@ export function CSBGameMaster({ bullsOwned = 0, rarityBonus = 0, context = "Dash
     );
   }
 
+  // Chat interface - different styling for embedded vs floating
+  const containerClass = embedded 
+    ? "w-full h-[400px] flex flex-col bg-gradient-to-b from-[#1a1a2e] to-[#16213e] border border-amber-500/30 rounded-lg"
+    : "fixed bottom-4 left-4 z-50 w-96 h-[500px] flex flex-col bg-gradient-to-b from-[#1a1a2e] to-[#16213e] border-amber-500/30 shadow-xl shadow-amber-500/20";
+
   return (
-    <Card className="fixed bottom-4 left-4 z-50 w-96 h-[500px] flex flex-col bg-gradient-to-b from-[#1a1a2e] to-[#16213e] border-amber-500/30 shadow-xl shadow-amber-500/20">
+    <Card className={containerClass}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
         <div className="flex items-center gap-3">

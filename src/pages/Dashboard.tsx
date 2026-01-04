@@ -737,22 +737,21 @@ const Dashboard = () => {
 
           {/* CSB Game Master Section */}
           <div className="mt-8">
-            <Card className="p-6 bg-gradient-to-br from-purple-500/20 to-card border-2 border-purple-500/40 max-w-2xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-full bg-purple-500/20">
-                    <Sparkles className="w-8 h-8 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-foreground">🤖 CSB Game Master</h3>
-                    <p className="text-sm text-muted-foreground">Your AI assistant for tips, strategies & bonuses!</p>
-                  </div>
+            <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-card border-2 border-amber-500/40 max-w-2xl mx-auto overflow-hidden">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-full bg-amber-500/20">
+                  <Sparkles className="w-8 h-8 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">🤖 CSB Game Master</h3>
+                  <p className="text-sm text-muted-foreground">Your AI assistant for tips, strategies & bonuses!</p>
                 </div>
               </div>
               <CSBGameMaster 
                 bullsOwned={bullsOwned} 
                 rarityBonus={rarityBonus} 
-                context="Dashboard - browsing games" 
+                context="Dashboard - browsing games"
+                embedded={true}
               />
             </Card>
           </div>
