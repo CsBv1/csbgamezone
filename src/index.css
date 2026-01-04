@@ -67,4 +67,49 @@ All colors MUST be HSL.
   .glow-gold {
     box-shadow: var(--shadow-glow);
   }
+
+  /* Animated glow effects for NFT holders */
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(45 96% 53% / 0.3), 0 0 40px hsl(45 96% 53% / 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px hsl(45 96% 53% / 0.5), 0 0 60px hsl(45 96% 53% / 0.3);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes scan {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  .animate-scan {
+    animation: scan 2s ease-in-out infinite;
+  }
 }
