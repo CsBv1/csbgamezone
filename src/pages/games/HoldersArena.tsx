@@ -1,65 +1,28 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Crown, Users, Trophy, Gem, Timer, Zap } from "lucide-react";
+import { ArrowLeft, Crown, Gem, Zap, Target, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { CreditBar } from "@/components/CreditBar";
 
-interface Player {
-  id: string;
-  user_id: string;
-  x: number;
-  y: number;
-  username: string | null;
-  score: number;
-  color: string;
-}
-
-// Arena maps - exclusive designs
-const ARENA_MAPS = [
-  { id: 'golden-palace', name: 'Golden Palace', color: '#FFD700', bg: '#1a1a0f' },
-  { id: 'diamond-vault', name: 'Diamond Vault', color: '#00D4FF', bg: '#0a1a2a' },
-  { id: 'legendary-pit', name: 'Legendary Pit', color: '#FF6B35', bg: '#1a0f0a' },
-];
-
-const ARENA_WIDTH = 1200;
-const ARENA_HEIGHT = 700;
-const PLAYER_SIZE = 40;
-const MOVE_SPEED = 8;
+type GameType = 'menu' | 'gem-tap' | 'bull-slots' | 'lucky-pick';
 
 export default function HoldersArena() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
   
   const [userId, setUserId] = useState<string | null>(null);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [myPosition, setMyPosition] = useState({ x: 600, y: 350 });
-  const [myColor, setMyColor] = useState('#FFD700');
-  const [score, setScore] = useState(0);
-  const [gems, setGems] = useState<{id: string; x: number; y: number; value: number}[]>([]);
-  const [currentMap, setCurrentMap] = useState(ARENA_MAPS[0]);
-  const [timeLeft, setTimeLeft] = useState(180); // 3 minute rounds
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [bullsOwned, setBullsOwned] = useState(0);
+  const [currentGame, setCurrentGame] = useState<GameType>('menu');
   
-  const keysPressed = useRef<Set<string>>(new Set());
-  const positionRef = useRef({ x: 600, y: 350 });
-  
-  // Joystick state
-  const joystickRef = useRef<{ active: boolean; dx: number; dy: number }>({ active: false, dx: 0, dy: 0 });
-  const joystickCenterRef = useRef<{ x: number; y: number } | null>(null);
-  
-  // NFT check
-  const { bullsOwned } = useNFTBonuses(walletAddress);
+  // Game states
+  const [score, setScore] = useState(0);
+  const [gameActive, setGameActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
 
-  // Initialize
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -71,20 +34,6 @@ export default function HoldersArena() {
       
       setUserId(user.id);
       
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, wallet_address')
-        .eq('id', user.id)
-        .single();
-      
-      if (profile) {
-        setUsername((profile as any).username || 'Player');
-        if ((profile as any).wallet_address) {
-          setWalletAddress((profile as any).wallet_address);
-        }
-      }
-      
-      // Check NFT ownership from cache
       const { data: nftData } = await supabase
         .from('user_nft_bonuses')
         .select('bulls_owned')
@@ -101,312 +50,44 @@ export default function HoldersArena() {
         return;
       }
       
+      setBullsOwned((nftData as any).bulls_owned);
       setIsLoading(false);
-      spawnGems();
     };
     
     init();
-    
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
   }, []);
 
-  const spawnGems = () => {
-    const newGems = [];
-    for (let i = 0; i < 20; i++) {
-      newGems.push({
-        id: `gem-${i}-${Date.now()}`,
-        x: 100 + Math.random() * (ARENA_WIDTH - 200),
-        y: 100 + Math.random() * (ARENA_HEIGHT - 200),
-        value: Math.random() > 0.7 ? 10 : Math.random() > 0.5 ? 5 : 1
-      });
-    }
-    setGems(newGems);
-  };
-
-  const startGame = () => {
-    setIsPlaying(true);
-    setScore(0);
-    setTimeLeft(180);
-    spawnGems();
-  };
-
-  // Timer
-  useEffect(() => {
-    if (!isPlaying) return;
+  const awardDiamonds = async (amount: number) => {
+    if (!userId || amount <= 0) return;
     
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          endGame();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const { data: current } = await supabase
+      .from('user_diamonds')
+      .select('balance, total_earned')
+      .eq('user_id', userId)
+      .single();
     
-    return () => clearInterval(timer);
-  }, [isPlaying]);
-
-  const endGame = async () => {
-    setIsPlaying(false);
-    toast({ 
-      title: "🏆 Round Complete!", 
-      description: `You collected ${score} gems!` 
-    });
-    
-    // Award diamonds
-    if (userId && score > 0) {
-      const diamondReward = Math.floor(score / 2);
-      const { data: current } = await supabase
+    if (current) {
+      await supabase
         .from('user_diamonds')
-        .select('balance, total_earned')
-        .eq('user_id', userId)
-        .single();
+        .update({ 
+          balance: ((current as any).balance || 0) + amount,
+          total_earned: ((current as any).total_earned || 0) + amount
+        })
+        .eq('user_id', userId);
       
-      if (current) {
-        await supabase
-          .from('user_diamonds')
-          .update({ 
-            balance: ((current as any).balance || 0) + diamondReward,
-            total_earned: ((current as any).total_earned || 0) + diamondReward
-          })
-          .eq('user_id', userId);
-        
-        toast({ title: `+${diamondReward} 💎`, description: "Diamonds added to your balance!" });
-      }
+      toast({ title: `+${amount} 💎`, description: "Diamonds added!" });
     }
   };
-
-  // Joystick handlers
-  const handleJoystickStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (!isPlaying) return;
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    
-    joystickCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-    joystickRef.current = { active: true, dx: 0, dy: 0 };
-  }, [isPlaying]);
-
-  const handleJoystickMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (!joystickRef.current.active || !joystickCenterRef.current) return;
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
-    const dx = clientX - joystickCenterRef.current.x;
-    const dy = clientY - joystickCenterRef.current.y;
-    
-    const maxDist = 40;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const clampedDist = Math.min(dist, maxDist);
-    const angle = Math.atan2(dy, dx);
-    
-    joystickRef.current.dx = (Math.cos(angle) * clampedDist) / maxDist;
-    joystickRef.current.dy = (Math.sin(angle) * clampedDist) / maxDist;
-  }, []);
-
-  const handleJoystickEnd = useCallback(() => {
-    joystickRef.current = { active: false, dx: 0, dy: 0 };
-    joystickCenterRef.current = null;
-  }, []);
-
-  // Movement controls
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key)) {
-        e.preventDefault();
-        keysPressed.current.add(e.key.toLowerCase());
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      keysPressed.current.delete(e.key.toLowerCase());
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [isPlaying]);
-
-  // Game loop
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const gameLoop = setInterval(() => {
-      let dx = 0, dy = 0;
-
-      // Keyboard controls
-      if (keysPressed.current.has('arrowup') || keysPressed.current.has('w')) dy = -MOVE_SPEED;
-      if (keysPressed.current.has('arrowdown') || keysPressed.current.has('s')) dy = MOVE_SPEED;
-      if (keysPressed.current.has('arrowleft') || keysPressed.current.has('a')) dx = -MOVE_SPEED;
-      if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) dx = MOVE_SPEED;
-
-      // Joystick controls
-      if (joystickRef.current.active) {
-        dx = joystickRef.current.dx * MOVE_SPEED;
-        dy = joystickRef.current.dy * MOVE_SPEED;
-      }
-
-      if (dx !== 0 || dy !== 0) {
-        positionRef.current = {
-          x: Math.max(40, Math.min(ARENA_WIDTH - 40, positionRef.current.x + dx)),
-          y: Math.max(40, Math.min(ARENA_HEIGHT - 40, positionRef.current.y + dy))
-        };
-        setMyPosition({ ...positionRef.current });
-      }
-
-      // Check gem collection
-      setGems(prev => {
-        const remaining = prev.filter(gem => {
-          const dist = Math.hypot(positionRef.current.x - gem.x, positionRef.current.y - gem.y);
-          if (dist < 45) {
-            setScore(s => s + gem.value);
-            return false;
-          }
-          return true;
-        });
-        
-        // Respawn gems if running low
-        if (remaining.length < 5) {
-          const newGems = [];
-          for (let i = 0; i < 10; i++) {
-            newGems.push({
-              id: `gem-${Date.now()}-${i}`,
-              x: 100 + Math.random() * (ARENA_WIDTH - 200),
-              y: 100 + Math.random() * (ARENA_HEIGHT - 200),
-              value: Math.random() > 0.7 ? 10 : Math.random() > 0.5 ? 5 : 1
-            });
-          }
-          return [...remaining, ...newGems];
-        }
-        
-        return remaining;
-      });
-    }, 33);
-
-    return () => clearInterval(gameLoop);
-  }, [isPlaying]);
-
-  // Canvas rendering
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-
-    const render = () => {
-      const time = Date.now() / 1000;
-      
-      // Background
-      ctx.fillStyle = currentMap.bg;
-      ctx.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-      
-      // Animated grid pattern
-      ctx.strokeStyle = currentMap.color + '20';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < ARENA_WIDTH; i += 50) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, ARENA_HEIGHT);
-        ctx.stroke();
-      }
-      for (let j = 0; j < ARENA_HEIGHT; j += 50) {
-        ctx.beginPath();
-        ctx.moveTo(0, j);
-        ctx.lineTo(ARENA_WIDTH, j);
-        ctx.stroke();
-      }
-      
-      // Animated border
-      ctx.strokeStyle = currentMap.color;
-      ctx.lineWidth = 4;
-      ctx.shadowColor = currentMap.color;
-      ctx.shadowBlur = 10 + Math.sin(time * 2) * 5;
-      ctx.strokeRect(10, 10, ARENA_WIDTH - 20, ARENA_HEIGHT - 20);
-      ctx.shadowBlur = 0;
-      
-      // Draw gems
-      gems.forEach(gem => {
-        const pulse = 1 + Math.sin(time * 3 + gem.x) * 0.15;
-        
-        // Glow
-        const gemGlow = ctx.createRadialGradient(gem.x, gem.y, 0, gem.x, gem.y, 30 * pulse);
-        const gemColor = gem.value >= 10 ? '#FFD700' : gem.value >= 5 ? '#00D4FF' : '#22c55e';
-        gemGlow.addColorStop(0, gemColor + '80');
-        gemGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = gemGlow;
-        ctx.beginPath();
-        ctx.arc(gem.x, gem.y, 30 * pulse, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Emoji
-        ctx.font = '28px Arial';
-        ctx.textAlign = 'center';
-        const emoji = gem.value >= 10 ? '💎' : gem.value >= 5 ? '🪙' : '✨';
-        ctx.fillText(emoji, gem.x, gem.y + 10);
-        
-        // Value
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px Arial';
-        ctx.fillText(`+${gem.value}`, gem.x, gem.y + 30);
-      });
-      
-      // Draw player
-      const playerGlow = ctx.createRadialGradient(myPosition.x, myPosition.y, 0, myPosition.x, myPosition.y, 50);
-      playerGlow.addColorStop(0, myColor + '60');
-      playerGlow.addColorStop(1, 'transparent');
-      ctx.fillStyle = playerGlow;
-      ctx.beginPath();
-      ctx.arc(myPosition.x, myPosition.y, 50, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Player body
-      ctx.fillStyle = myColor;
-      ctx.beginPath();
-      ctx.arc(myPosition.x, myPosition.y, PLAYER_SIZE / 2, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Crown for holder
-      ctx.font = '24px Arial';
-      ctx.fillText('👑', myPosition.x, myPosition.y - 30);
-      
-      // Name
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 12px Arial';
-      ctx.fillText(username || 'Player', myPosition.x, myPosition.y + 45);
-      
-      animationRef.current = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, [gems, myPosition, myColor, username, currentMap]);
 
   const goBack = () => {
-    const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
-    navigate(fromBullWorld ? '/games/bull-world' : '/');
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    if (currentGame !== 'menu') {
+      setCurrentGame('menu');
+      setGameActive(false);
+      setScore(0);
+    } else {
+      const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
+      navigate(fromBullWorld ? '/games/bull-world' : '/');
+    }
   };
 
   if (isLoading) {
@@ -422,135 +103,355 @@ export default function HoldersArena() {
 
   return (
     <div className="min-h-screen bg-[#0a1628] p-4">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <Button variant="ghost" className="text-[#FFD700] hover:bg-[#FFD700]/10" onClick={goBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Exit Arena
+            <ArrowLeft className="w-4 h-4 mr-2" /> {currentGame !== 'menu' ? 'Back' : 'Exit'}
           </Button>
           <CreditBar />
         </div>
 
         {/* Title */}
-        <div className="text-center mb-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] bg-clip-text text-transparent flex items-center justify-center gap-2">
-            <Crown className="w-8 h-8 text-[#FFD700]" />
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] bg-clip-text text-transparent flex items-center justify-center gap-2">
+            <Crown className="w-6 h-6 text-[#FFD700]" />
             Holders Arena
-            <Crown className="w-8 h-8 text-[#FFD700]" />
+            <Crown className="w-6 h-6 text-[#FFD700]" />
           </h1>
-          <p className="text-[#FFD700]/60">Exclusive arena for CSB Bull holders only!</p>
+          <p className="text-[#FFD700]/60 text-sm">Exclusive for {bullsOwned} Bull holders!</p>
         </div>
 
-        {/* Game Stats */}
-        <div className="flex justify-center gap-4 mb-4">
-          <Card className="px-4 py-2 flex items-center gap-2 bg-[#0d2137] border-[#FFD700]/30">
-            <Timer className="w-4 h-4 text-[#FFD700]" />
-            <span className="text-white font-bold">{formatTime(timeLeft)}</span>
-          </Card>
-          <Card className="px-4 py-2 flex items-center gap-2 bg-[#0d2137] border-[#FFD700]/30">
-            <Gem className="w-4 h-4 text-[#FFD700]" />
-            <span className="text-white font-bold">{score} pts</span>
-          </Card>
-          <Card className="px-4 py-2 flex items-center gap-2 bg-[#0d2137] border-[#FFD700]/30">
-            <Crown className="w-4 h-4 text-[#FFD700]" />
-            <span className="text-white">{bullsOwned} Bulls</span>
-          </Card>
-        </div>
-
-        {/* Map Selection */}
-        {!isPlaying && (
-          <div className="flex justify-center gap-2 mb-4">
-            {ARENA_MAPS.map(map => (
-              <Button
-                key={map.id}
-                variant={currentMap.id === map.id ? "default" : "outline"}
-                className={currentMap.id === map.id 
-                  ? "bg-[#FFD700] text-black" 
-                  : "border-[#FFD700]/50 text-[#FFD700]"}
-                onClick={() => setCurrentMap(map)}
-              >
-                {map.name}
-              </Button>
-            ))}
-          </div>
+        {currentGame === 'menu' && (
+          <GameMenu onSelectGame={setCurrentGame} />
         )}
-
-        {/* Game Canvas */}
-        <Card className="p-2 mb-4 overflow-hidden bg-[#0d2137] border-[#FFD700]/30">
-          <canvas
-            ref={canvasRef}
-            width={ARENA_WIDTH}
-            height={ARENA_HEIGHT}
-            className="w-full rounded-lg touch-none"
-            style={{ maxHeight: '50vh' }}
+        
+        {currentGame === 'gem-tap' && (
+          <GemTapGame 
+            score={score} 
+            setScore={setScore}
+            gameActive={gameActive}
+            setGameActive={setGameActive}
+            timeLeft={timeLeft}
+            setTimeLeft={setTimeLeft}
+            onEnd={awardDiamonds}
           />
-          
-          {/* Joystick Control - only show during playing */}
-          {isPlaying && (
-            <div className="flex justify-center mt-3">
-              <div
-                className="relative w-28 h-28 rounded-full bg-black/50 border-2 border-[#FFD700]/50 flex items-center justify-center select-none"
-                onTouchStart={handleJoystickStart}
-                onTouchMove={handleJoystickMove}
-                onTouchEnd={handleJoystickEnd}
-                onMouseDown={handleJoystickStart}
-                onMouseMove={handleJoystickMove}
-                onMouseUp={handleJoystickEnd}
-                onMouseLeave={handleJoystickEnd}
-              >
-                <div 
-                  className="w-12 h-12 rounded-full bg-[#FFD700]/80 border-2 border-[#FFD700] shadow-lg transition-transform"
-                  style={{
-                    transform: joystickRef.current.active 
-                      ? `translate(${joystickRef.current.dx * 30}px, ${joystickRef.current.dy * 30}px)` 
-                      : 'translate(0, 0)'
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="absolute top-1 text-xl text-[#FFD700]">↑</span>
-                  <span className="absolute bottom-1 text-xl text-[#FFD700]">↓</span>
-                  <span className="absolute left-1 text-xl text-[#FFD700]">←</span>
-                  <span className="absolute right-1 text-xl text-[#FFD700]">→</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Start/End Game */}
-        <div className="text-center">
-          {!isPlaying ? (
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black hover:from-[#FFD700]/90 hover:to-[#FFA500]/90 font-bold px-8"
-              onClick={startGame}
-            >
-              <Zap className="w-5 h-5 mr-2" />
-              Start Round
-            </Button>
-          ) : (
-            <div className="text-[#FFD700]/80 text-sm">
-              Use joystick below or <kbd className="px-2 py-1 bg-[#1a3a4a] rounded">WASD</kbd> to move • Collect gems!
-            </div>
-          )}
-        </div>
-
-        {/* Instructions */}
-        {!isPlaying && (
-          <Card className="mt-4 p-4 bg-[#0d2137] border-[#FFD700]/30">
-            <h3 className="font-bold text-[#FFD700] mb-2 flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              How to Play
-            </h3>
-            <ul className="text-sm text-white/80 space-y-1">
-              <li>• Collect as many gems as possible before time runs out</li>
-              <li>• 💎 = 10 pts • 🪙 = 5 pts • ✨ = 1 pt</li>
-              <li>• Score is converted to diamonds at the end</li>
-              <li>• Exclusive to CSB Bull NFT holders!</li>
-            </ul>
-          </Card>
+        )}
+        
+        {currentGame === 'bull-slots' && (
+          <BullSlotsGame onWin={awardDiamonds} />
+        )}
+        
+        {currentGame === 'lucky-pick' && (
+          <LuckyPickGame onWin={awardDiamonds} />
         )}
       </div>
     </div>
+  );
+}
+
+// Game Menu Component
+function GameMenu({ onSelectGame }: { onSelectGame: (game: GameType) => void }) {
+  const games = [
+    { id: 'gem-tap' as GameType, name: 'Gem Tap', icon: Gem, desc: 'Tap gems as fast as you can!', color: '#00D4FF' },
+    { id: 'bull-slots' as GameType, name: 'Bull Slots', icon: Coins, desc: 'Spin for diamond rewards!', color: '#FFD700' },
+    { id: 'lucky-pick' as GameType, name: 'Lucky Pick', icon: Target, desc: 'Pick the winning card!', color: '#22c55e' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {games.map(game => (
+        <Card 
+          key={game.id}
+          className="p-4 bg-[#0d2137] border-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{ borderColor: game.color + '50' }}
+          onClick={() => onSelectGame(game.id)}
+        >
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-14 h-14 rounded-xl flex items-center justify-center"
+              style={{ background: game.color + '20' }}
+            >
+              <game.icon className="w-7 h-7" style={{ color: game.color }} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-white">{game.name}</h3>
+              <p className="text-sm text-gray-400">{game.desc}</p>
+            </div>
+            <Zap className="w-5 h-5 text-[#FFD700]" />
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// Game 1: Gem Tap - Tap appearing gems
+function GemTapGame({ 
+  score, setScore, gameActive, setGameActive, timeLeft, setTimeLeft, onEnd 
+}: {
+  score: number;
+  setScore: (s: number | ((p: number) => number)) => void;
+  gameActive: boolean;
+  setGameActive: (a: boolean) => void;
+  timeLeft: number;
+  setTimeLeft: (t: number | ((p: number) => number)) => void;
+  onEnd: (diamonds: number) => void;
+}) {
+  const [gems, setGems] = useState<{id: number; x: number; y: number; value: number}[]>([]);
+
+  const startGame = () => {
+    setScore(0);
+    setTimeLeft(30);
+    setGameActive(true);
+    spawnGem();
+  };
+
+  const spawnGem = () => {
+    const newGem = {
+      id: Date.now(),
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 70,
+      value: Math.random() > 0.8 ? 5 : 1
+    };
+    setGems(prev => [...prev.slice(-4), newGem]);
+  };
+
+  const tapGem = (gemId: number, value: number) => {
+    if (!gameActive) return;
+    setGems(prev => prev.filter(g => g.id !== gemId));
+    setScore(prev => prev + value);
+    spawnGem();
+  };
+
+  useEffect(() => {
+    if (!gameActive) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setGameActive(false);
+          const reward = Math.floor(score / 3);
+          onEnd(reward);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const spawner = setInterval(spawnGem, 1500);
+    
+    return () => {
+      clearInterval(timer);
+      clearInterval(spawner);
+    };
+  }, [gameActive, score]);
+
+  return (
+    <Card className="p-4 bg-[#0d2137] border-[#00D4FF]/30">
+      <div className="flex justify-between mb-4">
+        <span className="text-white font-bold">Score: {score}</span>
+        <span className="text-[#00D4FF] font-bold">⏱️ {timeLeft}s</span>
+      </div>
+      
+      <div className="relative w-full h-80 bg-[#0a1628] rounded-xl overflow-hidden border border-[#00D4FF]/20">
+        {!gameActive && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button 
+              onClick={startGame}
+              className="bg-[#00D4FF] hover:bg-[#00D4FF]/80 text-black font-bold text-lg px-8 py-6"
+            >
+              {timeLeft === 0 ? `Play Again (Won ${Math.floor(score/3)}💎)` : 'Start Game'}
+            </Button>
+          </div>
+        )}
+        
+        {gameActive && gems.map(gem => (
+          <button
+            key={gem.id}
+            onClick={() => tapGem(gem.id, gem.value)}
+            className="absolute w-14 h-14 text-3xl animate-pulse hover:scale-125 transition-transform"
+            style={{ left: `${gem.x}%`, top: `${gem.y}%` }}
+          >
+            {gem.value > 1 ? '💎' : '✨'}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+// Game 2: Bull Slots - Simple slot machine
+function BullSlotsGame({ onWin }: { onWin: (diamonds: number) => void }) {
+  const symbols = ['🐂', '💎', '🪙', '⭐', '👑'];
+  const [reels, setReels] = useState(['🐂', '🐂', '🐂']);
+  const [spinning, setSpinning] = useState(false);
+  const [lastWin, setLastWin] = useState(0);
+
+  const spin = () => {
+    if (spinning) return;
+    setSpinning(true);
+    setLastWin(0);
+    
+    let spins = 0;
+    const maxSpins = 15;
+    
+    const interval = setInterval(() => {
+      setReels([
+        symbols[Math.floor(Math.random() * symbols.length)],
+        symbols[Math.floor(Math.random() * symbols.length)],
+        symbols[Math.floor(Math.random() * symbols.length)]
+      ]);
+      spins++;
+      
+      if (spins >= maxSpins) {
+        clearInterval(interval);
+        
+        // Final result with weighted odds
+        const finalReels = [
+          symbols[Math.floor(Math.random() * symbols.length)],
+          symbols[Math.floor(Math.random() * symbols.length)],
+          symbols[Math.floor(Math.random() * symbols.length)]
+        ];
+        
+        // 15% chance for a match
+        if (Math.random() < 0.15) {
+          const winner = symbols[Math.floor(Math.random() * symbols.length)];
+          finalReels[0] = winner;
+          finalReels[1] = winner;
+          finalReels[2] = winner;
+        }
+        
+        setReels(finalReels);
+        setSpinning(false);
+        
+        // Check win
+        if (finalReels[0] === finalReels[1] && finalReels[1] === finalReels[2]) {
+          const prize = finalReels[0] === '💎' ? 25 : finalReels[0] === '👑' ? 50 : 10;
+          setLastWin(prize);
+          onWin(prize);
+        }
+      }
+    }, 100);
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#FFD700]/30 text-center">
+      <h3 className="text-xl font-bold text-[#FFD700] mb-4">🎰 Bull Slots 🎰</h3>
+      
+      <div className="flex justify-center gap-3 mb-6">
+        {reels.map((symbol, i) => (
+          <div 
+            key={i}
+            className={`w-20 h-20 bg-[#0a1628] rounded-xl border-2 border-[#FFD700]/50 flex items-center justify-center text-4xl ${spinning ? 'animate-bounce' : ''}`}
+          >
+            {symbol}
+          </div>
+        ))}
+      </div>
+      
+      {lastWin > 0 && (
+        <p className="text-2xl font-bold text-[#22c55e] mb-4 animate-pulse">
+          🎉 WIN: +{lastWin} 💎
+        </p>
+      )}
+      
+      <Button 
+        onClick={spin}
+        disabled={spinning}
+        className="bg-[#FFD700] hover:bg-[#FFD700]/80 text-black font-bold text-lg px-12 py-6"
+      >
+        {spinning ? 'Spinning...' : 'SPIN FREE'}
+      </Button>
+      
+      <p className="text-gray-400 text-sm mt-4">Match 3 to win diamonds!</p>
+    </Card>
+  );
+}
+
+// Game 3: Lucky Pick - Pick a card
+function LuckyPickGame({ onWin }: { onWin: (diamonds: number) => void }) {
+  const [cards, setCards] = useState([false, false, false, false]);
+  const [revealed, setRevealed] = useState<number | null>(null);
+  const [winningCard, setWinningCard] = useState(0);
+  const [prize, setPrize] = useState(0);
+  const [canPick, setCanPick] = useState(true);
+
+  const resetGame = () => {
+    setCards([false, false, false, false]);
+    setRevealed(null);
+    setWinningCard(Math.floor(Math.random() * 4));
+    setPrize([5, 10, 15, 25][Math.floor(Math.random() * 4)]);
+    setCanPick(true);
+  };
+
+  useEffect(() => {
+    resetGame();
+  }, []);
+
+  const pickCard = (index: number) => {
+    if (!canPick || revealed !== null) return;
+    setCanPick(false);
+    setRevealed(index);
+    
+    if (index === winningCard) {
+      onWin(prize);
+    }
+    
+    // Reveal all after delay
+    setTimeout(() => {
+      setCards([true, true, true, true]);
+    }, 1000);
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#22c55e]/30 text-center">
+      <h3 className="text-xl font-bold text-[#22c55e] mb-2">🎯 Lucky Pick 🎯</h3>
+      <p className="text-gray-400 text-sm mb-4">Pick the winning card to win {prize} 💎</p>
+      
+      <div className="grid grid-cols-2 gap-3 mb-6 max-w-xs mx-auto">
+        {cards.map((isRevealed, i) => (
+          <button
+            key={i}
+            onClick={() => pickCard(i)}
+            disabled={!canPick}
+            className={`h-24 rounded-xl text-4xl transition-all ${
+              isRevealed || revealed === i
+                ? i === winningCard
+                  ? 'bg-[#22c55e] scale-105'
+                  : 'bg-red-500/50'
+                : 'bg-[#0a1628] border-2 border-[#22c55e]/50 hover:border-[#22c55e] hover:scale-105'
+            }`}
+          >
+            {isRevealed || revealed === i ? (
+              i === winningCard ? '💎' : '❌'
+            ) : (
+              '❓'
+            )}
+          </button>
+        ))}
+      </div>
+      
+      {revealed !== null && (
+        <div className="mb-4">
+          {revealed === winningCard ? (
+            <p className="text-2xl font-bold text-[#22c55e] animate-pulse">
+              🎉 YOU WON +{prize} 💎!
+            </p>
+          ) : (
+            <p className="text-lg text-red-400">Try again!</p>
+          )}
+        </div>
+      )}
+      
+      {revealed !== null && (
+        <Button 
+          onClick={resetGame}
+          className="bg-[#22c55e] hover:bg-[#22c55e]/80 text-black font-bold"
+        >
+          Play Again
+        </Button>
+      )}
+    </Card>
   );
 }
