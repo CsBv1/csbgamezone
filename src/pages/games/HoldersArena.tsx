@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,11 @@ export default function HoldersArena() {
   const [isLoading, setIsLoading] = useState(true);
   
   const keysPressed = useRef<Set<string>>(new Set());
+  const positionRef = useRef({ x: 600, y: 350 });
+  
+  // Joystick state
+  const joystickRef = useRef<{ active: boolean; dx: number; dy: number }>({ active: false, dx: 0, dy: 0 });
+  const joystickCenterRef = useRef<{ x: number; y: number } | null>(null);
   
   // NFT check
   const { bullsOwned } = useNFTBonuses(walletAddress);
@@ -174,6 +179,45 @@ export default function HoldersArena() {
     }
   };
 
+  // Joystick handlers
+  const handleJoystickStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!isPlaying) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    
+    joystickCenterRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    joystickRef.current = { active: true, dx: 0, dy: 0 };
+  }, [isPlaying]);
+
+  const handleJoystickMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!joystickRef.current.active || !joystickCenterRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    const dx = clientX - joystickCenterRef.current.x;
+    const dy = clientY - joystickCenterRef.current.y;
+    
+    const maxDist = 40;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const clampedDist = Math.min(dist, maxDist);
+    const angle = Math.atan2(dy, dx);
+    
+    joystickRef.current.dx = (Math.cos(angle) * clampedDist) / maxDist;
+    joystickRef.current.dy = (Math.sin(angle) * clampedDist) / maxDist;
+  }, []);
+
+  const handleJoystickEnd = useCallback(() => {
+    joystickRef.current = { active: false, dx: 0, dy: 0 };
+    joystickCenterRef.current = null;
+  }, []);
+
   // Movement controls
   useEffect(() => {
     if (!isPlaying) return;
@@ -205,22 +249,30 @@ export default function HoldersArena() {
     const gameLoop = setInterval(() => {
       let dx = 0, dy = 0;
 
+      // Keyboard controls
       if (keysPressed.current.has('arrowup') || keysPressed.current.has('w')) dy = -MOVE_SPEED;
       if (keysPressed.current.has('arrowdown') || keysPressed.current.has('s')) dy = MOVE_SPEED;
       if (keysPressed.current.has('arrowleft') || keysPressed.current.has('a')) dx = -MOVE_SPEED;
       if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) dx = MOVE_SPEED;
 
+      // Joystick controls
+      if (joystickRef.current.active) {
+        dx = joystickRef.current.dx * MOVE_SPEED;
+        dy = joystickRef.current.dy * MOVE_SPEED;
+      }
+
       if (dx !== 0 || dy !== 0) {
-        setMyPosition(prev => ({
-          x: Math.max(40, Math.min(ARENA_WIDTH - 40, prev.x + dx)),
-          y: Math.max(40, Math.min(ARENA_HEIGHT - 40, prev.y + dy))
-        }));
+        positionRef.current = {
+          x: Math.max(40, Math.min(ARENA_WIDTH - 40, positionRef.current.x + dx)),
+          y: Math.max(40, Math.min(ARENA_HEIGHT - 40, positionRef.current.y + dy))
+        };
+        setMyPosition({ ...positionRef.current });
       }
 
       // Check gem collection
       setGems(prev => {
         const remaining = prev.filter(gem => {
-          const dist = Math.hypot(myPosition.x - gem.x, myPosition.y - gem.y);
+          const dist = Math.hypot(positionRef.current.x - gem.x, positionRef.current.y - gem.y);
           if (dist < 45) {
             setScore(s => s + gem.value);
             return false;
@@ -247,7 +299,7 @@ export default function HoldersArena() {
     }, 33);
 
     return () => clearInterval(gameLoop);
-  }, [isPlaying, myPosition]);
+  }, [isPlaying]);
 
   // Canvas rendering
   useEffect(() => {
@@ -429,9 +481,40 @@ export default function HoldersArena() {
             ref={canvasRef}
             width={ARENA_WIDTH}
             height={ARENA_HEIGHT}
-            className="w-full rounded-lg"
-            style={{ maxHeight: '60vh' }}
+            className="w-full rounded-lg touch-none"
+            style={{ maxHeight: '50vh' }}
           />
+          
+          {/* Joystick Control - only show during playing */}
+          {isPlaying && (
+            <div className="flex justify-center mt-3">
+              <div
+                className="relative w-28 h-28 rounded-full bg-black/50 border-2 border-[#FFD700]/50 flex items-center justify-center select-none"
+                onTouchStart={handleJoystickStart}
+                onTouchMove={handleJoystickMove}
+                onTouchEnd={handleJoystickEnd}
+                onMouseDown={handleJoystickStart}
+                onMouseMove={handleJoystickMove}
+                onMouseUp={handleJoystickEnd}
+                onMouseLeave={handleJoystickEnd}
+              >
+                <div 
+                  className="w-12 h-12 rounded-full bg-[#FFD700]/80 border-2 border-[#FFD700] shadow-lg transition-transform"
+                  style={{
+                    transform: joystickRef.current.active 
+                      ? `translate(${joystickRef.current.dx * 30}px, ${joystickRef.current.dy * 30}px)` 
+                      : 'translate(0, 0)'
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="absolute top-1 text-xl text-[#FFD700]">↑</span>
+                  <span className="absolute bottom-1 text-xl text-[#FFD700]">↓</span>
+                  <span className="absolute left-1 text-xl text-[#FFD700]">←</span>
+                  <span className="absolute right-1 text-xl text-[#FFD700]">→</span>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Start/End Game */}
@@ -446,8 +529,8 @@ export default function HoldersArena() {
               Start Round
             </Button>
           ) : (
-            <div className="text-[#FFD700]/80">
-              Use <kbd className="px-2 py-1 bg-[#1a3a4a] rounded">WASD</kbd> or <kbd className="px-2 py-1 bg-[#1a3a4a] rounded">Arrow Keys</kbd> to move • Collect gems before time runs out!
+            <div className="text-[#FFD700]/80 text-sm">
+              Use joystick below or <kbd className="px-2 py-1 bg-[#1a3a4a] rounded">WASD</kbd> to move • Collect gems!
             </div>
           )}
         </div>
