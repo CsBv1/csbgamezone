@@ -713,6 +713,7 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
   const [keysFound, setKeysFound] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [hasAwardedKeys, setHasAwardedKeys] = useState(false);
 
   const initGame = () => {
     const newGrid: ('hidden' | 'empty' | 'key' | 'trap' | 'bonus')[][] = 
@@ -769,6 +770,7 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
     setKeysFound(0);
     setGameOver(false);
     setHintsUsed(0);
+    setHasAwardedKeys(false);
     
     // Store actual values
     (window as any).__treasureGrid = newGrid;
@@ -802,8 +804,9 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
         vibrate([50, 30, 50, 30, 100]);
         setKeysFound(prev => {
           const newFound = prev + 1;
-          if (newFound >= 2) {
+          if (newFound >= 2 && !hasAwardedKeys) {
             setGameOver(true);
+            setHasAwardedKeys(true);
             onWin(1);
           }
           return newFound;
@@ -823,11 +826,13 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
         playSound('hit');
     }
     
-    // Check game over
+    // Check game over - award 1 key for finding at least 1
     if (digsLeft - 1 <= 0 && keysFound < 2 && cellValue !== 'key') {
       setGameOver(true);
-      if (keysFound > 0) {
-        onWin(keysFound);
+      // Award key if found at least 1 key during the game
+      if (keysFound >= 1 && !hasAwardedKeys) {
+        setHasAwardedKeys(true);
+        onWin(1);
       }
     }
   };

@@ -112,4 +112,10 @@ All colors MUST be HSL.
   .animate-scan {
     animation: scan 2s ease-in-out infinite;
   }
+
+  /* Holder glow frame for leaderboard entries */
+  .holder-glow-frame {
+    box-shadow: 0 0 15px hsl(45 96% 53% / 0.4), inset 0 0 10px hsl(45 96% 53% / 0.1);
+    border-color: hsl(45 96% 53% / 0.8) !important;
+  }
 }

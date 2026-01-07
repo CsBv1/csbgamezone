@@ -20,9 +20,15 @@ interface UserColor {
   active: boolean;
 }
 
+interface UserNFTBonus {
+  user_id: string;
+  bulls_owned: number;
+}
+
 export const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userColors, setUserColors] = useState<Record<string, string>>({});
+  const [userBulls, setUserBulls] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,6 +91,21 @@ export const Leaderboard = () => {
         });
         setUserColors(colorsMap);
       }
+
+      // Fetch NFT bonuses to see who holds bulls
+      const { data: nftData } = await supabase
+        .from('user_nft_bonuses')
+        .select('user_id, bulls_owned');
+      
+      if (nftData && Array.isArray(nftData)) {
+        const bullsMap: Record<string, number> = {};
+        nftData.forEach((nft: any) => {
+          if (nft.bulls_owned > 0) {
+            bullsMap[nft.user_id] = nft.bulls_owned;
+          }
+        });
+        setUserBulls(bullsMap);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
@@ -130,40 +151,52 @@ export const Leaderboard = () => {
           leaderboard.map((entry, index) => {
             const nextRank = leaderboard[index - 1];
             const diamondGap = nextRank ? nextRank.total_diamonds - entry.total_diamonds : 0;
+            const isHolder = entry.user_id && userBulls[entry.user_id] > 0;
             
             return (
               <div
                 key={`${entry.username}-${entry.rank}`}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-all hover:scale-[1.02] ${
+                className={`flex items-center justify-between p-3 rounded-lg border transition-all hover:scale-[1.02] relative overflow-hidden ${
                   entry.rank <= 3
                     ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30'
                     : 'bg-background/50 border-border'
-                }`}
+                } ${isHolder ? 'animate-pulse-glow border-amber-400' : ''}`}
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                {/* Holder glow overlay */}
+                {isHolder && (
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
+                )}
+                <div className="flex items-center gap-3 flex-1 min-w-0 relative z-10">
                   <span className="text-lg font-bold min-w-[3rem]">
                     {getMedalEmoji(entry.rank)}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p 
-                      className="font-semibold truncate"
-                      style={{ 
-                        color: entry.user_id && userColors[entry.user_id] 
-                          ? userColors[entry.user_id] 
-                          : 'inherit',
-                        textShadow: entry.user_id && userColors[entry.user_id]
-                          ? `0 0 10px ${userColors[entry.user_id]}80`
-                          : 'none'
-                      }}
-                    >
-                      {entry.username}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p 
+                        className="font-semibold truncate"
+                        style={{ 
+                          color: entry.user_id && userColors[entry.user_id] 
+                            ? userColors[entry.user_id] 
+                            : 'inherit',
+                          textShadow: entry.user_id && userColors[entry.user_id]
+                            ? `0 0 10px ${userColors[entry.user_id]}80`
+                            : 'none'
+                        }}
+                      >
+                        {entry.username}
+                      </p>
+                      {isHolder && (
+                        <span className="text-xs px-1.5 py-0.5 bg-amber-500/30 text-amber-300 rounded-full animate-pulse whitespace-nowrap">
+                          🐂 {userBulls[entry.user_id!]}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {entry.total_wins} wins • {entry.total_games} games
                     </p>
                   </div>
                 </div>
-                <div className="text-right ml-4">
+                <div className="text-right ml-4 relative z-10">
                   <div className="flex items-center gap-1 mb-1">
                     <Gem className="w-4 h-4 text-cyan-400" />
                     <span className="font-bold gradient-gold bg-clip-text text-transparent">
