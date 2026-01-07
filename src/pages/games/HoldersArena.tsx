@@ -89,6 +89,7 @@ export default function HoldersArena() {
   const [isLoading, setIsLoading] = useState(true);
   const [bullsOwned, setBullsOwned] = useState(0);
   const [currentGame, setCurrentGame] = useState<GameType>('menu');
+  const [pendingKeys, setPendingKeys] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -124,34 +125,51 @@ export default function HoldersArena() {
     init();
   }, []);
 
-  const awardKeys = async (amount: number) => {
+  const saveKeysToWallet = async (amount: number) => {
     if (!userId || amount <= 0) return;
     
-    const { data: current } = await supabase
-      .from('user_keys')
-      .select('balance')
-      .eq('user_id', userId)
-      .single();
-    
-    if (current) {
-      await supabase
+    try {
+      const { data: current } = await supabase
         .from('user_keys')
-        .update({ balance: ((current as any).balance || 0) + amount })
-        .eq('user_id', userId);
-    } else {
-      await supabase
-        .from('user_keys')
-        .insert({ user_id: userId, balance: amount });
+        .select('balance')
+        .eq('user_id', userId)
+        .single();
+      
+      if (current) {
+        await supabase
+          .from('user_keys')
+          .update({ balance: ((current as any).balance || 0) + amount })
+          .eq('user_id', userId);
+      } else {
+        await supabase
+          .from('user_keys')
+          .insert({ user_id: userId, balance: amount });
+      }
+      
+      toast({ title: `+${amount} 🔑 saved to wallet!`, description: "Keys added!" });
+    } catch (e) {
+      console.error('Failed to save keys:', e);
     }
-    
+  };
+
+  const awardKeys = (amount: number) => {
+    if (amount <= 0) return;
+    setPendingKeys(prev => prev + amount);
     playSound('win');
     vibrate([100, 50, 100, 50, 200]);
     toast({ title: `+${amount} 🔑`, description: "Keys earned!" });
   };
 
-  const goBack = () => {
+  const goBack = async () => {
     playSound('click');
     vibrate(30);
+    
+    // Save any pending keys when leaving
+    if (pendingKeys > 0) {
+      await saveKeysToWallet(pendingKeys);
+      setPendingKeys(0);
+    }
+    
     if (currentGame !== 'menu') {
       setCurrentGame('menu');
     } else {
@@ -159,12 +177,18 @@ export default function HoldersArena() {
       navigate(fromBullWorld ? '/games/bull-world' : '/');
     }
   };
-
-  const selectGame = (game: GameType) => {
+  
+  // Auto-save keys when switching games
+  const handleGameChange = async (game: GameType) => {
+    if (pendingKeys > 0) {
+      await saveKeysToWallet(pendingKeys);
+      setPendingKeys(0);
+    }
     playSound('click');
     vibrate(50);
     setCurrentGame(game);
   };
+
 
   if (isLoading) {
     return (
@@ -199,7 +223,7 @@ export default function HoldersArena() {
         </div>
 
         {currentGame === 'menu' && (
-          <GameMenu onSelectGame={selectGame} />
+          <GameMenu onSelectGame={handleGameChange} />
         )}
         
         {currentGame === 'bull-quest' && (
@@ -262,7 +286,7 @@ function GameMenu({ onSelectGame }: { onSelectGame: (game: GameType) => void }) 
 
 // Game 1: Bull Quest - Navigate through obstacles and collect treasures
 function BullQuestGame({ onWin }: { onWin: (keys: number) => void }) {
-  const [playerPos, setPlayerPos] = useState({ x: 1, y: 1 });
+  const [playerPos, setPlayerPos] = useState({ x: 0, y: 0 });
   const [treasures, setTreasures] = useState<{x: number; y: number; collected: boolean}[]>([]);
   const [obstacles, setObstacles] = useState<{x: number; y: number}[]>([]);
   const [enemies, setEnemies] = useState<{x: number; y: number}[]>([]);
@@ -271,6 +295,32 @@ function BullQuestGame({ onWin }: { onWin: (keys: number) => void }) {
   const [gameOver, setGameOver] = useState(false);
   const [level, setLevel] = useState(1);
   const gridSize = 6;
+
+  // Check if a path exists from player to target using BFS
+  const hasPath = (start: {x: number; y: number}, target: {x: number; y: number}, blockedCells: {x: number; y: number}[]) => {
+    const visited = new Set<string>();
+    const queue = [start];
+    visited.add(`${start.x},${start.y}`);
+    
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (current.x === target.x && current.y === target.y) return true;
+      
+      const dirs = [{x: 0, y: -1}, {x: 0, y: 1}, {x: -1, y: 0}, {x: 1, y: 0}];
+      for (const dir of dirs) {
+        const nx = current.x + dir.x;
+        const ny = current.y + dir.y;
+        const key = `${nx},${ny}`;
+        
+        if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && 
+            !visited.has(key) && !blockedCells.some(b => b.x === nx && b.y === ny)) {
+          visited.add(key);
+          queue.push({x: nx, y: ny});
+        }
+      }
+    }
+    return false;
+  };
 
   const initLevel = useCallback(() => {
     setPlayerPos({ x: 0, y: 0 });
@@ -288,34 +338,56 @@ function BullQuestGame({ onWin }: { onWin: (keys: number) => void }) {
     }
     setTreasures(newTreasures);
     
-    // Generate obstacles
+    // Generate obstacles with path validation - fewer obstacles to prevent trapping
+    const maxObstacles = Math.min(3 + Math.floor(level / 2), 6); // Cap obstacles
     const newObstacles: {x: number; y: number}[] = [];
-    for (let i = 0; i < 4 + level; i++) {
-      let pos;
-      do {
-        pos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
-      } while (
-        (pos.x === 0 && pos.y === 0) || 
-        newTreasures.some(t => t.x === pos.x && t.y === pos.y) ||
-        newObstacles.some(o => o.x === pos.x && o.y === pos.y)
-      );
-      newObstacles.push(pos);
+    let attempts = 0;
+    
+    while (newObstacles.length < maxObstacles && attempts < 50) {
+      attempts++;
+      const pos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+      
+      // Skip if on player, treasure, or existing obstacle
+      if ((pos.x === 0 && pos.y === 0) || 
+          newTreasures.some(t => t.x === pos.x && t.y === pos.y) ||
+          newObstacles.some(o => o.x === pos.x && o.y === pos.y)) {
+        continue;
+      }
+      
+      // Skip cells adjacent to player start to ensure movement
+      if ((pos.x === 0 && pos.y === 1) || (pos.x === 1 && pos.y === 0)) {
+        continue;
+      }
+      
+      // Check if adding this obstacle still allows paths to all treasures
+      const testObstacles = [...newObstacles, pos];
+      const allReachable = newTreasures.every(t => hasPath({x: 0, y: 0}, {x: t.x, y: t.y}, testObstacles));
+      
+      if (allReachable) {
+        newObstacles.push(pos);
+      }
     }
     setObstacles(newObstacles);
     
-    // Generate enemies
+    // Generate enemies (fewer to reduce difficulty)
     const newEnemies: {x: number; y: number}[] = [];
-    for (let i = 0; i < Math.min(level, 3); i++) {
+    for (let i = 0; i < Math.min(Math.floor(level / 2), 2); i++) {
       let pos;
+      let enemyAttempts = 0;
       do {
         pos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+        enemyAttempts++;
       } while (
+        enemyAttempts < 20 && (
         (pos.x === 0 && pos.y === 0) || 
+        (pos.x <= 1 && pos.y <= 1) || // Keep enemies away from start
         newTreasures.some(t => t.x === pos.x && t.y === pos.y) ||
         newObstacles.some(o => o.x === pos.x && o.y === pos.y) ||
-        newEnemies.some(e => e.x === pos.x && e.y === pos.y)
+        newEnemies.some(e => e.x === pos.x && e.y === pos.y))
       );
-      newEnemies.push(pos);
+      if (enemyAttempts < 20) {
+        newEnemies.push(pos);
+      }
     }
     setEnemies(newEnemies);
   }, [level]);
