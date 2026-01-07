@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
+import { GameCard } from "@/components/GameCard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -358,9 +359,18 @@ const Dashboard = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card
-                className="group overflow-hidden bg-card border-4 border-primary hover:border-accent hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${
+                  bullsOwned > 0 
+                    ? 'border-amber-400 animate-pulse-glow' 
+                    : 'border-primary hover:border-accent'
+                }`}
                 onClick={() => navigate('/games/bull-mining')}
               >
+                {bullsOwned > 0 && (
+                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">
+                    🐂 HOLDER BOOST
+                  </div>
+                )}
                 <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center relative">
                   <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
                     NEW!
@@ -377,9 +387,18 @@ const Dashboard = () => {
               </Card>
 
               <Card
-                className="group overflow-hidden bg-card border-4 border-primary hover:border-accent hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${
+                  bullsOwned > 0 
+                    ? 'border-amber-400 animate-pulse-glow' 
+                    : 'border-primary hover:border-accent'
+                }`}
                 onClick={() => navigate('/games/milk-the-bull')}
               >
+                {bullsOwned > 0 && (
+                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">
+                    🐂 HOLDER BOOST
+                  </div>
+                )}
                 <div className="h-40 bg-gradient-to-br from-blue-600 to-cyan-700 flex items-center justify-center relative">
                   <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
                     NEW!
@@ -396,9 +415,18 @@ const Dashboard = () => {
               </Card>
 
               <Card
-                className="group overflow-hidden bg-card border-4 border-primary hover:border-accent hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${
+                  bullsOwned > 0 
+                    ? 'border-amber-400 animate-pulse-glow' 
+                    : 'border-primary hover:border-accent'
+                }`}
                 onClick={() => navigate('/games/bull-kingdom')}
               >
+                {bullsOwned > 0 && (
+                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">
+                    🐂 HOLDER BOOST
+                  </div>
+                )}
                 <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
                   <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
                     NEW!
@@ -425,100 +453,70 @@ const Dashboard = () => {
               Exclusive games requiring keys. Higher stakes, bigger rewards!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="⚔️ Bull Gauntlet"
+                description="Battle through waves for massive rewards!"
+                icon={Trophy}
+                gradient="from-orange-600 to-red-700"
                 onClick={() => navigate('/games/bull-gauntlet')}
-              >
-                <div className="h-40 bg-gradient-to-br from-orange-600 to-red-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">⚔️ Bull Gauntlet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Battle through waves for massive rewards!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Enter Arena
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Enter Arena"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="💎 Diamond Fortress"
+                description="Defend and collect diamonds in waves!"
+                icon={Gem}
+                gradient="from-cyan-600 to-blue-700"
                 onClick={() => navigate('/games/diamond-fortress')}
-              >
-                <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">💎 Diamond Fortress</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Defend and collect diamonds in waves!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Enter Fortress
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Enter Fortress"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🏆 Treasure Vault"
+                description="Unlock chests for legendary prizes!"
+                icon={Coins}
+                gradient="from-purple-600 to-pink-700"
                 onClick={() => navigate('/games/treasure-vault')}
-              >
-                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Coins className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🏆 Treasure Vault</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Unlock chests for legendary prizes!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Enter Vault
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Enter Vault"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🚀 Cosmic Gauntlet"
+                description="Navigate space for cosmic rewards!"
+                icon={Trophy}
+                gradient="from-purple-600 to-blue-700"
                 onClick={() => navigate('/games/cosmic-gauntlet')}
-              >
-                <div className="h-40 bg-gradient-to-br from-purple-600 to-blue-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🚀 Cosmic Gauntlet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Navigate space for cosmic rewards!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Launch Mission
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Launch Mission"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🎲 Fortune's Trial"
+                description="Risk vs Reward - Choose wisely!"
+                icon={Coins}
+                gradient="from-amber-600 to-orange-700"
                 onClick={() => navigate('/games/fortune-trial')}
-              >
-                <div className="h-40 bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Coins className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🎲 Fortune's Trial</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Risk vs Reward - Choose wisely!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Begin Trial
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Begin Trial"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
               <Card
                 className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
@@ -737,30 +735,14 @@ const Dashboard = () => {
 
           {/* CSB Game Master Section */}
           <div className="mt-8">
-            <Card className={`p-6 bg-gradient-to-br from-amber-500/10 to-card border-2 max-w-2xl mx-auto overflow-hidden relative ${
-              bullsOwned > 0 
-                ? 'border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.4)] animate-pulse-glow' 
-                : 'border-amber-500/40'
-            }`}>
-              {/* Animated glow overlay for NFT holders */}
-              {bullsOwned > 0 && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 animate-shimmer" />
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-scan" />
-                </div>
-              )}
+            <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-card border-2 max-w-2xl mx-auto overflow-hidden relative border-amber-500/40">
               <div className="flex items-center gap-3 mb-4 relative z-10">
-                <div className={`p-3 rounded-full ${bullsOwned > 0 ? 'bg-amber-500/30 animate-pulse' : 'bg-amber-500/20'}`}>
-                  <Sparkles className={`w-8 h-8 ${bullsOwned > 0 ? 'text-amber-300' : 'text-amber-400'}`} />
+                <div className="p-3 rounded-full bg-amber-500/20">
+                  <Sparkles className="w-8 h-8 text-amber-400" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                     🤖 CSB Game Master
-                    {bullsOwned > 0 && (
-                      <span className="text-xs px-2 py-0.5 bg-amber-500/30 text-amber-300 rounded-full animate-pulse">
-                        🐂 HOLDER BOOST
-                      </span>
-                    )}
                   </h3>
                   <p className="text-sm text-muted-foreground">Your AI assistant for tips, strategies & bonuses!</p>
                 </div>
