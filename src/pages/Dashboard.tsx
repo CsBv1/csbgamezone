@@ -518,188 +518,143 @@ const Dashboard = () => {
                 isHolder={bullsOwned > 0}
               />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🌑 Shadow Vault"
+                description="Progressive mystery boxes & tiers!"
+                icon={Gem}
+                gradient="from-purple-600 to-indigo-700"
                 onClick={() => navigate('/games/shadow-vault')}
-              >
-                <div className="h-40 bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🌑 Shadow Vault</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Progressive mystery boxes & tiers!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Enter Shadows
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Enter Shadows"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="⚔️ Eternal Arena"
+                description="Boss battle through 5 phases!"
+                icon={Trophy}
+                gradient="from-red-600 to-orange-700"
                 onClick={() => navigate('/games/eternal-arena')}
-              >
-                <div className="h-40 bg-gradient-to-br from-red-600 to-orange-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">⚔️ Eternal Arena</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Boss battle through 5 phases!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Enter Arena
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Enter Arena"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🔗 Lucky Chain"
+                description="Build multipliers, don't get greedy!"
+                icon={Coins}
+                gradient="from-purple-600 to-pink-700"
                 onClick={() => navigate('/games/lucky-chain')}
-              >
-                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Coins className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🔗 Lucky Chain</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Build multipliers, don't get greedy!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Start Chain
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Start Chain"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🧠 Pattern Master"
+                description="Test your memory with patterns!"
+                icon={Gem}
+                gradient="from-cyan-600 to-blue-700"
                 onClick={() => navigate('/games/pattern-master')}
-              >
-                <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🧠 Pattern Master</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Test your memory with patterns!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Test Memory
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Test Memory"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="⏱️ Perfect Timing"
+                description="Hit the target zone perfectly!"
+                icon={Trophy}
+                gradient="from-orange-600 to-red-700"
                 onClick={() => navigate('/games/perfect-timing')}
-              >
-                <div className="h-40 bg-gradient-to-br from-orange-600 to-red-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">⏱️ Perfect Timing</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Hit the target zone perfectly!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Test Timing
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Test Timing"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🎵 Rhythm Rush"
+                description="Hit beats, build combos, earn diamonds!"
+                icon={Music}
+                gradient="from-purple-600 to-pink-700"
                 onClick={() => navigate('/games/rhythm-rush')}
-              >
-                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Music className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🎵 Rhythm Rush</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Hit beats, build combos, earn diamonds!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Start Rhythm
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Start Rhythm"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="💎 Gem Chain"
+                description="Match-3 puzzle with levels & rewards!"
+                icon={Gem}
+                gradient="from-emerald-600 to-green-700"
                 onClick={() => navigate('/games/gem-chain')}
-              >
-                <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">💎 Gem Chain</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Match-3 puzzle with levels & rewards!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Match Gems
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Match Gems"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="🔐 Risk Vault"
+                description="High-risk progression - cash out or bust!"
+                icon={Lock}
+                gradient="from-red-600 to-orange-700"
                 onClick={() => navigate('/games/risk-vault')}
-              >
-                <div className="h-40 bg-gradient-to-br from-red-600 to-orange-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Lock className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🔐 Risk Vault</h3>
-                  <p className="text-sm text-muted-foreground mb-4">High-risk progression - cash out or bust!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Take Risk
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Take Risk"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
-              <Card
-                className="group overflow-hidden bg-card border-4 border-yellow-500 hover:border-yellow-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+              <GameCard
+                title="⚡ Speed Run"
+                description="Reflex arcade - click targets fast!"
+                icon={Gauge}
+                gradient="from-yellow-600 to-amber-700"
                 onClick={() => navigate('/games/speed-run')}
-              >
-                <div className="h-40 bg-gradient-to-br from-yellow-600 to-amber-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
-                  <Gauge className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">⚡ Speed Run</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Reflex arcade - click targets fast!</p>
-                  <Button variant="outline" size="sm" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black">
-                    Start Run
-                  </Button>
-                </div>
-              </Card>
+                badge="🔑 KEY REQUIRED"
+                badgeColor="bg-yellow-500 text-black"
+                buttonText="Start Run"
+                buttonVariant="key"
+                isHolder={bullsOwned > 0}
+              />
 
               {/* FEATURED: Bull World - Multiplayer Virtual World */}
               <Card
-                className="group overflow-hidden bg-card border-4 border-cyan-400 hover:border-cyan-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3"
+                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3 ${
+                  bullsOwned > 0 
+                    ? 'border-amber-400 animate-pulse-glow' 
+                    : 'border-cyan-400 hover:border-cyan-300'
+                }`}
                 onClick={() => navigate('/games/bull-world')}
               >
+                {bullsOwned > 0 && (
+                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-20 animate-pulse">
+                    🐂 HOLDER BOOST
+                  </div>
+                )}
                 <div className="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 flex items-center justify-center relative overflow-hidden">
                   <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%220.1%22%3E%3Cpath%20d%3D%22M0%2020L20%200L40%2020L20%2040z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"></div>
                   <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">
                     🌍 MULTIPLAYER WORLD
                   </div>
-                  <div className="absolute top-2 left-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                  <div className="absolute top-10 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
                     🔑 KEY REQUIRED
                   </div>
                   <div className="flex items-center gap-6">

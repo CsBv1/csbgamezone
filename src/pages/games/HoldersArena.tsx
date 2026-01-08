@@ -152,12 +152,14 @@ export default function HoldersArena() {
     }
   };
 
-  const awardKeys = (amount: number) => {
+  const awardKeys = async (amount: number) => {
     if (amount <= 0) return;
-    setPendingKeys(prev => prev + amount);
     playSound('win');
     vibrate([100, 50, 100, 50, 200]);
     toast({ title: `+${amount} 🔑`, description: "Keys earned!" });
+    
+    // Save keys immediately to wallet
+    await saveKeysToWallet(amount);
   };
 
   const goBack = async () => {
