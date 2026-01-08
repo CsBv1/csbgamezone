@@ -125,41 +125,79 @@ export default function HoldersArena() {
     init();
   }, []);
 
-  const saveKeysToWallet = async (amount: number) => {
-    if (!userId || amount <= 0) return;
+  const saveKeysToWallet = async (amount: number): Promise<boolean> => {
+    if (!userId || amount <= 0) {
+      console.log('[Keys] No userId or invalid amount:', { userId, amount });
+      return false;
+    }
     
     try {
-      const { data: current } = await supabase
+      console.log('[Keys] Saving keys to wallet:', { userId, amount });
+      
+      // First check if user has keys record
+      const { data: current, error: fetchError } = await supabase
         .from('user_keys')
         .select('balance')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
-      if (current) {
-        await supabase
-          .from('user_keys')
-          .update({ balance: ((current as any).balance || 0) + amount })
-          .eq('user_id', userId);
-      } else {
-        await supabase
-          .from('user_keys')
-          .insert({ user_id: userId, balance: amount });
+      if (fetchError) {
+        console.error('[Keys] Error fetching current balance:', fetchError);
+        throw fetchError;
       }
       
-      toast({ title: `+${amount} 🔑 saved to wallet!`, description: "Keys added!" });
+      let updateError;
+      
+      if (current && (current as any).balance !== undefined) {
+        // Update existing record
+        const newBalance = ((current as any).balance || 0) + amount;
+        console.log('[Keys] Updating existing balance:', { old: (current as any).balance, new: newBalance });
+        
+        const { error } = await supabase
+          .from('user_keys')
+          .update({ balance: newBalance, updated_at: new Date().toISOString() })
+          .eq('user_id', userId);
+        updateError = error;
+      } else {
+        // Insert new record
+        console.log('[Keys] Creating new keys record with balance:', amount);
+        
+        const { error } = await supabase
+          .from('user_keys')
+          .insert({ user_id: userId, balance: amount });
+        updateError = error;
+      }
+      
+      if (updateError) {
+        console.error('[Keys] Error saving keys:', updateError);
+        throw updateError;
+      }
+      
+      console.log('[Keys] Successfully saved keys to wallet!');
+      toast({ title: `+${amount} 🔑 saved to wallet!`, description: "Keys added to your balance!" });
+      return true;
     } catch (e) {
-      console.error('Failed to save keys:', e);
+      console.error('[Keys] Failed to save keys:', e);
+      toast({ title: "Failed to save keys", description: "Please try again", variant: "destructive" });
+      return false;
     }
   };
 
-  const awardKeys = async (amount: number) => {
-    if (amount <= 0) return;
+  const awardKeys = async (amount: number): Promise<boolean> => {
+    if (amount <= 0) return false;
+    
+    console.log('[Keys] Awarding keys:', amount);
     playSound('win');
     vibrate([100, 50, 100, 50, 200]);
-    toast({ title: `+${amount} 🔑`, description: "Keys earned!" });
     
-    // Save keys immediately to wallet
-    await saveKeysToWallet(amount);
+    // Save keys immediately to wallet and wait for completion
+    const success = await saveKeysToWallet(amount);
+    
+    if (!success) {
+      toast({ title: `Earned ${amount} 🔑`, description: "But failed to save - please report this!", variant: "destructive" });
+    }
+    
+    return success;
   };
 
   const goBack = async () => {
@@ -436,16 +474,20 @@ function BullQuestGame({ onWin }: { onWin: (keys: number) => void }) {
     if (enemies.some(e => e.x === newX && e.y === newY)) {
       playSound('lose');
       vibrate([200, 100, 200]);
-      setHp(prev => {
-        const newHp = prev - 1;
-        if (newHp <= 0) {
-          setGameOver(true);
-          if (keysCollected > 0) {
-            onWin(keysCollected);
-          }
+      const newHp = hp - 1;
+      setHp(newHp);
+      
+      if (newHp <= 0) {
+        setGameOver(true);
+        // Award all collected keys when game ends
+        const totalKeys = keysCollected + (treasureIndex !== -1 ? 1 : 0);
+        if (totalKeys > 0) {
+          // Use setTimeout to ensure state updates complete first
+          setTimeout(() => {
+            onWin(totalKeys);
+          }, 100);
         }
-        return newHp;
-      });
+      }
     }
   };
 
@@ -567,7 +609,7 @@ function BattleArenaGame({ onWin }: { onWin: (keys: number) => void }) {
         break;
     }
     
-    setTimeout(() => {
+    setTimeout(async () => {
       setPlayerTurn(false);
       setIsAnimating(false);
       
@@ -579,8 +621,9 @@ function BattleArenaGame({ onWin }: { onWin: (keys: number) => void }) {
         setWins(newWins);
         setMessage(`Victory! You've won ${newWins} battle${newWins > 1 ? 's' : ''}!`);
         
-        if (newWins >= 3) {
-          onWin(1);
+        // Award 1 key for every 3 wins
+        if (newWins >= 3 && newWins % 3 === 0) {
+          await onWin(1);
           setMessage(`Champion! You earned 1 🔑!`);
         }
       } else {
@@ -608,12 +651,16 @@ function BattleArenaGame({ onWin }: { onWin: (keys: number) => void }) {
     setPlayerHp(prev => Math.max(0, prev - actualDamage));
     setShield(0);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       if (playerHp - actualDamage <= 0) {
         playSound('lose');
         vibrate([200, 100, 200, 100, 200]);
-        setMessage(`Defeated! You won ${wins} battles. ${wins > 0 ? `Earned ${Math.floor(wins / 3)} 🔑` : ''}`);
-        if (wins >= 3) onWin(Math.floor(wins / 3));
+        const keysEarned = Math.floor(wins / 3);
+        setMessage(`Defeated! You won ${wins} battles. ${keysEarned > 0 ? `Earned ${keysEarned} 🔑` : ''}`);
+        // Award keys for completed sets of 3 wins
+        if (keysEarned > 0) {
+          await onWin(keysEarned);
+        }
       } else {
         setPlayerTurn(true);
       }
@@ -804,15 +851,18 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
       case 'key':
         playSound('collect');
         vibrate([50, 30, 50, 30, 100]);
-        setKeysFound(prev => {
-          const newFound = prev + 1;
-          if (newFound >= 2 && !hasAwardedKeys) {
-            setGameOver(true);
-            setHasAwardedKeys(true);
-            onWin(1);
-          }
-          return newFound;
-        });
+        const newFound = keysFound + 1;
+        setKeysFound(newFound);
+        
+        // Win condition: found both keys
+        if (newFound >= 2 && !hasAwardedKeys) {
+          setGameOver(true);
+          setHasAwardedKeys(true);
+          // Award 1 key for finding both treasures
+          setTimeout(async () => {
+            await onWin(1);
+          }, 100);
+        }
         break;
       case 'trap':
         playSound('lose');
@@ -828,13 +878,18 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
         playSound('hit');
     }
     
-    // Check game over - award 1 key for finding at least 1
-    if (digsLeft - 1 <= 0 && keysFound < 2 && cellValue !== 'key') {
+    // Check game over when out of digs
+    const newDigsLeft = cellValue === 'trap' ? digsLeft - 3 : digsLeft - 1;
+    const currentKeysFound = cellValue === 'key' ? keysFound + 1 : keysFound;
+    
+    if (newDigsLeft <= 0 && currentKeysFound < 2 && !hasAwardedKeys) {
       setGameOver(true);
-      // Award key if found at least 1 key during the game
-      if (keysFound >= 1 && !hasAwardedKeys) {
+      // Award 1 key if found at least 1 treasure key during the game
+      if (currentKeysFound >= 1) {
         setHasAwardedKeys(true);
-        onWin(1);
+        setTimeout(async () => {
+          await onWin(1);
+        }, 100);
       }
     }
   };
