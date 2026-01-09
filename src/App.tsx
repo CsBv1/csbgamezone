@@ -142,6 +142,14 @@ import BullWorld from "./pages/games/BullWorld";
 import MultiplayerCrash from "./pages/games/MultiplayerCrash";
 import BullStampede from "./pages/games/BullStampede";
 import HoldersArena from "./pages/games/HoldersArena";
+import BullTactician from "./pages/games/holders/BullTactician";
+import KingdomSiege from "./pages/games/holders/KingdomSiege";
+import MarketMaster from "./pages/games/holders/MarketMaster";
+import BullCommander from "./pages/games/holders/BullCommander";
+import FortressBuilder from "./pages/games/holders/FortressBuilder";
+import CardanoConquest from "./pages/games/holders/CardanoConquest";
+import BullDiplomacy from "./pages/games/holders/BullDiplomacy";
+import StrategicStacks from "./pages/games/holders/StrategicStacks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -177,6 +185,14 @@ const App = () => (
           <Route path="/games/multiplayer-crash" element={<MultiplayerCrash />} />
           <Route path="/games/bull-stampede" element={<BullStampede />} />
           <Route path="/games/holders-arena" element={<HoldersArena />} />
+          <Route path="/games/bull-tactician" element={<BullTactician />} />
+          <Route path="/games/kingdom-siege" element={<KingdomSiege />} />
+          <Route path="/games/market-master" element={<MarketMaster />} />
+          <Route path="/games/bull-commander" element={<BullCommander />} />
+          <Route path="/games/fortress-builder" element={<FortressBuilder />} />
+          <Route path="/games/cardano-conquest" element={<CardanoConquest />} />
+          <Route path="/games/bull-diplomacy" element={<BullDiplomacy />} />
+          <Route path="/games/strategic-stacks" element={<StrategicStacks />} />
           <Route path="/games/slots" element={<Slots />} />
           <Route path="/games/number-bet" element={<NumberBet />} />
           <Route path="/games/card-flip" element={<CardFlip />} />

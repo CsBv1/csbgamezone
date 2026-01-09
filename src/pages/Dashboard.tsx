@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle, Key } from "lucide-react";
+import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle, Key, Shield } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelector } from "@/components/ColorSelector";
@@ -672,6 +672,25 @@ const Dashboard = () => {
               </Card>
             </div>
           </div>
+
+          {/* Holder-Only Strategy Games */}
+          {bullsOwned > 0 && (
+            <div>
+              <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">
+                👑 Holder-Only Strategy Games (Earn 🔑 Keys)
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <GameCard title="⚔️ Bull Tactician" description="Chess-like strategy - capture enemy bulls!" icon={Target} gradient="from-indigo-600 to-purple-700" onClick={() => navigate('/games/bull-tactician')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Play" buttonVariant="key" isHolder={true} />
+                <GameCard title="🏰 Kingdom Siege" description="Tower defense - survive 5 waves!" icon={Shield} gradient="from-slate-600 to-gray-700" onClick={() => navigate('/games/kingdom-siege')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Defend" buttonVariant="key" isHolder={true} />
+                <GameCard title="📈 Market Master" description="Trading sim - profit 2000g in 20 days!" icon={TrendingUp} gradient="from-green-600 to-emerald-700" onClick={() => navigate('/games/market-master')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Trade" buttonVariant="key" isHolder={true} />
+                <GameCard title="🪖 Bull Commander" description="Army management - conquer 5 waves!" icon={Flame} gradient="from-red-600 to-orange-700" onClick={() => navigate('/games/bull-commander')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Command" buttonVariant="key" isHolder={true} />
+                <GameCard title="🏗️ Fortress Builder" description="Resource management - reach 5000g!" icon={Pickaxe} gradient="from-amber-600 to-yellow-700" onClick={() => navigate('/games/fortress-builder')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Build" buttonVariant="key" isHolder={true} />
+                <GameCard title="🗺️ Cardano Conquest" description="Territory control - dominate the map!" icon={Globe} gradient="from-blue-600 to-cyan-700" onClick={() => navigate('/games/cardano-conquest')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Conquer" buttonVariant="key" isHolder={true} />
+                <GameCard title="🤝 Bull Diplomacy" description="Negotiation - ally 3+ factions!" icon={Users} gradient="from-violet-600 to-purple-700" onClick={() => navigate('/games/bull-diplomacy')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Negotiate" buttonVariant="key" isHolder={true} />
+                <GameCard title="📦 Strategic Stacks" description="2048-style puzzle - reach 2048!" icon={Gem} gradient="from-pink-600 to-rose-700" onClick={() => navigate('/games/strategic-stacks')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Stack" buttonVariant="key" isHolder={true} />
+              </div>
+            </div>
+          )}
 
           {/* Link to Casino Games */}
           <div className="text-center">
