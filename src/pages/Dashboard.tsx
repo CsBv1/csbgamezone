@@ -673,24 +673,120 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Holder-Only Strategy Games */}
-          {bullsOwned > 0 && (
-            <div>
-              <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">
-                👑 Holder-Only Strategy Games (Earn 🔑 Keys)
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <GameCard title="⚔️ Bull Tactician" description="Chess-like strategy - capture enemy bulls!" icon={Target} gradient="from-indigo-600 to-purple-700" onClick={() => navigate('/games/bull-tactician')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Play" buttonVariant="key" isHolder={true} />
-                <GameCard title="🏰 Kingdom Siege" description="Tower defense - survive 5 waves!" icon={Shield} gradient="from-slate-600 to-gray-700" onClick={() => navigate('/games/kingdom-siege')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Defend" buttonVariant="key" isHolder={true} />
-                <GameCard title="📈 Market Master" description="Trading sim - profit 2000g in 20 days!" icon={TrendingUp} gradient="from-green-600 to-emerald-700" onClick={() => navigate('/games/market-master')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Trade" buttonVariant="key" isHolder={true} />
-                <GameCard title="🪖 Bull Commander" description="Army management - conquer 5 waves!" icon={Flame} gradient="from-red-600 to-orange-700" onClick={() => navigate('/games/bull-commander')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Command" buttonVariant="key" isHolder={true} />
-                <GameCard title="🏗️ Fortress Builder" description="Resource management - reach 5000g!" icon={Pickaxe} gradient="from-amber-600 to-yellow-700" onClick={() => navigate('/games/fortress-builder')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Build" buttonVariant="key" isHolder={true} />
-                <GameCard title="🗺️ Cardano Conquest" description="Territory control - dominate the map!" icon={Globe} gradient="from-blue-600 to-cyan-700" onClick={() => navigate('/games/cardano-conquest')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Conquer" buttonVariant="key" isHolder={true} />
-                <GameCard title="🤝 Bull Diplomacy" description="Negotiation - ally 3+ factions!" icon={Users} gradient="from-violet-600 to-purple-700" onClick={() => navigate('/games/bull-diplomacy')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Negotiate" buttonVariant="key" isHolder={true} />
-                <GameCard title="📦 Strategic Stacks" description="2048-style puzzle - reach 2048!" icon={Gem} gradient="from-pink-600 to-rose-700" onClick={() => navigate('/games/strategic-stacks')} badge="🔑 KEYS" badgeColor="bg-yellow-500 text-black" buttonText="Stack" buttonVariant="key" isHolder={true} />
+          {/* Holder-Only Strategy Games - Visible to all, locked for non-holders */}
+          <div>
+            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">
+              👑 Holder-Only Strategy Games (Earn 🔑 Keys)
+            </h2>
+            {bullsOwned === 0 && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-xl border border-amber-500/40 flex items-center gap-3">
+                <Lock className="w-6 h-6 text-amber-400" />
+                <p className="text-amber-300 text-sm">
+                  <span className="font-bold">🔒 Hold a CSB Bull NFT to unlock these exclusive games!</span>
+                  {' '}
+                  <a href="https://www.jpg.store/collection/cardanostakebulls?tab=items" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-200">Get yours on JPG.Store →</a>
+                </p>
               </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <GameCard 
+                title="⚔️ Bull Tactician" 
+                description="Chess-like strategy - capture enemy bulls!" 
+                icon={Target} 
+                gradient="from-indigo-600 to-purple-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/bull-tactician') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Play" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🏰 Kingdom Siege" 
+                description="Tower defense - survive 5 waves!" 
+                icon={Shield} 
+                gradient="from-slate-600 to-gray-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/kingdom-siege') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Defend" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="📈 Market Master" 
+                description="Trading sim - profit 2000g in 20 days!" 
+                icon={TrendingUp} 
+                gradient="from-green-600 to-emerald-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/market-master') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Trade" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🪖 Bull Commander" 
+                description="Army management - conquer 5 waves!" 
+                icon={Flame} 
+                gradient="from-red-600 to-orange-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/bull-commander') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Command" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🏗️ Fortress Builder" 
+                description="Resource management - reach 5000g!" 
+                icon={Pickaxe} 
+                gradient="from-amber-600 to-yellow-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/fortress-builder') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Build" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🗺️ Cardano Conquest" 
+                description="Territory control - dominate the map!" 
+                icon={Globe} 
+                gradient="from-blue-600 to-cyan-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/cardano-conquest') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Conquer" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🤝 Bull Diplomacy" 
+                description="Negotiation - ally 3+ factions!" 
+                icon={Users} 
+                gradient="from-violet-600 to-purple-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/bull-diplomacy') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Negotiate" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="📦 Strategic Stacks" 
+                description="2048-style puzzle - reach 2048!" 
+                icon={Gem} 
+                gradient="from-pink-600 to-rose-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/strategic-stacks') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Stack" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
             </div>
-          )}
+          </div>
 
           {/* Link to Casino Games */}
           <div className="text-center">

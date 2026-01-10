@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Crown, Sword, Shield, Key, Flame, Skull, Heart, Zap } from "lucide-react";
+import { ArrowLeft, Crown, Sword, Shield, Key, Flame, Skull, Heart, Zap, Target, Coins, Gem, Timer, Dice1 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreditBar } from "@/components/CreditBar";
 
-type GameType = 'menu' | 'bull-quest' | 'battle-arena' | 'treasure-hunt';
+type GameType = 'menu' | 'bull-quest' | 'battle-arena' | 'treasure-hunt' | 'key-slots' | 'bull-dice' | 'speed-keys' | 'key-match' | 'bull-gauntlet';
 
 // Sound effects using Web Audio API
 const playSound = (type: 'hit' | 'collect' | 'win' | 'lose' | 'click' | 'power') => {
@@ -277,6 +277,26 @@ export default function HoldersArena() {
         {currentGame === 'treasure-hunt' && (
           <TreasureHuntGame onWin={awardKeys} />
         )}
+        
+        {currentGame === 'key-slots' && (
+          <KeySlotsGame onWin={awardKeys} />
+        )}
+        
+        {currentGame === 'bull-dice' && (
+          <BullDiceGame onWin={awardKeys} />
+        )}
+        
+        {currentGame === 'speed-keys' && (
+          <SpeedKeysGame onWin={awardKeys} />
+        )}
+        
+        {currentGame === 'key-match' && (
+          <KeyMatchGame onWin={awardKeys} />
+        )}
+        
+        {currentGame === 'bull-gauntlet' && (
+          <BullGauntletGame onWin={awardKeys} />
+        )}
       </div>
     </div>
   );
@@ -288,6 +308,11 @@ function GameMenu({ onSelectGame }: { onSelectGame: (game: GameType) => void }) 
     { id: 'bull-quest' as GameType, name: 'Bull Quest', icon: Sword, desc: 'Navigate obstacles & collect treasures', color: '#FF6B35' },
     { id: 'battle-arena' as GameType, name: 'Battle Arena', icon: Shield, desc: 'Turn-based combat vs enemy bulls', color: '#E63946' },
     { id: 'treasure-hunt' as GameType, name: 'Treasure Hunt', icon: Key, desc: 'Explore & dig for hidden keys', color: '#2ECC71' },
+    { id: 'key-slots' as GameType, name: 'Key Slots', icon: Coins, desc: 'Match 3 keys to win big!', color: '#9B59B6' },
+    { id: 'bull-dice' as GameType, name: 'Bull Dice', icon: Dice1, desc: 'Roll high to earn keys!', color: '#3498DB' },
+    { id: 'speed-keys' as GameType, name: 'Speed Keys', icon: Timer, desc: 'Collect keys before time runs out!', color: '#F39C12' },
+    { id: 'key-match' as GameType, name: 'Key Match', icon: Gem, desc: 'Memory matching for keys!', color: '#1ABC9C' },
+    { id: 'bull-gauntlet' as GameType, name: 'Bull Gauntlet', icon: Target, desc: 'Survive 10 challenges for keys!', color: '#E74C3C' },
   ];
 
   return (
@@ -964,6 +989,515 @@ function TreasureHuntGame({ onWin }: { onWin: (keys: number) => void }) {
           </p>
           {keysFound > 0 && <p className="text-[#FFD700]">Earned {keysFound >= 2 ? 1 : 0} 🔑</p>}
           <Button onClick={initGame} className="mt-2 bg-[#2ECC71] hover:bg-[#2ECC71]/80">
+            Play Again
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// Game 4: Key Slots - Match 3 keys to win
+function KeySlotsGame({ onWin }: { onWin: (keys: number) => void }) {
+  const [reels, setReels] = useState(['🔑', '🐂', '💎']);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const symbols = ['🔑', '🐂', '💎', '⭐', '🎰'];
+
+  const spin = () => {
+    if (spinning) return;
+    setSpinning(true);
+    setResult(null);
+    playSound('click');
+    vibrate(50);
+
+    let spins = 0;
+    const maxSpins = 15;
+    const interval = setInterval(() => {
+      setReels([
+        symbols[Math.floor(Math.random() * symbols.length)],
+        symbols[Math.floor(Math.random() * symbols.length)],
+        symbols[Math.floor(Math.random() * symbols.length)],
+      ]);
+      spins++;
+      if (spins >= maxSpins) {
+        clearInterval(interval);
+        const finalReels = [
+          symbols[Math.floor(Math.random() * symbols.length)],
+          symbols[Math.floor(Math.random() * symbols.length)],
+          symbols[Math.floor(Math.random() * symbols.length)],
+        ];
+        setReels(finalReels);
+        setSpinning(false);
+
+        if (finalReels[0] === '🔑' && finalReels[1] === '🔑' && finalReels[2] === '🔑') {
+          playSound('win');
+          vibrate([100, 50, 100, 50, 200]);
+          setResult('JACKPOT! 3 Keys!');
+          onWin(3);
+        } else if (finalReels.filter(s => s === '🔑').length === 2) {
+          playSound('collect');
+          vibrate([50, 30, 50]);
+          setResult('Nice! 2 Keys!');
+          onWin(1);
+        } else if (finalReels[0] === finalReels[1] && finalReels[1] === finalReels[2]) {
+          playSound('collect');
+          vibrate(100);
+          setResult('Triple Match! +1 Key');
+          onWin(1);
+        } else {
+          playSound('lose');
+          vibrate(100);
+          setResult('Try again!');
+        }
+      }
+    }, 100);
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#9B59B6]/50">
+      <h2 className="text-xl font-bold text-[#9B59B6] mb-4 text-center">🎰 Key Slots</h2>
+      <div className="flex justify-center gap-4 mb-6">
+        {reels.map((symbol, i) => (
+          <div
+            key={i}
+            className={`w-20 h-20 bg-[#1a3a5c] rounded-xl flex items-center justify-center text-4xl border-2 border-[#9B59B6]/50 ${
+              spinning ? 'animate-pulse' : ''
+            }`}
+          >
+            {symbol}
+          </div>
+        ))}
+      </div>
+      {result && (
+        <p className={`text-center mb-4 text-lg font-bold ${result.includes('JACKPOT') ? 'text-[#FFD700] animate-pulse' : result.includes('Try') ? 'text-red-400' : 'text-[#9B59B6]'}`}>
+          {result}
+        </p>
+      )}
+      <Button onClick={spin} disabled={spinning} className="w-full bg-[#9B59B6] hover:bg-[#9B59B6]/80">
+        {spinning ? 'Spinning...' : 'Spin! 🎰'}
+      </Button>
+    </Card>
+  );
+}
+
+// Game 5: Bull Dice - Roll high to win keys
+function BullDiceGame({ onWin }: { onWin: (keys: number) => void }) {
+  const [dice, setDice] = useState([1, 1]);
+  const [rolling, setRolling] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
+
+  const roll = () => {
+    if (rolling) return;
+    setRolling(true);
+    setResult(null);
+    playSound('click');
+    vibrate(50);
+
+    let rolls = 0;
+    const interval = setInterval(() => {
+      setDice([
+        Math.floor(Math.random() * 6) + 1,
+        Math.floor(Math.random() * 6) + 1,
+      ]);
+      rolls++;
+      if (rolls >= 10) {
+        clearInterval(interval);
+        const finalDice = [
+          Math.floor(Math.random() * 6) + 1,
+          Math.floor(Math.random() * 6) + 1,
+        ];
+        setDice(finalDice);
+        setRolling(false);
+
+        const total = finalDice[0] + finalDice[1];
+        if (finalDice[0] === finalDice[1]) {
+          playSound('win');
+          vibrate([100, 50, 100, 50, 200]);
+          setResult(`Double ${finalDice[0]}s! +2 Keys!`);
+          setStreak(s => s + 1);
+          onWin(2);
+        } else if (total >= 10) {
+          playSound('collect');
+          vibrate([50, 30, 50]);
+          setResult(`High roll (${total})! +1 Key`);
+          setStreak(s => s + 1);
+          onWin(1);
+        } else {
+          playSound('lose');
+          vibrate(100);
+          setResult(`Rolled ${total}. Need 10+`);
+          setStreak(0);
+        }
+      }
+    }, 80);
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#3498DB]/50">
+      <h2 className="text-xl font-bold text-[#3498DB] mb-4 text-center">🎲 Bull Dice</h2>
+      <div className="flex justify-center gap-6 mb-4">
+        {dice.map((d, i) => (
+          <div
+            key={i}
+            className={`w-16 h-16 bg-white rounded-xl flex items-center justify-center text-3xl font-bold text-[#0d2137] ${
+              rolling ? 'animate-bounce' : ''
+            }`}
+          >
+            {['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][d - 1]}
+          </div>
+        ))}
+      </div>
+      {streak > 0 && <p className="text-center text-[#FFD700] mb-2">🔥 Streak: {streak}</p>}
+      {result && (
+        <p className={`text-center mb-4 font-bold ${result.includes('Double') || result.includes('High') ? 'text-[#3498DB]' : 'text-red-400'}`}>
+          {result}
+        </p>
+      )}
+      <Button onClick={roll} disabled={rolling} className="w-full bg-[#3498DB] hover:bg-[#3498DB]/80">
+        {rolling ? 'Rolling...' : 'Roll Dice! 🎲'}
+      </Button>
+    </Card>
+  );
+}
+
+// Game 6: Speed Keys - Tap targets before time runs out
+function SpeedKeysGame({ onWin }: { onWin: (keys: number) => void }) {
+  const [targets, setTargets] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [gameActive, setGameActive] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+
+  const startGame = useCallback(() => {
+    setScore(0);
+    setTimeLeft(15);
+    setGameActive(true);
+    setGameOver(false);
+    setTargets([]);
+    playSound('click');
+  }, []);
+
+  useEffect(() => {
+    if (!gameActive) return;
+
+    const spawnInterval = setInterval(() => {
+      setTargets(prev => [
+        ...prev.slice(-4),
+        { id: Date.now(), x: Math.random() * 80 + 10, y: Math.random() * 60 + 20 },
+      ]);
+    }, 600);
+
+    const timer = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) {
+          clearInterval(spawnInterval);
+          clearInterval(timer);
+          setGameActive(false);
+          setGameOver(true);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(spawnInterval);
+      clearInterval(timer);
+    };
+  }, [gameActive]);
+
+  useEffect(() => {
+    if (gameOver && score >= 5) {
+      const keysEarned = Math.floor(score / 5);
+      playSound('win');
+      vibrate([100, 50, 100, 50, 200]);
+      onWin(keysEarned);
+    } else if (gameOver) {
+      playSound('lose');
+    }
+  }, [gameOver, score, onWin]);
+
+  const hitTarget = (id: number) => {
+    playSound('collect');
+    vibrate(30);
+    setTargets(prev => prev.filter(t => t.id !== id));
+    setScore(s => s + 1);
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#F39C12]/50">
+      <h2 className="text-xl font-bold text-[#F39C12] mb-4 text-center">⚡ Speed Keys</h2>
+      <div className="flex justify-between mb-4">
+        <span className="text-white">Score: {score}</span>
+        <span className={`font-bold ${timeLeft <= 5 ? 'text-red-400 animate-pulse' : 'text-[#F39C12]'}`}>
+          ⏱️ {timeLeft}s
+        </span>
+      </div>
+      <div className="relative h-48 bg-[#1a3a5c] rounded-xl mb-4 overflow-hidden">
+        {targets.map(t => (
+          <button
+            key={t.id}
+            onClick={() => hitTarget(t.id)}
+            className="absolute w-12 h-12 bg-[#F39C12] rounded-full flex items-center justify-center text-2xl hover:scale-110 transition-transform animate-pulse"
+            style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(-50%, -50%)' }}
+          >
+            🔑
+          </button>
+        ))}
+        {!gameActive && !gameOver && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-gray-400">Tap keys as fast as you can!</p>
+          </div>
+        )}
+      </div>
+      {gameOver && (
+        <p className={`text-center mb-4 font-bold ${score >= 5 ? 'text-[#F39C12]' : 'text-red-400'}`}>
+          {score >= 5 ? `🎉 Earned ${Math.floor(score / 5)} Key(s)!` : 'Need 5+ hits for a key!'}
+        </p>
+      )}
+      <Button onClick={startGame} disabled={gameActive} className="w-full bg-[#F39C12] hover:bg-[#F39C12]/80">
+        {gameActive ? `Playing... (${score})` : 'Start Game!'}
+      </Button>
+    </Card>
+  );
+}
+
+// Game 7: Key Match - Memory matching
+function KeyMatchGame({ onWin }: { onWin: (keys: number) => void }) {
+  const symbols = ['🔑', '🐂', '💎', '👑', '⭐', '🎯'];
+  const [cards, setCards] = useState<{ id: number; symbol: string; flipped: boolean; matched: boolean }[]>([]);
+  const [flipped, setFlipped] = useState<number[]>([]);
+  const [matches, setMatches] = useState(0);
+  const [moves, setMoves] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+
+  const initGame = useCallback(() => {
+    const pairs = [...symbols, ...symbols]
+      .sort(() => Math.random() - 0.5)
+      .map((symbol, i) => ({ id: i, symbol, flipped: false, matched: false }));
+    setCards(pairs);
+    setFlipped([]);
+    setMatches(0);
+    setMoves(0);
+    setGameOver(false);
+  }, []);
+
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
+
+  const flipCard = (id: number) => {
+    if (flipped.length === 2 || cards[id].flipped || cards[id].matched) return;
+    
+    playSound('click');
+    vibrate(20);
+    
+    const newFlipped = [...flipped, id];
+    setFlipped(newFlipped);
+    setCards(prev => prev.map(c => c.id === id ? { ...c, flipped: true } : c));
+
+    if (newFlipped.length === 2) {
+      setMoves(m => m + 1);
+      const [first, second] = newFlipped;
+      if (cards[first].symbol === cards[second].symbol) {
+        playSound('collect');
+        vibrate([50, 30, 50]);
+        setTimeout(() => {
+          setCards(prev => prev.map(c => 
+            c.id === first || c.id === second ? { ...c, matched: true } : c
+          ));
+          setMatches(m => m + 1);
+          setFlipped([]);
+          
+          if (matches + 1 === symbols.length) {
+            setGameOver(true);
+            const keysEarned = moves <= 12 ? 3 : moves <= 18 ? 2 : 1;
+            playSound('win');
+            vibrate([100, 50, 100, 50, 200]);
+            onWin(keysEarned);
+          }
+        }, 300);
+      } else {
+        playSound('hit');
+        setTimeout(() => {
+          setCards(prev => prev.map(c => 
+            c.id === first || c.id === second ? { ...c, flipped: false } : c
+          ));
+          setFlipped([]);
+        }, 800);
+      }
+    }
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#1ABC9C]/50">
+      <h2 className="text-xl font-bold text-[#1ABC9C] mb-4 text-center">🧠 Key Match</h2>
+      <p className="text-center text-gray-400 mb-4">Moves: {moves} | Matches: {matches}/{symbols.length}</p>
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {cards.map(card => (
+          <button
+            key={card.id}
+            onClick={() => flipCard(card.id)}
+            className={`aspect-square rounded-lg flex items-center justify-center text-2xl transition-all ${
+              card.flipped || card.matched
+                ? 'bg-[#1ABC9C]/30 border-[#1ABC9C]'
+                : 'bg-[#1a3a5c] hover:bg-[#1a3a5c]/80 border-gray-600'
+            } border-2`}
+          >
+            {card.flipped || card.matched ? card.symbol : '❓'}
+          </button>
+        ))}
+      </div>
+      {gameOver && (
+        <div className="text-center mb-4">
+          <p className="text-[#1ABC9C] font-bold">🎉 All matched in {moves} moves!</p>
+          <p className="text-[#FFD700]">Earned {moves <= 12 ? 3 : moves <= 18 ? 2 : 1} 🔑</p>
+        </div>
+      )}
+      <Button onClick={initGame} className="w-full bg-[#1ABC9C] hover:bg-[#1ABC9C]/80">
+        {gameOver ? 'Play Again' : 'Restart'}
+      </Button>
+    </Card>
+  );
+}
+
+// Game 8: Bull Gauntlet - Survive 10 challenges
+function BullGauntletGame({ onWin }: { onWin: (keys: number) => void }) {
+  const [round, setRound] = useState(1);
+  const [hp, setHp] = useState(3);
+  const [challenge, setChallenge] = useState<{ type: string; answer: number; options: number[] } | null>(null);
+  const [result, setResult] = useState<string | null>(null);
+  const [gameOver, setGameOver] = useState(false);
+
+  const generateChallenge = useCallback(() => {
+    const types = ['add', 'sub', 'mult'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    let a: number, b: number, answer: number;
+    
+    if (type === 'add') {
+      a = Math.floor(Math.random() * 20) + 5;
+      b = Math.floor(Math.random() * 20) + 5;
+      answer = a + b;
+    } else if (type === 'sub') {
+      a = Math.floor(Math.random() * 30) + 20;
+      b = Math.floor(Math.random() * 15) + 5;
+      answer = a - b;
+    } else {
+      a = Math.floor(Math.random() * 10) + 2;
+      b = Math.floor(Math.random() * 10) + 2;
+      answer = a * b;
+    }
+    
+    const options = [answer];
+    while (options.length < 4) {
+      const wrong = answer + (Math.floor(Math.random() * 20) - 10);
+      if (wrong !== answer && wrong > 0 && !options.includes(wrong)) {
+        options.push(wrong);
+      }
+    }
+    
+    return {
+      type: type === 'add' ? `${a} + ${b} = ?` : type === 'sub' ? `${a} - ${b} = ?` : `${a} × ${b} = ?`,
+      answer,
+      options: options.sort(() => Math.random() - 0.5),
+    };
+  }, []);
+
+  const startGame = useCallback(() => {
+    setRound(1);
+    setHp(3);
+    setGameOver(false);
+    setResult(null);
+    setChallenge(generateChallenge());
+  }, [generateChallenge]);
+
+  useEffect(() => {
+    startGame();
+  }, []);
+
+  const selectAnswer = (selected: number) => {
+    if (!challenge || gameOver) return;
+    
+    if (selected === challenge.answer) {
+      playSound('collect');
+      vibrate([50, 30, 50]);
+      setResult('Correct!');
+      
+      if (round >= 10) {
+        setGameOver(true);
+        playSound('win');
+        vibrate([100, 50, 100, 50, 200]);
+        const keysEarned = hp === 3 ? 3 : hp === 2 ? 2 : 1;
+        onWin(keysEarned);
+      } else {
+        setTimeout(() => {
+          setRound(r => r + 1);
+          setChallenge(generateChallenge());
+          setResult(null);
+        }, 500);
+      }
+    } else {
+      playSound('hit');
+      vibrate(200);
+      setResult('Wrong!');
+      const newHp = hp - 1;
+      setHp(newHp);
+      
+      if (newHp <= 0) {
+        setGameOver(true);
+        playSound('lose');
+      } else {
+        setTimeout(() => {
+          setChallenge(generateChallenge());
+          setResult(null);
+        }, 800);
+      }
+    }
+  };
+
+  return (
+    <Card className="p-6 bg-[#0d2137] border-[#E74C3C]/50">
+      <h2 className="text-xl font-bold text-[#E74C3C] mb-4 text-center">⚔️ Bull Gauntlet</h2>
+      <div className="flex justify-between mb-4">
+        <span className="text-white">Round: {round}/10</span>
+        <span className="text-red-400">
+          {'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}
+        </span>
+      </div>
+      
+      {challenge && !gameOver && (
+        <>
+          <div className="text-center mb-6">
+            <p className="text-2xl font-bold text-white">{challenge.type}</p>
+          </div>
+          {result && (
+            <p className={`text-center mb-4 font-bold ${result === 'Correct!' ? 'text-[#2ECC71]' : 'text-red-400'}`}>
+              {result}
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            {challenge.options.map((opt, i) => (
+              <Button
+                key={i}
+                onClick={() => selectAnswer(opt)}
+                className="h-12 text-lg bg-[#1a3a5c] hover:bg-[#E74C3C] border border-[#E74C3C]/50"
+              >
+                {opt}
+              </Button>
+            ))}
+          </div>
+        </>
+      )}
+      
+      {gameOver && (
+        <div className="text-center">
+          <p className={`text-xl mb-2 ${hp > 0 ? 'text-[#2ECC71]' : 'text-red-400'}`}>
+            {hp > 0 ? '🎉 Gauntlet Complete!' : 'Defeated!'}
+          </p>
+          {hp > 0 && <p className="text-[#FFD700]">Earned {hp === 3 ? 3 : hp === 2 ? 2 : 1} 🔑</p>}
+          <Button onClick={startGame} className="mt-4 bg-[#E74C3C] hover:bg-[#E74C3C]/80">
             Play Again
           </Button>
         </div>
