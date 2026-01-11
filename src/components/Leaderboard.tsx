@@ -25,10 +25,16 @@ interface UserNFTBonus {
   bulls_owned: number;
 }
 
+interface UserBukal {
+  user_id: string;
+  balance: number;
+}
+
 export const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   const [userBulls, setUserBulls] = useState<Record<string, number>>({});
+  const [userBukals, setUserBukals] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -106,6 +112,21 @@ export const Leaderboard = () => {
         });
         setUserBulls(bullsMap);
       }
+
+      // Fetch bukals to show on leaderboard
+      const { data: bukalsData } = await supabase
+        .from('user_bukals' as any)
+        .select('user_id, balance');
+      
+      if (bukalsData && Array.isArray(bukalsData)) {
+        const bukalsMap: Record<string, number> = {};
+        bukalsData.forEach((bukal: any) => {
+          if (bukal.balance > 0) {
+            bukalsMap[bukal.user_id] = bukal.balance;
+          }
+        });
+        setUserBukals(bukalsMap);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
@@ -152,6 +173,7 @@ export const Leaderboard = () => {
             const nextRank = leaderboard[index - 1];
             const diamondGap = nextRank ? nextRank.total_diamonds - entry.total_diamonds : 0;
             const isHolder = entry.user_id && userBulls[entry.user_id] > 0;
+            const hasBukals = entry.user_id && userBukals[entry.user_id] > 0;
             
             return (
               <div
@@ -188,6 +210,11 @@ export const Leaderboard = () => {
                       {isHolder && (
                         <span className="text-xs px-1.5 py-0.5 bg-amber-500/30 text-amber-300 rounded-full animate-pulse whitespace-nowrap">
                           🐂 {userBulls[entry.user_id!]}
+                        </span>
+                      )}
+                      {hasBukals && (
+                        <span className="text-xs px-1.5 py-0.5 bg-yellow-500/30 text-yellow-300 rounded-full whitespace-nowrap">
+                          🏆 {userBukals[entry.user_id!]}
                         </span>
                       )}
                     </div>

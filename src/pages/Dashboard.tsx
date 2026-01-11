@@ -131,6 +131,91 @@ const Dashboard = () => {
     }
   };
 
+  const handleCreditToBukalSwap = async (creditsCost: number, bukalsAmount: number) => {
+    if (!isConnected) {
+      toast({
+        title: "Wallet Required 🔒",
+        description: "Please connect your wallet to swap",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSwapping(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      // Fetch credits balance
+      const creditsResult = await supabase
+        .from('user_credits' as any)
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!(creditsResult.data as any) || (creditsResult.data as any).balance < creditsCost) {
+        toast({
+          title: "Not Enough Credits! 💰",
+          description: `You need ${creditsCost.toLocaleString()} credits for this swap`,
+          variant: "destructive",
+        });
+        setIsSwapping(false);
+        return;
+      }
+
+      // Deduct credits
+      const creditsUpdate = await supabase
+        .from('user_credits' as any)
+        .update({ balance: (creditsResult.data as any).balance - creditsCost })
+        .eq('user_id', user.id);
+
+      if (creditsUpdate.error) throw creditsUpdate.error;
+
+      // Upsert bukals (insert if not exists, update if exists)
+      const { data: existingBukals } = await supabase
+        .from('user_bukals' as any)
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingBukals && (existingBukals as any).balance !== undefined) {
+        // Update existing
+        const bukalsUpdate = await supabase
+          .from('user_bukals' as any)
+          .update({ balance: (existingBukals as any).balance + bukalsAmount })
+          .eq('user_id', user.id);
+        
+        if (bukalsUpdate.error) throw bukalsUpdate.error;
+      } else {
+        // Insert new
+        const bukalsInsert = await supabase
+          .from('user_bukals' as any)
+          .insert({ user_id: user.id, balance: bukalsAmount });
+        
+        if (bukalsInsert.error) throw bukalsInsert.error;
+      }
+
+      toast({
+        title: "Swap Successful! 🏆",
+        description: `Traded ${creditsCost.toLocaleString()} credits for ${bukalsAmount} 🏆 Bukal!`,
+      });
+
+      // Refresh page to update all displays
+      window.location.reload();
+
+    } catch (error) {
+      console.error('Swap error:', error);
+      toast({
+        title: "Swap Failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSwapping(false);
+    }
+  };
+
   const handleDiamondToKeySwap = async (diamondsCost: number, keysAmount: number) => {
     if (!isConnected) {
       toast({
@@ -304,6 +389,33 @@ const Dashboard = () => {
               </div>
             </Card>
           </div>
+
+          {/* Credits to Bukal Swap */}
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-yellow-500/30 max-w-md mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-2xl">🏆</div>
+              <h3 className="text-xl font-bold text-foreground">Get Bukals</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Trade credits for Bukals - the ultimate trophy currency!
+            </p>
+            <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-foreground">1,000,000 Credits</span>
+                <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
+                  1 🏆
+                </span>
+              </div>
+              <Button 
+                size="sm" 
+                className="w-full"
+                onClick={() => handleCreditToBukalSwap(1000000, 1)}
+                disabled={isSwapping || !isConnected}
+              >
+                Get Bukal
+              </Button>
+            </div>
+          </Card>
 
           {/* Diamond to Keys Swap */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-accent/30 max-w-md mx-auto">

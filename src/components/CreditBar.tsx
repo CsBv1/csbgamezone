@@ -7,6 +7,7 @@ export const CreditBar = () => {
   const [credits, setCredits] = useState(0);
   const [diamonds, setDiamonds] = useState(0);
   const [keys, setKeys] = useState(0);
+  const [bukals, setBukals] = useState(0);
   const [bullsOwned, setBullsOwned] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,6 +25,8 @@ export const CreditBar = () => {
         setIsAuthenticated(false);
         setCredits(0);
         setDiamonds(0);
+        setKeys(0);
+        setBukals(0);
         setBullsOwned(0);
         setLoading(false);
       }
@@ -73,10 +76,20 @@ export const CreditBar = () => {
       )
       .subscribe();
 
+    const bukalsChannel = supabase
+      .channel('bukals-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_bukals' },
+        () => fetchBalances()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(creditsChannel);
       supabase.removeChannel(diamondsChannel);
       supabase.removeChannel(nftChannel);
+      supabase.removeChannel(bukalsChannel);
     };
   }, [isAuthenticated]);
 
@@ -85,16 +98,18 @@ export const CreditBar = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [creditsResult, diamondsResult, keysResult, nftResult] = await Promise.all([
+      const [creditsResult, diamondsResult, keysResult, bukalsResult, nftResult] = await Promise.all([
         supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).single(),
+        supabase.from('user_bukals' as any).select('balance').eq('user_id', user.id).maybeSingle(),
         supabase.from('user_nft_bonuses' as any).select('bulls_owned').eq('user_id', user.id).maybeSingle()
       ]);
 
       if ((creditsResult as any).data) setCredits((creditsResult as any).data.balance);
       if ((diamondsResult as any).data) setDiamonds((diamondsResult as any).data.balance);
       if ((keysResult as any).data) setKeys((keysResult as any).data.balance);
+      if ((bukalsResult as any).data) setBukals((bukalsResult as any).data.balance);
       if ((nftResult as any).data) setBullsOwned((nftResult as any).data.bulls_owned);
     } catch (error: any) {
       console.error('Error fetching balances:', error);
@@ -175,13 +190,18 @@ export const CreditBar = () => {
       </div>
       <div className="h-3 w-px bg-border/50"></div>
       <div className="flex items-center gap-1">
-        <Gem className="w-3 h-3 text-cyan-400" />
-        <span className="font-bold">{diamonds}</span>
+        <span className="text-sm">🏆</span>
+        <span className="font-bold text-yellow-400">{bukals}</span>
       </div>
       <div className="h-3 w-px bg-border/50"></div>
       <div className="flex items-center gap-1">
         <Key className="w-3 h-3 text-amber-500" />
         <span className="font-bold">{keys}</span>
+      </div>
+      <div className="h-3 w-px bg-border/50"></div>
+      <div className="flex items-center gap-1">
+        <Gem className="w-3 h-3 text-cyan-400" />
+        <span className="font-bold">{diamonds}</span>
       </div>
       <div className="h-3 w-px bg-border/50"></div>
       <div className="flex items-center gap-1">
