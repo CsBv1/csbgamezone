@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -1002,10 +1002,11 @@ function KeySlotsGame({ onWin }: { onWin: (keys: number) => void }) {
   const [reels, setReels] = useState(['🔑', '🐂', '💎']);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [isAwarding, setIsAwarding] = useState(false);
   const symbols = ['🔑', '🐂', '💎', '⭐', '🎰'];
 
-  const spin = () => {
-    if (spinning) return;
+  const spin = async () => {
+    if (spinning || isAwarding) return;
     setSpinning(true);
     setResult(null);
     playSound('click');
@@ -1013,7 +1014,7 @@ function KeySlotsGame({ onWin }: { onWin: (keys: number) => void }) {
 
     let spins = 0;
     const maxSpins = 15;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       setReels([
         symbols[Math.floor(Math.random() * symbols.length)],
         symbols[Math.floor(Math.random() * symbols.length)],
@@ -1034,17 +1035,23 @@ function KeySlotsGame({ onWin }: { onWin: (keys: number) => void }) {
           playSound('win');
           vibrate([100, 50, 100, 50, 200]);
           setResult('JACKPOT! 3 Keys!');
-          onWin(3);
+          setIsAwarding(true);
+          await onWin(3);
+          setIsAwarding(false);
         } else if (finalReels.filter(s => s === '🔑').length === 2) {
           playSound('collect');
           vibrate([50, 30, 50]);
-          setResult('Nice! 2 Keys!');
-          onWin(1);
+          setResult('Nice! +1 Key!');
+          setIsAwarding(true);
+          await onWin(1);
+          setIsAwarding(false);
         } else if (finalReels[0] === finalReels[1] && finalReels[1] === finalReels[2]) {
           playSound('collect');
           vibrate(100);
           setResult('Triple Match! +1 Key');
-          onWin(1);
+          setIsAwarding(true);
+          await onWin(1);
+          setIsAwarding(false);
         } else {
           playSound('lose');
           vibrate(100);
@@ -1087,16 +1094,17 @@ function BullDiceGame({ onWin }: { onWin: (keys: number) => void }) {
   const [rolling, setRolling] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
+  const [isAwarding, setIsAwarding] = useState(false);
 
-  const roll = () => {
-    if (rolling) return;
+  const roll = async () => {
+    if (rolling || isAwarding) return;
     setRolling(true);
     setResult(null);
     playSound('click');
     vibrate(50);
 
     let rolls = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       setDice([
         Math.floor(Math.random() * 6) + 1,
         Math.floor(Math.random() * 6) + 1,
@@ -1117,13 +1125,17 @@ function BullDiceGame({ onWin }: { onWin: (keys: number) => void }) {
           vibrate([100, 50, 100, 50, 200]);
           setResult(`Double ${finalDice[0]}s! +2 Keys!`);
           setStreak(s => s + 1);
-          onWin(2);
+          setIsAwarding(true);
+          await onWin(2);
+          setIsAwarding(false);
         } else if (total >= 10) {
           playSound('collect');
           vibrate([50, 30, 50]);
           setResult(`High roll (${total})! +1 Key`);
           setStreak(s => s + 1);
-          onWin(1);
+          setIsAwarding(true);
+          await onWin(1);
+          setIsAwarding(false);
         } else {
           playSound('lose');
           vibrate(100);
@@ -1169,12 +1181,16 @@ function SpeedKeysGame({ onWin }: { onWin: (keys: number) => void }) {
   const [timeLeft, setTimeLeft] = useState(15);
   const [gameActive, setGameActive] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [hasAwarded, setHasAwarded] = useState(false);
+  const finalScoreRef = useRef(0);
 
   const startGame = useCallback(() => {
     setScore(0);
+    finalScoreRef.current = 0;
     setTimeLeft(15);
     setGameActive(true);
     setGameOver(false);
+    setHasAwarded(false);
     setTargets([]);
     playSound('click');
   }, []);
@@ -1208,22 +1224,31 @@ function SpeedKeysGame({ onWin }: { onWin: (keys: number) => void }) {
     };
   }, [gameActive]);
 
+  // Award keys only once when game ends
   useEffect(() => {
-    if (gameOver && score >= 5) {
-      const keysEarned = Math.floor(score / 5);
-      playSound('win');
-      vibrate([100, 50, 100, 50, 200]);
-      onWin(keysEarned);
-    } else if (gameOver) {
-      playSound('lose');
+    if (gameOver && !hasAwarded) {
+      const finalScore = finalScoreRef.current;
+      if (finalScore >= 5) {
+        const keysEarned = Math.floor(finalScore / 5);
+        setHasAwarded(true);
+        playSound('win');
+        vibrate([100, 50, 100, 50, 200]);
+        onWin(keysEarned);
+      } else {
+        playSound('lose');
+      }
     }
-  }, [gameOver, score, onWin]);
+  }, [gameOver, hasAwarded, onWin]);
 
   const hitTarget = (id: number) => {
     playSound('collect');
     vibrate(30);
     setTargets(prev => prev.filter(t => t.id !== id));
-    setScore(s => s + 1);
+    setScore(s => {
+      const newScore = s + 1;
+      finalScoreRef.current = newScore;
+      return newScore;
+    });
   };
 
   return (
@@ -1272,6 +1297,7 @@ function KeyMatchGame({ onWin }: { onWin: (keys: number) => void }) {
   const [matches, setMatches] = useState(0);
   const [moves, setMoves] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [hasAwarded, setHasAwarded] = useState(false);
 
   const initGame = useCallback(() => {
     const pairs = [...symbols, ...symbols]
@@ -1282,6 +1308,7 @@ function KeyMatchGame({ onWin }: { onWin: (keys: number) => void }) {
     setMatches(0);
     setMoves(0);
     setGameOver(false);
+    setHasAwarded(false);
   }, []);
 
   useEffect(() => {
@@ -1289,7 +1316,7 @@ function KeyMatchGame({ onWin }: { onWin: (keys: number) => void }) {
   }, [initGame]);
 
   const flipCard = (id: number) => {
-    if (flipped.length === 2 || cards[id].flipped || cards[id].matched) return;
+    if (flipped.length === 2 || cards[id].flipped || cards[id].matched || hasAwarded) return;
     
     playSound('click');
     vibrate(20);
@@ -1299,7 +1326,8 @@ function KeyMatchGame({ onWin }: { onWin: (keys: number) => void }) {
     setCards(prev => prev.map(c => c.id === id ? { ...c, flipped: true } : c));
 
     if (newFlipped.length === 2) {
-      setMoves(m => m + 1);
+      const newMoves = moves + 1;
+      setMoves(newMoves);
       const [first, second] = newFlipped;
       if (cards[first].symbol === cards[second].symbol) {
         playSound('collect');
@@ -1308,12 +1336,14 @@ function KeyMatchGame({ onWin }: { onWin: (keys: number) => void }) {
           setCards(prev => prev.map(c => 
             c.id === first || c.id === second ? { ...c, matched: true } : c
           ));
-          setMatches(m => m + 1);
+          const newMatches = matches + 1;
+          setMatches(newMatches);
           setFlipped([]);
           
-          if (matches + 1 === symbols.length) {
+          if (newMatches === symbols.length && !hasAwarded) {
             setGameOver(true);
-            const keysEarned = moves <= 12 ? 3 : moves <= 18 ? 2 : 1;
+            setHasAwarded(true);
+            const keysEarned = newMoves <= 12 ? 3 : newMoves <= 18 ? 2 : 1;
             playSound('win');
             vibrate([100, 50, 100, 50, 200]);
             onWin(keysEarned);
@@ -1370,6 +1400,8 @@ function BullGauntletGame({ onWin }: { onWin: (keys: number) => void }) {
   const [challenge, setChallenge] = useState<{ type: string; answer: number; options: number[] } | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [hasAwarded, setHasAwarded] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const generateChallenge = useCallback(() => {
     const types = ['add', 'sub', 'mult'];
@@ -1409,6 +1441,8 @@ function BullGauntletGame({ onWin }: { onWin: (keys: number) => void }) {
     setRound(1);
     setHp(3);
     setGameOver(false);
+    setHasAwarded(false);
+    setIsProcessing(false);
     setResult(null);
     setChallenge(generateChallenge());
   }, [generateChallenge]);
@@ -1417,25 +1451,30 @@ function BullGauntletGame({ onWin }: { onWin: (keys: number) => void }) {
     startGame();
   }, []);
 
-  const selectAnswer = (selected: number) => {
-    if (!challenge || gameOver) return;
+  const selectAnswer = async (selected: number) => {
+    if (!challenge || gameOver || isProcessing || hasAwarded) return;
+    
+    setIsProcessing(true);
     
     if (selected === challenge.answer) {
       playSound('collect');
       vibrate([50, 30, 50]);
       setResult('Correct!');
       
-      if (round >= 10) {
+      if (round >= 10 && !hasAwarded) {
         setGameOver(true);
+        setHasAwarded(true);
         playSound('win');
         vibrate([100, 50, 100, 50, 200]);
         const keysEarned = hp === 3 ? 3 : hp === 2 ? 2 : 1;
-        onWin(keysEarned);
+        await onWin(keysEarned);
+        setIsProcessing(false);
       } else {
         setTimeout(() => {
           setRound(r => r + 1);
           setChallenge(generateChallenge());
           setResult(null);
+          setIsProcessing(false);
         }, 500);
       }
     } else {
@@ -1448,10 +1487,12 @@ function BullGauntletGame({ onWin }: { onWin: (keys: number) => void }) {
       if (newHp <= 0) {
         setGameOver(true);
         playSound('lose');
+        setIsProcessing(false);
       } else {
         setTimeout(() => {
           setChallenge(generateChallenge());
           setResult(null);
+          setIsProcessing(false);
         }, 800);
       }
     }
