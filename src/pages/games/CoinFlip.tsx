@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const CoinFlip = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -16,29 +17,40 @@ const CoinFlip = () => {
   const flip = () => {
     if (!prediction) {
       toast.error("Choose heads or tails first!");
+      audioManager.playSFX('error');
       return;
     }
     if (credits < 50) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits(credits - 50);
     setFlipping(true);
     setResult(null);
+    audioManager.playSFX('spin');
 
     setTimeout(() => {
+      audioManager.playSFX('coin');
       const coinResult = Math.random() > 0.5 ? "heads" : "tails";
       setResult(coinResult);
       setFlipping(false);
 
       if (prediction === coinResult) {
         setCredits(c => c + 100);
+        audioManager.playSFX('win');
         toast.success("🐂 You won 100 credits!");
       } else {
+        audioManager.playSFX('lose');
         toast.error("Wrong side! Try again!");
       }
     }, 1500);
+  };
+
+  const handlePrediction = (pred: "heads" | "tails") => {
+    setPrediction(pred);
+    audioManager.playSFX('buttonPress');
   };
 
   return (
@@ -79,7 +91,7 @@ const CoinFlip = () => {
               <Button
                 variant={prediction === "heads" ? "default" : "outline"}
                 size="xl"
-                onClick={() => setPrediction("heads")}
+                onClick={() => handlePrediction("heads")}
                 disabled={flipping}
                 className="h-24 text-2xl"
               >
@@ -88,7 +100,7 @@ const CoinFlip = () => {
               <Button
                 variant={prediction === "tails" ? "default" : "outline"}
                 size="xl"
-                onClick={() => setPrediction("tails")}
+                onClick={() => handlePrediction("tails")}
                 disabled={flipping}
                 className="h-24 text-2xl"
               >

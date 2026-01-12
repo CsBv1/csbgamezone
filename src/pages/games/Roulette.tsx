@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Roulette = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -19,17 +20,28 @@ const Roulette = () => {
   const spin = () => {
     if (!selectedBet) {
       toast.error("Please place a bet first!");
+      audioManager.playSFX('error');
       return;
     }
     if (credits < 50) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits(credits - 50);
     setSpinning(true);
+    audioManager.playSFX('spin');
+
+    // Tick sounds during spin
+    const tickInterval = setInterval(() => {
+      audioManager.playSFX('wheelTick');
+    }, 200);
 
     setTimeout(() => {
+      clearInterval(tickInterval);
+      audioManager.playSFX('wheelStop');
+      
       const result = Math.floor(Math.random() * 37);
       setLastNumber(result);
       setSpinning(false);
@@ -56,11 +68,18 @@ const Roulette = () => {
 
       if (won) {
         setCredits(c => c + payout);
+        audioManager.playSFX(payout > 500 ? 'jackpot' : 'win');
         toast.success(`🐂 Number ${result}! You won ${payout} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error(`Number ${result}. Better luck next time!`);
       }
     }, 2000);
+  };
+
+  const handleBetClick = (bet: string) => {
+    setSelectedBet(bet);
+    audioManager.playSFX('buttonPress');
   };
 
   const getNumberColor = (num: number) => {
@@ -103,28 +122,28 @@ const Roulette = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 variant={selectedBet === "red" ? "default" : "outline"}
-                onClick={() => setSelectedBet("red")}
+                onClick={() => handleBetClick("red")}
                 className="h-16 bg-red-600 hover:bg-red-700"
               >
                 Red
               </Button>
               <Button
                 variant={selectedBet === "black" ? "default" : "outline"}
-                onClick={() => setSelectedBet("black")}
+                onClick={() => handleBetClick("black")}
                 className="h-16 bg-zinc-900 hover:bg-zinc-800"
               >
                 Black
               </Button>
               <Button
                 variant={selectedBet === "even" ? "default" : "outline"}
-                onClick={() => setSelectedBet("even")}
+                onClick={() => handleBetClick("even")}
                 className="h-16"
               >
                 Even
               </Button>
               <Button
                 variant={selectedBet === "odd" ? "default" : "outline"}
-                onClick={() => setSelectedBet("odd")}
+                onClick={() => handleBetClick("odd")}
                 className="h-16"
               >
                 Odd
@@ -138,7 +157,7 @@ const Roulette = () => {
               {numbers.map(num => (
                 <button
                   key={num}
-                  onClick={() => setSelectedBet(num.toString())}
+                  onClick={() => handleBetClick(num.toString())}
                   className={`h-12 rounded font-bold text-white ${getNumberColor(num)} ${
                     selectedBet === num.toString() ? 'ring-4 ring-primary' : ''
                   }`}

@@ -5,6 +5,7 @@ import { ArrowLeft, Gem, Bomb } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Mines = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -20,9 +21,11 @@ const Mines = () => {
   const startGame = () => {
     if (credits < 50) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
     setCredits(credits - 50);
+    audioManager.playSFX('buttonPress');
     
     const minePositions: number[] = [];
     while (minePositions.length < numMines) {
@@ -54,11 +57,13 @@ const Mines = () => {
         newGrid[m] = false;
       });
       setGrid(newGrid);
+      audioManager.playSFX('lose');
       toast.error("💣 Hit a mine! Game over!");
     } else {
       const newRevealed = revealed + 1;
       setRevealed(newRevealed);
       const multiplier = 1 + (newRevealed * 0.5);
+      audioManager.playSFX('collect');
       toast.success(`🐂 Safe! ${multiplier.toFixed(1)}x multiplier`);
     }
   };
@@ -67,6 +72,7 @@ const Mines = () => {
     const multiplier = 1 + (revealed * 0.5);
     const winAmount = Math.floor(50 * multiplier);
     setCredits(c => c + winAmount);
+    audioManager.playSFX('win');
     toast.success(`Cashed out ${winAmount} credits! 🐂`);
     setPlaying(false);
   };
