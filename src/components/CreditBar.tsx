@@ -183,38 +183,43 @@ export const CreditBar = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-card/90 to-primary/10 backdrop-blur-sm border border-primary/40 rounded-lg text-xs">
-      <div className="flex items-center gap-1">
-        <Coins className="w-3 h-3 text-yellow-500" />
-        <span className="font-bold">{credits}</span>
+    <div className="flex flex-col gap-0.5 px-2 py-1 bg-gradient-to-r from-card/90 to-primary/10 backdrop-blur-sm border border-primary/40 rounded-lg text-xs">
+      {/* Top row: Credits & Diamonds */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <Coins className="w-3 h-3 text-yellow-500" />
+          <span className="font-bold">{credits}</span>
+        </div>
+        <div className="h-3 w-px bg-border/50"></div>
+        <div className="flex items-center gap-1">
+          <Gem className="w-3 h-3 text-cyan-400" />
+          <span className="font-bold">{diamonds}</span>
+        </div>
       </div>
-      <div className="h-3 w-px bg-border/50"></div>
-      <div className="flex items-center gap-1">
-        <span className="text-sm">🏆</span>
-        <span className="font-bold text-yellow-400">{bukals}</span>
-      </div>
-      <div className="h-3 w-px bg-border/50"></div>
-      <div className="flex items-center gap-1">
-        <Key className="w-3 h-3 text-amber-500" />
-        <span className="font-bold">{keys}</span>
-      </div>
-      <div className="h-3 w-px bg-border/50"></div>
-      <div className="flex items-center gap-1">
-        <Gem className="w-3 h-3 text-cyan-400" />
-        <span className="font-bold">{diamonds}</span>
-      </div>
-      <div className="h-3 w-px bg-border/50"></div>
-      <div className="flex items-center gap-1">
-        <span className="text-sm">🐂</span>
-        <span className="font-bold text-amber-400">{bullsOwned}</span>
-        <button
-          onClick={rescanWallet}
-          disabled={isScanning}
-          className="p-0.5 hover:bg-primary/20 rounded transition-colors disabled:opacity-50"
-          title="Rescan wallet for NFTs"
-        >
-          <RefreshCw className={`w-3 h-3 text-muted-foreground ${isScanning ? 'animate-spin' : ''}`} />
-        </button>
+      {/* Bottom row: Bukals, Keys, Bulls */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <span className="text-xs">🏆</span>
+          <span className="font-bold text-yellow-400">{bukals}</span>
+        </div>
+        <div className="h-3 w-px bg-border/50"></div>
+        <div className="flex items-center gap-1">
+          <Key className="w-3 h-3 text-amber-500" />
+          <span className="font-bold">{keys}</span>
+        </div>
+        <div className="h-3 w-px bg-border/50"></div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs">🐂</span>
+          <span className="font-bold text-amber-400">{bullsOwned}</span>
+          <button
+            onClick={rescanWallet}
+            disabled={isScanning}
+            className="p-0.5 hover:bg-primary/20 rounded transition-colors disabled:opacity-50"
+            title="Rescan wallet for NFTs"
+          >
+            <RefreshCw className={`w-3 h-3 text-muted-foreground ${isScanning ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
     </div>
   );
