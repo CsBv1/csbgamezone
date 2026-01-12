@@ -189,35 +189,36 @@ export const Leaderboard = () => {
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
                 )}
                 <div className="flex items-center gap-3 flex-1 min-w-0 relative z-10">
-                  <span className="text-lg font-bold min-w-[3rem]">
-                    {getMedalEmoji(entry.rank)}
-                  </span>
+                  {/* Rank with stacked Bukals/Bulls */}
+                  <div className="flex flex-col items-center min-w-[3rem]">
+                    {hasBukals && (
+                      <span className="text-[10px] text-yellow-400 font-bold leading-tight">
+                        🏆{userBukals[entry.user_id!]}
+                      </span>
+                    )}
+                    <span className="text-lg font-bold">
+                      {getMedalEmoji(entry.rank)}
+                    </span>
+                    {isHolder && (
+                      <span className="text-[10px] text-amber-400 font-bold leading-tight">
+                        🐂{userBulls[entry.user_id!]}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p 
-                        className="font-semibold truncate"
-                        style={{ 
-                          color: entry.user_id && userColors[entry.user_id] 
-                            ? userColors[entry.user_id] 
-                            : 'inherit',
-                          textShadow: entry.user_id && userColors[entry.user_id]
-                            ? `0 0 10px ${userColors[entry.user_id]}80`
-                            : 'none'
-                        }}
-                      >
-                        {entry.username}
-                      </p>
-                      {isHolder && (
-                        <span className="text-xs px-1.5 py-0.5 bg-amber-500/30 text-amber-300 rounded-full animate-pulse whitespace-nowrap">
-                          🐂 {userBulls[entry.user_id!]}
-                        </span>
-                      )}
-                      {hasBukals && (
-                        <span className="text-xs px-1.5 py-0.5 bg-yellow-500/30 text-yellow-300 rounded-full whitespace-nowrap">
-                          🏆 {userBukals[entry.user_id!]}
-                        </span>
-                      )}
-                    </div>
+                    <p 
+                      className="font-semibold truncate"
+                      style={{ 
+                        color: entry.user_id && userColors[entry.user_id] 
+                          ? userColors[entry.user_id] 
+                          : 'inherit',
+                        textShadow: entry.user_id && userColors[entry.user_id]
+                          ? `0 0 10px ${userColors[entry.user_id]}80`
+                          : 'none'
+                      }}
+                    >
+                      {entry.username}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {entry.total_wins} wins • {entry.total_games} games
                     </p>
