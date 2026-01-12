@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Crash = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -14,6 +15,7 @@ const Crash = () => {
   const [betPlaced, setBetPlaced] = useState(false);
   const [credits, setCredits] = useState(1000);
   const [crashPoint, setCrashPoint] = useState(0);
+  const tickRef = useRef(0);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -22,9 +24,17 @@ const Crash = () => {
       interval = setInterval(() => {
         setMultiplier(m => {
           const newMultiplier = m + 0.01;
+          
+          // Play tick sound at intervals
+          tickRef.current++;
+          if (tickRef.current % 20 === 0) {
+            audioManager.playSFX('wheelTick');
+          }
+          
           if (newMultiplier >= crashPoint) {
             setCrashed(true);
             setPlaying(false);
+            audioManager.playSFX('lose');
             if (betPlaced) {
               toast.error("💥 CRASHED! Lost your bet!");
               setBetPlaced(false);
@@ -44,15 +54,19 @@ const Crash = () => {
     setMultiplier(1.00);
     setCrashed(false);
     setPlaying(true);
+    tickRef.current = 0;
+    audioManager.playSFX('spin');
   };
 
   const placeBet = () => {
     if (credits < 50) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
     setCredits(credits - 50);
     setBetPlaced(true);
+    audioManager.playSFX('buttonPress');
     if (!playing) {
       startRound();
     }
@@ -63,6 +77,7 @@ const Crash = () => {
     const winAmount = Math.floor(50 * multiplier);
     setCredits(c => c + winAmount);
     setBetPlaced(false);
+    audioManager.playSFX(multiplier >= 3 ? 'jackpot' : 'win');
     toast.success(`🐂 Cashed out at ${multiplier.toFixed(2)}x! Won ${winAmount} credits!`);
   };
 

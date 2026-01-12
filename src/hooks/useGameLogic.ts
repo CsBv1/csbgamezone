@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { audioManager, SFX } from './useAudioManager';
 
 export const useGameLogic = (gameName: string) => {
   const [credits, setCredits] = useState(0);
@@ -133,6 +134,9 @@ export const useGameLogic = (gameName: string) => {
 
       const bonusText = rarityBonus > 0 ? ` (+${rarityBonus}% NFT bonus!)` : '';
       toast.success(`🐂 Won ${finalAmount} diamonds!${bonusText}`);
+      
+      // Play win sound
+      audioManager.playSFX('win');
     } catch (error) {
       console.error('Error awarding diamonds:', error);
     }
@@ -178,6 +182,9 @@ export const useGameLogic = (gameName: string) => {
 
       const bonusText = rarityBonus > 0 ? ` (+${rarityBonus}% NFT bonus!)` : '';
       toast.success(`💰 Won ${finalAmount} credits!${bonusText}`);
+      
+      // Play win sound
+      audioManager.playSFX('win');
     } catch (error) {
       console.error('Error awarding credits:', error);
     }
@@ -196,10 +203,18 @@ export const useGameLogic = (gameName: string) => {
           credits_spent: creditsSpent,
           diamonds_won: 0
         });
+      
+      // Play lose sound
+      audioManager.playSFX('lose');
     } catch (error) {
       console.error('Error recording loss:', error);
     }
   };
+  
+  // Play specific sound effects - games can call these directly
+  const playSFX = useCallback((sfxName: keyof typeof SFX) => {
+    audioManager.playSFX(sfxName);
+  }, []);
 
   const returnExcessCredits = async (currentCredits: number) => {
     if (!userId) return;
@@ -243,6 +258,7 @@ export const useGameLogic = (gameName: string) => {
     awardDiamonds,
     recordLoss,
     refreshData: loadUserData,
-    returnExcessCredits
+    returnExcessCredits,
+    playSFX
   };
 };

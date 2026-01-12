@@ -10,6 +10,7 @@ import { NFTBonusDisplay } from "@/components/NFTBonusDisplay";
 import { useCardanoWallet } from "@/hooks/useCardanoWallet";
 import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useToast } from "@/hooks/use-toast";
+import { useAudioManager } from "@/hooks/useAudioManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
@@ -20,6 +21,9 @@ const Dashboard = () => {
   const { isConnected, connectedWallet } = useCardanoWallet();
   const { toast } = useToast();
   const [isSwapping, setIsSwapping] = useState(false);
+  
+  // Initialize background music - auto-starts on first interaction
+  const { playSFX } = useAudioManager();
   
   // NFT bonuses from wallet scan
   const { bullsOwned, rarityBonus, highestRarity, isScanning, rescan } = useNFTBonuses(

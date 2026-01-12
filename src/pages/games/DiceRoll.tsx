@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const DiceRoll = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -15,16 +16,19 @@ const DiceRoll = () => {
   const rollDice = () => {
     if (prediction === null) {
       toast.error("Choose High (8-12) or Low (2-6) first!");
+      audioManager.playSFX('error');
       return;
     }
 
     if (credits < 15) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits((c) => c - 15);
     setRolling(true);
+    audioManager.playSFX('diceRoll');
 
     const interval = setInterval(() => {
       setDice([
@@ -49,13 +53,22 @@ const DiceRoll = () => {
       if (won) {
         const winAmount = total === 7 ? 150 : 60;
         setCredits((c) => c + winAmount);
+        audioManager.playSFX(total === 7 ? 'jackpot' : 'win');
         toast.success(`🎉 You won! Total: ${total}. +${winAmount} credits`);
       } else {
+        audioManager.playSFX('lose');
         toast.error(`Total was ${total}. Better luck next time!`);
       }
 
       setPrediction(null);
     }, 2000);
+  };
+
+  const handlePredictionClick = (pred: "high" | "low") => {
+    if (!rolling) {
+      setPrediction(pred);
+      audioManager.playSFX('buttonPress');
+    }
   };
 
   const getDiceDisplay = (value: number) => {
@@ -96,7 +109,7 @@ const DiceRoll = () => {
           {/* Prediction Buttons */}
           <div className="flex gap-4 mb-8">
             <button
-              onClick={() => setPrediction("low")}
+              onClick={() => handlePredictionClick("low")}
               disabled={rolling}
               className={`flex-1 p-6 rounded-lg font-bold text-xl transition-all ${
                 prediction === "low"
@@ -108,7 +121,7 @@ const DiceRoll = () => {
               <div className="text-sm font-normal mt-1">2-6</div>
             </button>
             <button
-              onClick={() => setPrediction("high")}
+              onClick={() => handlePredictionClick("high")}
               disabled={rolling}
               className={`flex-1 p-6 rounded-lg font-bold text-xl transition-all ${
                 prediction === "high"

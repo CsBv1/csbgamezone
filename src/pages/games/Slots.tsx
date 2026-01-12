@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const SYMBOLS = ["🐂", "💰", "🏆", "💎", "⭐", "🔥"];
 
@@ -17,24 +18,33 @@ const Slots = () => {
   const spin = () => {
     if (credits < 10) {
       toast.error("Not enough credits! Stake more NFTs to earn credits.");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits((c) => c - 10);
     setSpinning(true);
+    audioManager.playSFX('spin');
 
-    // Animate spinning
+    // Animate spinning with tick sounds
+    let tickCount = 0;
     const interval = setInterval(() => {
       setReels([
         SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
         SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
         SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
       ]);
+      tickCount++;
+      if (tickCount % 3 === 0) {
+        audioManager.playSFX('wheelTick');
+      }
     }, 100);
 
     // Stop after 2 seconds
     setTimeout(() => {
       clearInterval(interval);
+      audioManager.playSFX('wheelStop');
+      
       const finalReels = [
         SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
         SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
@@ -48,10 +58,14 @@ const Slots = () => {
         const winAmount = finalReels[0] === "🐂" ? 100 : 50;
         setCredits((c) => c + winAmount);
         setWins((w) => w + 1);
+        audioManager.playSFX('jackpot');
         toast.success(`🎉 JACKPOT! You won ${winAmount} credits!`);
       } else if (finalReels[0] === finalReels[1] || finalReels[1] === finalReels[2]) {
         setCredits((c) => c + 20);
+        audioManager.playSFX('coin');
         toast.success("Nice! You won 20 credits!");
+      } else {
+        audioManager.playSFX('lose');
       }
     }, 2000);
   };
