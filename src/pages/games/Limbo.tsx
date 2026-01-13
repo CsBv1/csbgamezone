@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Limbo = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -16,10 +17,12 @@ const Limbo = () => {
 
   const play = () => {
     if (credits < betAmount) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('spin');
     setCredits(prev => prev - betAmount);
     setPlaying(true);
 
@@ -29,10 +32,12 @@ const Limbo = () => {
       setResult(rollNum);
 
       if (rollNum >= target) {
+        audioManager.playSFX(rollNum >= target * 2 ? 'jackpot' : 'win');
         const winAmount = Math.floor(betAmount * target);
         setCredits(prev => prev + winAmount);
         toast.success(`🐂 ${rollNum}x! Won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error(`${rollNum}x - Need ${target}x or higher!`);
       }
       setPlaying(false);

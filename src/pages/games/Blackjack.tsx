@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Blackjack = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -33,8 +34,10 @@ const Blackjack = () => {
   const startGame = () => {
     if (credits < 50) {
       toast.error("Not enough credits! Minimum bet: 50");
+      audioManager.playSFX('error');
       return;
     }
+    audioManager.playSFX('cardDeal');
     setCredits(credits - 50);
     const newPlayerHand = [getRandomCard(), getRandomCard()];
     const newDealerHand = [getRandomCard(), getRandomCard()];
@@ -45,6 +48,7 @@ const Blackjack = () => {
   };
 
   const hit = () => {
+    audioManager.playSFX('cardFlip');
     const newHand = [...playerHand, getRandomCard()];
     setPlayerHand(newHand);
     if (calculateTotal(newHand) > 21) {
@@ -53,6 +57,7 @@ const Blackjack = () => {
   };
 
   const stand = () => {
+    audioManager.playSFX('buttonPress');
     let newDealerHand = [...dealerHand];
     while (calculateTotal(newDealerHand) < 17) {
       newDealerHand.push(getRandomCard());
@@ -68,16 +73,21 @@ const Blackjack = () => {
     
     setTimeout(() => {
       if (playerTotal > 21) {
+        audioManager.playSFX('lose');
         toast.error("Bust! You lose 🐂");
       } else if (dealerTotal > 21) {
+        audioManager.playSFX('win');
         setCredits(c => c + 100);
         toast.success("Dealer busts! You win! 🎉");
       } else if (playerTotal > dealerTotal) {
+        audioManager.playSFX('win');
         setCredits(c => c + 100);
         toast.success("You win! 🐂");
       } else if (playerTotal < dealerTotal) {
+        audioManager.playSFX('lose');
         toast.error("Dealer wins!");
       } else {
+        audioManager.playSFX('coin');
         setCredits(c => c + 50);
         toast("Push! Bet returned");
       }

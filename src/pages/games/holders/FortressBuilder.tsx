@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Building, Hammer, Users, Coins } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { audioManager } from "@/hooks/useAudioManager";
 
 interface Building {
   id: string;
@@ -48,6 +49,7 @@ export default function FortressBuilder() {
     if (!building || gold < building.cost) return;
     if (building.populationCost > 0 && availablePopulation < building.populationCost) return;
     
+    audioManager.playSFX('build');
     setGold(g => g - building.cost);
     if (building.populationCost < 0) {
       setPopulation(p => p - building.populationCost);
@@ -61,13 +63,17 @@ export default function FortressBuilder() {
     if (day >= DAYS_TO_WIN) {
       setGameOver(true);
       if (gold >= TARGET_GOLD) {
+        audioManager.playSFX('jackpot');
         const keys = 2 + Math.floor(bullsOwned / 2);
         setKeysEarned(keys);
         await awardKeys(keys);
+      } else {
+        audioManager.playSFX('lose');
       }
       return;
     }
     
+    audioManager.playSFX('coin');
     setGold(g => g + goldPerDay);
     setDay(d => d + 1);
   };

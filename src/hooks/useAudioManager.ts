@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import backgroundMusicFile from '@/assets/background-music.mp3';
 
 // Audio configuration - adjust volumes here only
 const AUDIO_CONFIG = {
@@ -41,6 +42,15 @@ export const SFX = {
   buttonPress: { frequency: 450, duration: 0.06, type: 'square' as OscillatorType },
   error: { frequency: 150, duration: 0.3, type: 'sawtooth' as OscillatorType },
   success: { frequency: 880, duration: 0.25, type: 'sine' as OscillatorType },
+  
+  // Strategy games
+  build: { frequency: 520, duration: 0.2, type: 'triangle' as OscillatorType },
+  attack: { frequency: 280, duration: 0.3, type: 'sawtooth' as OscillatorType },
+  defend: { frequency: 380, duration: 0.25, type: 'sine' as OscillatorType },
+  capture: { frequency: 650, duration: 0.35, type: 'sine' as OscillatorType },
+  move: { frequency: 420, duration: 0.1, type: 'triangle' as OscillatorType },
+  select: { frequency: 550, duration: 0.08, type: 'square' as OscillatorType },
+  trade: { frequency: 720, duration: 0.15, type: 'sine' as OscillatorType },
 };
 
 class AudioManager {
@@ -48,9 +58,8 @@ class AudioManager {
   private backgroundGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
-  private backgroundOscillators: OscillatorNode[] = [];
+  private backgroundAudio: HTMLAudioElement | null = null;
   private isBackgroundPlaying = false;
-  private backgroundInterval: NodeJS.Timeout | null = null;
 
   private initContext() {
     if (!this.audioContext) {
@@ -76,105 +85,32 @@ class AudioManager {
     }
   }
 
-  // Adventure background music - procedural ambient soundtrack
+  // Start playing the custom background music file on loop
   startBackgroundMusic() {
     if (this.isBackgroundPlaying) return;
     
     this.initContext();
     this.isBackgroundPlaying = true;
     
-    // Create ambient adventure loop
-    this.playBackgroundLoop();
-  }
-
-  private playBackgroundLoop() {
-    if (!this.audioContext || !this.backgroundGain || !this.isBackgroundPlaying) return;
-
-    // Adventure chord progression
-    const chords = [
-      [130.81, 164.81, 196.00], // C major
-      [146.83, 185.00, 220.00], // D minor
-      [164.81, 207.65, 246.94], // E minor
-      [174.61, 220.00, 261.63], // F major
-      [196.00, 246.94, 293.66], // G major
-      [146.83, 185.00, 220.00], // D minor
-      [130.81, 164.81, 196.00], // C major
-      [196.00, 246.94, 293.66], // G major
-    ];
-
-    let chordIndex = 0;
+    // Create audio element for the music file
+    if (!this.backgroundAudio) {
+      this.backgroundAudio = new Audio(backgroundMusicFile);
+      this.backgroundAudio.loop = true;
+      this.backgroundAudio.volume = AUDIO_CONFIG.backgroundMusicVolume * AUDIO_CONFIG.masterVolume;
+    }
     
-    const playChord = () => {
-      if (!this.isBackgroundPlaying || !this.audioContext || !this.backgroundGain) return;
-      
-      const chord = chords[chordIndex];
-      const now = this.audioContext.currentTime;
-      
-      chord.forEach((freq, i) => {
-        const osc = this.audioContext!.createOscillator();
-        const envGain = this.audioContext!.createGain();
-        
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        
-        envGain.gain.setValueAtTime(0, now);
-        envGain.gain.linearRampToValueAtTime(0.08, now + 0.3);
-        envGain.gain.linearRampToValueAtTime(0.05, now + 1.5);
-        envGain.gain.linearRampToValueAtTime(0, now + 2);
-        
-        osc.connect(envGain);
-        envGain.connect(this.backgroundGain!);
-        
-        osc.start(now);
-        osc.stop(now + 2);
-        
-        this.backgroundOscillators.push(osc);
-      });
-      
-      // Add subtle high melody note
-      const melodyOsc = this.audioContext!.createOscillator();
-      const melodyGain = this.audioContext!.createGain();
-      
-      melodyOsc.type = 'triangle';
-      melodyOsc.frequency.value = chord[2] * 2; // Octave up
-      
-      melodyGain.gain.setValueAtTime(0, now);
-      melodyGain.gain.linearRampToValueAtTime(0.03, now + 0.1);
-      melodyGain.gain.linearRampToValueAtTime(0.02, now + 0.8);
-      melodyGain.gain.linearRampToValueAtTime(0, now + 1.2);
-      
-      melodyOsc.connect(melodyGain);
-      melodyGain.connect(this.backgroundGain!);
-      
-      melodyOsc.start(now);
-      melodyOsc.stop(now + 1.2);
-      
-      chordIndex = (chordIndex + 1) % chords.length;
-    };
-
-    // Play immediately
-    playChord();
-    
-    // Loop every 2 seconds
-    this.backgroundInterval = setInterval(playChord, 2000);
+    this.backgroundAudio.play().catch(err => {
+      console.log('Background music autoplay blocked, will retry on interaction');
+    });
   }
 
   stopBackgroundMusic() {
     this.isBackgroundPlaying = false;
     
-    if (this.backgroundInterval) {
-      clearInterval(this.backgroundInterval);
-      this.backgroundInterval = null;
+    if (this.backgroundAudio) {
+      this.backgroundAudio.pause();
+      this.backgroundAudio.currentTime = 0;
     }
-    
-    this.backgroundOscillators.forEach(osc => {
-      try {
-        osc.stop();
-      } catch (e) {
-        // Already stopped
-      }
-    });
-    this.backgroundOscillators = [];
   }
 
   // Play sound effect
