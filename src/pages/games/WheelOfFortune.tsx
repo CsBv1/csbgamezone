@@ -6,6 +6,10 @@ import { ArrowLeft, Key } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const WheelOfFortune = () => {
   const navigate = useNavigate();
@@ -61,15 +65,18 @@ const WheelOfFortune = () => {
 
   const spin = async () => {
     if (keys < 1) {
+      audioManager.playSFX('error');
       toast.error("You need a key to spin! 🔑");
       return;
     }
 
     if (!userId) {
+      audioManager.playSFX('error');
       toast.error("Please connect your wallet!");
       return;
     }
 
+    audioManager.playSFX('spin');
     setSpinning(true);
     
     // Deduct key
@@ -91,10 +98,12 @@ const WheelOfFortune = () => {
     setRotation(finalRotation);
 
     setTimeout(async () => {
+      audioManager.playSFX('wheelStop');
       const segmentAngle = 360 / colorPrizes.length;
       const normalizedRotation = finalRotation % 360;
       const prizeIndex = Math.floor((360 - normalizedRotation) / segmentAngle) % colorPrizes.length;
       const prize = colorPrizes[prizeIndex];
+      audioManager.playSFX('jackpot');
 
       // Check if user already has this color
       const hasColor = userColors.some((c: any) => c.color_name === prize.name);

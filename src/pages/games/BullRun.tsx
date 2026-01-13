@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const BullRun = () => {
   const navigate = useNavigate();
@@ -18,15 +22,18 @@ const BullRun = () => {
 
   const startRace = () => {
     if (selectedBull === null) {
+      audioManager.playSFX('error');
       toast.error("Select a bull first!");
       return;
     }
 
     if (credits < 20) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('spin');
     setCredits((c) => c - 20);
     setRacing(true);
     setWinner(null);
@@ -44,10 +51,12 @@ const BullRun = () => {
           setWinner(winnerIndex);
 
           if (winnerIndex === selectedBull) {
+            audioManager.playSFX('jackpot');
             const winAmount = 80;
             setCredits((c) => c + winAmount);
             toast.success(`🎉 Your bull won! +${winAmount} credits!`);
           } else {
+            audioManager.playSFX('lose');
             toast.error("Your bull didn't win this time!");
           }
         }

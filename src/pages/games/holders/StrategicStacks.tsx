@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Layers, RotateCcw, Trophy } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { useAudioManager } from "@/hooks/useAudioManager";
 
 interface Block {
   id: number;
@@ -15,6 +16,10 @@ export default function StrategicStacks() {
   const { isLoading, isAuthorized, bullsOwned, awardKeys, navigate } = useHolderGame({ 
     gameName: "Strategic Stacks" 
   });
+  const { playSFX, startMusic } = useAudioManager();
+  
+  // Start music when entering game
+  startMusic();
   
   const [grid, setGrid] = useState<(Block | null)[][]>(() => initGrid());
   const [score, setScore] = useState(0);
@@ -52,9 +57,11 @@ export default function StrategicStacks() {
   const move = (direction: 'up' | 'down' | 'left' | 'right') => {
     if (gameOver) return;
     
+    playSFX('move');
     const newGrid = grid.map(row => row.map(cell => cell ? { ...cell, merged: false } : null));
     let moved = false;
     let scoreGain = 0;
+    let merged = false;
     
     const processLine = (line: (Block | null)[]): (Block | null)[] => {
       // Remove nulls
@@ -67,6 +74,7 @@ export default function StrategicStacks() {
           const newValue = filtered[i].value * 2;
           result.push({ id: Math.random(), value: newValue, merged: true });
           scoreGain += newValue;
+          merged = true;
           i += 2;
         } else {
           result.push(filtered[i]);
@@ -110,6 +118,9 @@ export default function StrategicStacks() {
     }
     
     if (moved) {
+      if (merged) {
+        playSFX('collect');
+      }
       addRandomBlock(newGrid);
       setGrid(newGrid);
       setScore(s => s + scoreGain);
@@ -122,6 +133,7 @@ export default function StrategicStacks() {
       
       // Check game over
       if (!canMove(newGrid)) {
+        playSFX('lose');
         setGameOver(true);
       }
     }
@@ -141,6 +153,7 @@ export default function StrategicStacks() {
   };
 
   const handleWin = async () => {
+    playSFX('jackpot');
     setWon(true);
     const keys = 3 + Math.floor(bullsOwned / 2);
     setKeysEarned(keys);

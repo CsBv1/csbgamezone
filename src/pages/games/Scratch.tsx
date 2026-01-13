@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const Scratch = () => {
   const navigate = useNavigate();
@@ -18,10 +22,12 @@ const Scratch = () => {
 
   const newGame = () => {
     if (credits < betAmount) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('buttonPress');
     setCredits(prev => prev - betAmount);
     const newSymbols = Array(9).fill(null).map(() => 
       scratchSymbols[Math.floor(Math.random() * scratchSymbols.length)]
@@ -34,6 +40,7 @@ const Scratch = () => {
   const scratch = (index: number) => {
     if (!gameActive || scratched[index]) return;
 
+    audioManager.playSFX('click');
     const newScratched = [...scratched];
     newScratched[index] = true;
     setScratched(newScratched);
@@ -52,10 +59,12 @@ const Scratch = () => {
 
     const maxCount = Math.max(...Object.values(counts));
     if (maxCount >= 3) {
+      audioManager.playSFX('jackpot');
       const winAmount = betAmount * maxCount;
       setCredits(prev => prev + winAmount);
       toast.success(`🐂 ${maxCount} match! Won ${winAmount} credits!`);
     } else {
+      audioManager.playSFX('lose');
       toast.error("No matches. Try again!");
     }
   };

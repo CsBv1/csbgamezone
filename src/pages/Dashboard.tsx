@@ -22,8 +22,9 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [isSwapping, setIsSwapping] = useState(false);
   
-  // Initialize background music - auto-starts on first interaction
-  const { playSFX } = useAudioManager();
+  // Initialize background music - starts immediately
+  const { playSFX, startMusic } = useAudioManager();
+  startMusic();
   
   // NFT bonuses from wallet scan
   const { bullsOwned, rarityBonus, highestRarity, isScanning, rescan } = useNFTBonuses(

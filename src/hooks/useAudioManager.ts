@@ -85,7 +85,7 @@ class AudioManager {
     }
   }
 
-  // Start playing the custom background music file on loop
+  // Start playing the custom background music file on loop - instant start
   startBackgroundMusic() {
     if (this.isBackgroundPlaying) return;
     
@@ -97,11 +97,24 @@ class AudioManager {
       this.backgroundAudio = new Audio(backgroundMusicFile);
       this.backgroundAudio.loop = true;
       this.backgroundAudio.volume = AUDIO_CONFIG.backgroundMusicVolume * AUDIO_CONFIG.masterVolume;
+      this.backgroundAudio.preload = 'auto';
     }
     
-    this.backgroundAudio.play().catch(err => {
-      console.log('Background music autoplay blocked, will retry on interaction');
-    });
+    // Attempt to play immediately
+    const playPromise = this.backgroundAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay blocked - will be started on user interaction
+        this.isBackgroundPlaying = false;
+      });
+    }
+  }
+
+  // Force start music (call on user interaction)
+  forceStartMusic() {
+    if (!this.isBackgroundPlaying) {
+      this.startBackgroundMusic();
+    }
   }
 
   stopBackgroundMusic() {

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Sword, Shield, Zap } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { useAudioManager } from "@/hooks/useAudioManager";
 
 interface Unit {
   id: number;
@@ -24,6 +25,10 @@ export default function BullCommander() {
   const { isLoading, isAuthorized, bullsOwned, awardKeys, navigate } = useHolderGame({ 
     gameName: "Bull Commander" 
   });
+  const { playSFX, startMusic } = useAudioManager();
+  
+  // Start music when entering game
+  startMusic();
   
   const [gold, setGold] = useState(100);
   const [wave, setWave] = useState(1);
@@ -45,8 +50,12 @@ export default function BullCommander() {
 
   const recruit = (type: 'warrior' | 'archer' | 'mage') => {
     const unitType = UNIT_TYPES[type];
-    if (gold < unitType.cost || army.length >= 6) return;
+    if (gold < unitType.cost || army.length >= 6) {
+      playSFX('error');
+      return;
+    }
     
+    playSFX('coin');
     setGold(g => g - unitType.cost);
     setArmy(a => [...a, {
       id: nextId,
@@ -78,8 +87,12 @@ export default function BullCommander() {
   };
 
   const startBattle = () => {
-    if (army.length === 0) return;
+    if (army.length === 0) {
+      playSFX('error');
+      return;
+    }
     
+    playSFX('attack');
     const enemies = generateEnemies();
     simulateBattle([...army], enemies);
   };
@@ -121,21 +134,25 @@ export default function BullCommander() {
     setBattle({ round, playerUnits, enemyUnits, log: log.slice(-10) });
     
     if (playerWon) {
+      playSFX('win');
       const survivors = playerUnits.filter(u => u.hp > 0);
       setArmy(survivors.map(u => ({ ...u, hp: Math.min(u.hp + 20, u.maxHp) })));
       setGold(g => g + 30 + wave * 10);
       
       if (wave >= WAVES_TO_WIN) {
+        playSFX('jackpot');
         setGameOver(true);
         setWon(true);
         const keys = 2 + Math.floor(bullsOwned / 2);
         setKeysEarned(keys);
         awardKeys(keys);
       } else {
+        playSFX('levelUp');
         setWave(w => w + 1);
         setTimeout(() => setBattle(null), 2000);
       }
     } else {
+      playSFX('lose');
       setGameOver(true);
       setWon(false);
     }

@@ -6,6 +6,9 @@ import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
 import { audioManager } from "@/hooks/useAudioManager";
 
+// Start background music immediately when game loads
+audioManager.startBackgroundMusic();
+
 interface Asset {
   name: string;
   emoji: string;

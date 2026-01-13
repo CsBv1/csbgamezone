@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const NumberBet = () => {
   const navigate = useNavigate();
@@ -16,15 +20,18 @@ const NumberBet = () => {
 
   const placeBet = () => {
     if (selectedNumber === null) {
+      audioManager.playSFX('error');
       toast.error("Please select a number first!");
       return;
     }
 
     if (credits < 10) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('diceRoll');
     setCredits((c) => c - 10);
     setBetting(true);
 
@@ -35,14 +42,17 @@ const NumberBet = () => {
       setBetting(false);
 
       if (result === selectedNumber) {
+        audioManager.playSFX('jackpot');
         const winAmount = 100;
         setCredits((c) => c + winAmount);
         toast.success(`🎉 Perfect match! You won ${winAmount} credits!`);
       } else if (Math.abs(result - selectedNumber) === 1) {
+        audioManager.playSFX('win');
         const winAmount = 30;
         setCredits((c) => c + winAmount);
         toast.success(`Close! You won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error("Better luck next time!");
       }
     }, 1500);

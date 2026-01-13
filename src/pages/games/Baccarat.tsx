@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const Baccarat = () => {
   const navigate = useNavigate();
@@ -21,14 +25,17 @@ const Baccarat = () => {
 
   const deal = () => {
     if (!bet) {
+      audioManager.playSFX('error');
       toast.error("Place your bet first!");
       return;
     }
     if (credits < betAmount) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('cardDeal');
     setDealing(true);
     setCredits(prev => prev - betAmount);
 
@@ -56,10 +63,12 @@ const Baccarat = () => {
       }
 
       if (won) {
+        audioManager.playSFX('jackpot');
         const winAmount = Math.floor(betAmount * multiplier);
         setCredits(prev => prev + winAmount);
         toast.success(`🐂 You won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error("Better luck next time!");
       }
 
