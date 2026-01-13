@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Plinko = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -17,13 +18,21 @@ const Plinko = () => {
   const dropBall = () => {
     if (credits < 50) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
+    audioManager.playSFX('buttonPress');
     setCredits(credits - 50);
     setDropping(true);
 
+    // Play ticking sounds during drop
+    const tickInterval = setInterval(() => {
+      audioManager.playSFX('wheelTick');
+    }, 200);
+
     setTimeout(() => {
+      clearInterval(tickInterval);
       const position = Math.floor(Math.random() * multipliers.length);
       const multiplier = multipliers[position];
       const winAmount = Math.floor(50 * multiplier);
@@ -33,10 +42,13 @@ const Plinko = () => {
       setDropping(false);
 
       if (multiplier >= 3) {
+        audioManager.playSFX('jackpot');
         toast.success(`🐂 ${multiplier}x! Won ${winAmount} credits!`);
       } else if (multiplier >= 1) {
+        audioManager.playSFX('win');
         toast.success(`${multiplier}x multiplier! Won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error(`${multiplier}x - Lost some credits`);
       }
     }, 2000);

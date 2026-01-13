@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Crown, Swords } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { audioManager } from "@/hooks/useAudioManager";
 
 type Piece = 'bull' | 'knight' | 'rook' | 'empty';
 type Player = 'player' | 'ai';
@@ -72,6 +73,7 @@ export default function BullTactician() {
     
     if (selected) {
       if (canMove(selected, [row, col])) {
+        audioManager.playSFX('move');
         const newBoard = board.map(r => r.map(c => ({ ...c })));
         const captured = newBoard[row][col];
         newBoard[row][col] = newBoard[selected[0]][selected[1]];
@@ -81,6 +83,7 @@ export default function BullTactician() {
         
         // Check if captured AI bull
         if (captured.piece === 'bull' && captured.owner === 'ai') {
+          audioManager.playSFX('capture');
           const aiBulls = newBoard.flat().filter(c => c.piece === 'bull' && c.owner === 'ai');
           if (aiBulls.length === 0) {
             endGame('player');
@@ -94,6 +97,7 @@ export default function BullTactician() {
         setSelected(null);
       }
     } else if (cell.owner === 'player') {
+      audioManager.playSFX('select');
       setSelected([row, col]);
     }
   };
@@ -173,9 +177,12 @@ export default function BullTactician() {
     setGameOver(true);
     setWinner(w);
     if (w === 'player') {
+      audioManager.playSFX('jackpot');
       const keys = 1 + Math.floor(bullsOwned / 2);
       setKeysEarned(keys);
       await awardKeys(keys);
+    } else {
+      audioManager.playSFX('lose');
     }
   };
 

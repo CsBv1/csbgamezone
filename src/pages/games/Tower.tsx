@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Tower = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -16,6 +17,7 @@ const Tower = () => {
 
   const climbLevel = () => {
     if (!playing) {
+      audioManager.playSFX('buttonPress');
       setCredits(prev => prev - betAmount);
       setPlaying(true);
       setLevel(0);
@@ -28,11 +30,14 @@ const Tower = () => {
       const newMult = 1 + (newLevel * 0.5);
       setLevel(newLevel);
       setMultiplier(newMult);
+      audioManager.playSFX('levelUp');
       toast.success(`🐂 Level ${newLevel}! Multiplier: ${newMult.toFixed(1)}x`);
     } else {
       if (level === 0) {
+        audioManager.playSFX('lose');
         toast.error("Failed to climb!");
       } else {
+        audioManager.playSFX('win');
         const winAmount = Math.floor(betAmount * multiplier);
         setCredits(prev => prev + winAmount);
         toast.success(`🐂 Cashed out at level ${level}! Won ${winAmount} credits!`);
@@ -45,6 +50,7 @@ const Tower = () => {
 
   const cashOut = () => {
     if (playing && level > 0) {
+      audioManager.playSFX('collect');
       const winAmount = Math.floor(betAmount * multiplier);
       setCredits(prev => prev + winAmount);
       toast.success(`🐂 Cashed out! Won ${winAmount} credits!`);

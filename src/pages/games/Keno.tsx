@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Keno = () => {
   const navigate = useNavigate();
@@ -18,25 +19,30 @@ const Keno = () => {
 
   const toggleNumber = (num: number) => {
     if (playing) return;
+    audioManager.playSFX('click');
     if (selected.includes(num)) {
       setSelected(selected.filter(n => n !== num));
     } else if (selected.length < maxSelection) {
       setSelected([...selected, num]);
     } else {
+      audioManager.playSFX('error');
       toast.error(`Maximum ${maxSelection} numbers!`);
     }
   };
 
   const play = () => {
     if (selected.length === 0) {
+      audioManager.playSFX('error');
       toast.error("Select at least one number!");
       return;
     }
     if (credits < 50) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('buttonPress');
     setCredits(credits - 50);
     setPlaying(true);
 
@@ -55,9 +61,11 @@ const Keno = () => {
       const winAmount = Math.floor(50 * (multipliers[matches] || 0));
 
       if (matches > 0) {
+        audioManager.playSFX(matches >= 5 ? 'jackpot' : 'win');
         setCredits(c => c + winAmount);
         toast.success(`🐂 ${matches} matches! Won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error("No matches this time!");
       }
       setPlaying(false);

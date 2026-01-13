@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Map, Flag, Swords } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { audioManager } from "@/hooks/useAudioManager";
 
 interface Territory {
   id: number;
@@ -43,6 +44,8 @@ export default function CardanoConquest() {
     if (from.owner !== 'player' || from.troops <= 1) return;
     if (!from.adjacent.includes(toId)) return;
     if (to.owner === 'player') return;
+    
+    audioManager.playSFX('attack');
     
     const attackPower = from.troops - 1;
     const defensePower = to.troops;
@@ -159,9 +162,12 @@ export default function CardanoConquest() {
     setGameOver(true);
     setWon(won);
     if (won) {
+      audioManager.playSFX('jackpot');
       const keys = 3 + Math.floor(bullsOwned / 2);
       setKeysEarned(keys);
       await awardKeys(keys);
+    } else {
+      audioManager.playSFX('lose');
     }
   };
 

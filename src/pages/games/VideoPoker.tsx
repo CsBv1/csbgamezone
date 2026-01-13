@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const VideoPoker = () => {
   const navigate = useNavigate();
@@ -25,10 +26,12 @@ const VideoPoker = () => {
 
   const deal = () => {
     if (credits < betAmount) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('cardDeal');
     setCredits(prev => prev - betAmount);
     const newHand = Array(5).fill(null).map(() => drawCard());
     setHand(newHand);
@@ -37,6 +40,7 @@ const VideoPoker = () => {
   };
 
   const draw = () => {
+    audioManager.playSFX('cardFlip');
     const newHand = hand.map((card, i) => held[i] ? card : drawCard());
     setHand(newHand);
     checkWin(newHand);
@@ -44,6 +48,7 @@ const VideoPoker = () => {
   };
 
   const toggleHold = (index: number) => {
+    audioManager.playSFX('click');
     const newHeld = [...held];
     newHeld[index] = !newHeld[index];
     setHeld(newHeld);
@@ -66,9 +71,11 @@ const VideoPoker = () => {
     else if (counts[0] === 2) winAmount = betAmount * 1;
 
     if (winAmount > 0) {
+      audioManager.playSFX(winAmount >= betAmount * 9 ? 'jackpot' : 'win');
       setCredits(prev => prev + winAmount);
       toast.success(`🐂 Won ${winAmount} credits!`);
     } else {
+      audioManager.playSFX('lose');
       toast.error("No winning hand!");
     }
   };

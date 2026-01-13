@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, Swords, Castle } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { audioManager } from "@/hooks/useAudioManager";
 
 interface Tower {
   id: number;
@@ -43,6 +44,7 @@ export default function KingdomSiege() {
     if (gold < TOWER_COST) return;
     if (towers.some(t => t.x === x)) return;
     
+    audioManager.playSFX('build');
     setGold(g => g - TOWER_COST);
     setTowers(t => [...t, { id: nextTowerId, x, damage: 10 + bullsOwned, range: 2 }]);
     setNextTowerId(id => id + 1);
@@ -50,6 +52,7 @@ export default function KingdomSiege() {
 
   const startWave = () => {
     if (gameState === 'setup' || gameState === 'playing') {
+      audioManager.playSFX('buttonPress');
       setGameState('playing');
       const enemyCount = wave + 2;
       const newEnemies: Enemy[] = [];
@@ -88,6 +91,7 @@ export default function KingdomSiege() {
         const alive = newEnemies.filter(e => e.hp > 0);
         const killed = newEnemies.length - alive.length;
         if (killed > 0) {
+          audioManager.playSFX('hit');
           setGold(g => g + killed * 15);
         }
         
@@ -108,11 +112,13 @@ export default function KingdomSiege() {
         // Wave complete
         if (remaining.length === 0 && prev.length > 0) {
           if (wave >= WAVES_TO_WIN) {
+            audioManager.playSFX('jackpot');
             setGameState('won');
             const keys = 2 + Math.floor(bullsOwned / 2);
             setKeysEarned(keys);
             awardKeys(keys);
           } else {
+            audioManager.playSFX('levelUp');
             setWave(w => w + 1);
             setGameState('setup');
           }

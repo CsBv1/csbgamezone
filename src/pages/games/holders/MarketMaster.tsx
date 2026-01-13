@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { audioManager } from "@/hooks/useAudioManager";
 
 interface Asset {
   name: string;
@@ -36,6 +37,7 @@ export default function MarketMaster() {
     const asset = assets.find(a => a.name === assetName);
     if (!asset || cash < asset.price) return;
     
+    audioManager.playSFX('trade');
     setCash(c => c - asset.price);
     setHoldings(h => ({ ...h, [assetName]: (h[assetName] || 0) + 1 }));
   };
@@ -45,6 +47,7 @@ export default function MarketMaster() {
     const asset = assets.find(a => a.name === assetName);
     if (!asset) return;
     
+    audioManager.playSFX('coin');
     setCash(c => c + asset.price);
     setHoldings(h => ({ ...h, [assetName]: h[assetName] - 1 }));
   };
@@ -86,9 +89,12 @@ export default function MarketMaster() {
     setGameOver(true);
     const portfolio = getPortfolioValue();
     if (portfolio >= 1000 + TARGET_PROFIT) {
+      audioManager.playSFX('jackpot');
       const keys = 2 + Math.floor(bullsOwned / 2);
       setKeysEarned(keys);
       await awardKeys(keys);
+    } else {
+      audioManager.playSFX('lose');
     }
   };
 
