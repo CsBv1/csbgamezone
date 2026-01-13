@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const CARDS = ["🐂", "💰", "🏆", "💎", "⭐", "🔥"];
 
@@ -34,6 +38,7 @@ const CardFlip = () => {
       return;
     }
 
+    audioManager.playSFX('cardFlip');
     const newFlipped = [...flipped, index];
     setFlipped(newFlipped);
 
@@ -41,6 +46,7 @@ const CardFlip = () => {
       setMoves((m) => m + 1);
       
       if (cards[newFlipped[0]] === cards[newFlipped[1]]) {
+        audioManager.playSFX('win');
         setMatched([...matched, ...newFlipped]);
         setFlipped([]);
         setCredits((c) => c + 10);
@@ -48,12 +54,14 @@ const CardFlip = () => {
 
         if (matched.length + 2 === cards.length) {
           setTimeout(() => {
+            audioManager.playSFX('jackpot');
             const bonus = Math.max(50 - moves * 2, 10);
             setCredits((c) => c + bonus);
             toast.success(`🎉 Game complete! Bonus: ${bonus} credits`);
           }, 500);
         }
       } else {
+        audioManager.playSFX('miss');
         setTimeout(() => setFlipped([]), 1000);
       }
     }

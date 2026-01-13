@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, Handshake, Sword, Gift } from "lucide-react";
 import { useHolderGame } from "@/hooks/useHolderGame";
 import { CreditBar } from "@/components/CreditBar";
+import { useAudioManager } from "@/hooks/useAudioManager";
 
 interface Faction {
   id: string;
@@ -23,6 +24,10 @@ export default function BullDiplomacy() {
   const { isLoading, isAuthorized, bullsOwned, awardKeys, navigate } = useHolderGame({ 
     gameName: "Bull Diplomacy" 
   });
+  const { playSFX, startMusic } = useAudioManager();
+  
+  // Start music when entering game
+  startMusic();
   
   const bonusRelation = bullsOwned * 5;
   
@@ -94,6 +99,7 @@ export default function BullDiplomacy() {
   ];
 
   const startTurn = () => {
+    playSFX('buttonPress');
     const event = events[Math.floor(Math.random() * events.length)];
     setCurrentEvent(event);
   };
@@ -101,6 +107,7 @@ export default function BullDiplomacy() {
   const makeChoice = (choiceIndex: number) => {
     if (!currentEvent) return;
     
+    playSFX('select');
     const choice = currentEvent.choices[choiceIndex];
     
     setFactions(prev => prev.map(faction => ({
@@ -113,6 +120,7 @@ export default function BullDiplomacy() {
     if (turn >= TURNS_TO_WIN) {
       checkWinCondition();
     } else {
+      playSFX('levelUp');
       setTurn(t => t + 1);
     }
   };
@@ -125,9 +133,12 @@ export default function BullDiplomacy() {
     setWon(isWin);
     
     if (isWin) {
+      playSFX('jackpot');
       const keys = 2 + Math.floor(bullsOwned / 2);
       setKeysEarned(keys);
       await awardKeys(keys);
+    } else {
+      playSFX('lose');
     }
   };
 

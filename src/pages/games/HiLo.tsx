@@ -5,6 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start music when entering game
+audioManager.startBackgroundMusic();
 
 const HiLo = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -16,9 +20,11 @@ const HiLo = () => {
 
   const startGame = () => {
     if (credits < 50) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
+    audioManager.playSFX('cardDeal');
     setCredits(credits - 50);
     setCurrentCard(Math.floor(Math.random() * 13) + 1);
     setNextCard(null);
@@ -27,12 +33,14 @@ const HiLo = () => {
   };
 
   const guess = (higher: boolean) => {
+    audioManager.playSFX('cardFlip');
     const next = Math.floor(Math.random() * 13) + 1;
     setNextCard(next);
 
     const correct = higher ? next > currentCard : next < currentCard;
     
     if (correct) {
+      audioManager.playSFX('win');
       const newStreak = streak + 1;
       setStreak(newStreak);
       const winAmount = 25 * newStreak;
@@ -44,12 +52,14 @@ const HiLo = () => {
         setNextCard(null);
       }, 1000);
     } else {
+      audioManager.playSFX('lose');
       toast.error("Wrong! Game over!");
       setPlaying(false);
     }
   };
 
   const cashOut = () => {
+    audioManager.playSFX('collect');
     toast.success(`Cashed out with ${streak}x streak! 🐂`);
     setPlaying(false);
   };
