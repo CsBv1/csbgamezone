@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const InstantWin = () => {
-  const navigate = useNavigate();
+  const { goBack, getBackLabel } = useBullWorldNavigation();
   const [credits, setCredits] = useState(1000);
   const [playing, setPlaying] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -24,11 +25,13 @@ const InstantWin = () => {
   const play = () => {
     if (credits < betAmount) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits(prev => prev - betAmount);
     setPlaying(true);
+    audioManager.playSFX('spin');
 
     setTimeout(() => {
       const rand = Math.random();
@@ -45,8 +48,10 @@ const InstantWin = () => {
       if (outcome.mult > 0) {
         const winAmount = betAmount * outcome.mult;
         setCredits(prev => prev + winAmount);
+        audioManager.playSFX(outcome.mult >= 10 ? 'jackpot' : 'win');
         toast.success(`🐂 ${outcome.text}! Won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error("Try again!");
       }
       setPlaying(false);
@@ -55,8 +60,8 @@ const InstantWin = () => {
 
   return (
     <div className="min-h-screen bull-pattern p-4">
-      <Button variant="ghost" onClick={() => navigate("/games")} className="mb-4">
-        <ArrowLeft className="w-5 h-5" /> Back to Games
+      <Button variant="ghost" onClick={goBack} className="mb-4">
+        <ArrowLeft className="w-5 h-5" /> {getBackLabel()}
       </Button>
 
       <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">

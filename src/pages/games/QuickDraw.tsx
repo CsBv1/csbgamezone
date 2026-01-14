@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const QuickDraw = () => {
-  const navigate = useNavigate();
+  const { goBack, getBackLabel } = useBullWorldNavigation();
   const [credits, setCredits] = useState(1000);
   const [playing, setPlaying] = useState(false);
   const [numbers, setNumbers] = useState<number[]>([]);
@@ -17,12 +18,13 @@ const QuickDraw = () => {
   const startGame = () => {
     if (credits < betAmount) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits(prev => prev - betAmount);
     setPlaying(true);
-    setPicked([]);
+    audioManager.playSFX('spin');
     
     setTimeout(() => {
       const drawn = Array(10).fill(0).map(() => Math.floor(Math.random() * 20) + 1);
@@ -34,8 +36,10 @@ const QuickDraw = () => {
         const mult = matches === 3 ? 3 : matches === 4 ? 10 : 25;
         const winAmount = betAmount * mult;
         setCredits(prev => prev + winAmount);
+        audioManager.playSFX(matches >= 4 ? 'jackpot' : 'win');
         toast.success(`🐂 ${matches} matches! Won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error(`Only ${matches} matches!`);
       }
       setPlaying(false);
@@ -44,6 +48,8 @@ const QuickDraw = () => {
 
   const togglePick = (num: number) => {
     if (playing) return;
+    
+    audioManager.playSFX('click');
     
     if (picked.includes(num)) {
       setPicked(picked.filter(p => p !== num));
@@ -54,8 +60,8 @@ const QuickDraw = () => {
 
   return (
     <div className="min-h-screen bull-pattern p-4">
-      <Button variant="ghost" onClick={() => navigate("/games")} className="mb-4">
-        <ArrowLeft className="w-5 h-5" /> Back to Games
+      <Button variant="ghost" onClick={goBack} className="mb-4">
+        <ArrowLeft className="w-5 h-5" /> {getBackLabel()}
       </Button>
 
       <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">
@@ -94,7 +100,7 @@ const QuickDraw = () => {
             <p className="text-center text-sm text-muted-foreground mb-2">Drawn Numbers:</p>
             <div className="flex gap-2 justify-center flex-wrap">
               {numbers.map((n, i) => (
-                <div key={i} className="bg-primary/20 p-2 rounded border border-primary">
+                <div key={i} className={`p-2 rounded border ${picked.includes(n) ? 'bg-green-500/30 border-green-500' : 'bg-primary/20 border-primary'}`}>
                   <p className="text-lg font-bold text-primary">{n}</p>
                 </div>
               ))}

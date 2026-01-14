@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const MegaMatch = () => {
-  const navigate = useNavigate();
+  const { goBack, getBackLabel } = useBullWorldNavigation();
   const [credits, setCredits] = useState(1000);
   const [playing, setPlaying] = useState(false);
   const [symbols, setSymbols] = useState<string[]>([]);
@@ -18,11 +19,13 @@ const MegaMatch = () => {
   const play = () => {
     if (credits < betAmount) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits(prev => prev - betAmount);
     setPlaying(true);
+    audioManager.playSFX('spin');
 
     const newSymbols = Array(5).fill(0).map(() => 
       symbolList[Math.floor(Math.random() * symbolList.length)]
@@ -37,16 +40,20 @@ const MegaMatch = () => {
       if (maxMatch === 5) {
         const winAmount = betAmount * 100;
         setCredits(prev => prev + winAmount);
+        audioManager.playSFX('jackpot');
         toast.success(`🐂 MEGA MATCH! Won ${winAmount} credits!`);
       } else if (maxMatch === 4) {
         const winAmount = betAmount * 20;
         setCredits(prev => prev + winAmount);
+        audioManager.playSFX('jackpot');
         toast.success(`🐂 4 Match! Won ${winAmount} credits!`);
       } else if (maxMatch === 3) {
         const winAmount = betAmount * 5;
         setCredits(prev => prev + winAmount);
+        audioManager.playSFX('win');
         toast.success(`3 Match! Won ${winAmount} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error("No match!");
       }
       setPlaying(false);
@@ -55,8 +62,8 @@ const MegaMatch = () => {
 
   return (
     <div className="min-h-screen bull-pattern p-4">
-      <Button variant="ghost" onClick={() => navigate("/games")} className="mb-4">
-        <ArrowLeft className="w-5 h-5" /> Back to Games
+      <Button variant="ghost" onClick={goBack} className="mb-4">
+        <ArrowLeft className="w-5 h-5" /> {getBackLabel()}
       </Button>
 
       <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">
@@ -73,7 +80,7 @@ const MegaMatch = () => {
         {symbols.length > 0 && (
           <div className="flex gap-3 justify-center mb-6">
             {symbols.map((symbol, i) => (
-              <div key={i} className="bg-primary/20 p-6 rounded-lg border-2 border-primary">
+              <div key={i} className={`bg-primary/20 p-6 rounded-lg border-2 border-primary ${playing ? 'animate-bounce' : ''}`}>
                 <p className="text-5xl">{symbol}</p>
               </div>
             ))}

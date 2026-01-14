@@ -7,12 +7,8 @@ const corsHeaders = {
 
 const CSB_POLICY_ID = "b11c9439e1dbec97f89037e0f7bde3b2daad4ad279812ffd9d24e43e";
 
-const RARITY_BONUSES: Record<string, number> = {
-  "legendary": 50,
-  "epic": 25,
-  "rare": 10,
-  "common": 0,
-};
+// Simple bonus: 10% per bull owned
+const BONUS_PER_BULL = 10;
 
 // Bech32 encoding implementation for Cardano addresses
 const BECH32_ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
@@ -284,8 +280,6 @@ serve(async (req) => {
 
     // Process found assets
     const csbNfts: Array<{ name: string; rarity: string; quantity: number }> = [];
-    let highestBonus = 0;
-    let highestRarity = "none";
     let totalBulls = 0;
 
     for (const addressData of allAssets) {
@@ -312,29 +306,18 @@ serve(async (req) => {
 
           console.log("*** FOUND CSB BULL ***:", assetName, "qty:", quantity);
 
-          // All CSB Bulls from this collection are Legendary by default
-          const rarity = "legendary";
-
-          const bonus = RARITY_BONUSES[rarity] || 0;
-          if (bonus > highestBonus) {
-            highestBonus = bonus;
-            highestRarity = rarity;
-          }
-
-          csbNfts.push({ name: assetName, rarity, quantity });
+          csbNfts.push({ name: assetName, rarity: "holder", quantity });
         }
       }
     }
 
-    // Calculate total bonus based on quantity owned
-    // Base bonus + (5% per additional bull)
-    const quantityBonus = Math.min(totalBulls * 5, 50); // Cap at 50%
-    const finalBonus = highestBonus + quantityBonus;
+    // Calculate total bonus: 10% per bull owned
+    const finalBonus = totalBulls * BONUS_PER_BULL;
 
     const result = {
       bullsOwned: totalBulls,
       rarityBonus: finalBonus,
-      highestRarity: totalBulls > 0 ? highestRarity : "none",
+      highestRarity: totalBulls > 0 ? "holder" : "none",
       nfts: csbNfts.slice(0, 10),
     };
 

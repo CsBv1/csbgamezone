@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const LuckyWheel = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -18,20 +19,32 @@ const LuckyWheel = () => {
   const play = () => {
     if (credits < betAmount) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
     setCredits(prev => prev - betAmount);
     setPlaying(true);
+    audioManager.playSFX('spin');
+
+    // Play tick sounds during spin
+    const tickInterval = setInterval(() => {
+      audioManager.playSFX('wheelTick');
+    }, 150);
 
     setTimeout(() => {
+      clearInterval(tickInterval);
+      audioManager.playSFX('wheelStop');
+      
       const won = prizes[Math.floor(Math.random() * prizes.length)];
       setResult(won);
 
       if (won > 0) {
         setCredits(prev => prev + won);
+        audioManager.playSFX(won >= 200 ? 'jackpot' : 'win');
         toast.success(`🐂 Won ${won} credits!`);
       } else {
+        audioManager.playSFX('lose');
         toast.error("No prize this spin!");
       }
       setPlaying(false);
@@ -57,7 +70,7 @@ const LuckyWheel = () => {
 
         {result !== null && (
           <div className="text-center mb-6">
-            <div className="inline-block bg-primary/20 p-12 rounded-full border-4 border-primary">
+            <div className={`inline-block bg-primary/20 p-12 rounded-full border-4 border-primary ${playing ? 'animate-spin' : ''}`}>
               <p className="text-7xl font-bold text-primary">{result}</p>
             </div>
           </div>
