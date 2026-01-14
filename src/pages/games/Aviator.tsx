@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
+import { audioManager } from "@/hooks/useAudioManager";
 
 const Aviator = () => {
   const { goBack, getBackLabel } = useBullWorldNavigation();
@@ -13,6 +14,7 @@ const Aviator = () => {
   const [multiplier, setMultiplier] = useState(1.00);
   const [cashedOut, setCashedOut] = useState(false);
   const [crashPoint, setCrashPoint] = useState(0);
+  const tickRef = useRef(0);
   const betAmount = 50;
 
   useEffect(() => {
@@ -21,8 +23,16 @@ const Aviator = () => {
       interval = setInterval(() => {
         setMultiplier(m => {
           const newM = m + 0.05;
+          
+          // Play tick sound periodically
+          tickRef.current++;
+          if (tickRef.current % 10 === 0) {
+            audioManager.playSFX('wheelTick');
+          }
+          
           if (newM >= crashPoint) {
             setFlying(false);
+            audioManager.playSFX('lose');
             toast.error(`Crashed at ${crashPoint.toFixed(2)}x!`);
             return crashPoint;
           }
@@ -36,6 +46,7 @@ const Aviator = () => {
   const startFlight = () => {
     if (credits < betAmount) {
       toast.error("Not enough credits!");
+      audioManager.playSFX('error');
       return;
     }
 
@@ -44,6 +55,8 @@ const Aviator = () => {
     setCashedOut(false);
     setMultiplier(1.00);
     setCrashPoint(1 + Math.random() * 10);
+    tickRef.current = 0;
+    audioManager.playSFX('spin');
   };
 
   const cashOut = () => {
@@ -53,6 +66,7 @@ const Aviator = () => {
     setFlying(false);
     const winAmount = Math.floor(betAmount * multiplier);
     setCredits(prev => prev + winAmount);
+    audioManager.playSFX(multiplier >= 3 ? 'jackpot' : 'win');
     toast.success(`🐂 Cashed out at ${multiplier.toFixed(2)}x! Won ${winAmount} credits!`);
   };
 

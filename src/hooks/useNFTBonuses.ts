@@ -71,8 +71,8 @@ export function useNFTBonuses(walletAddress: string | null) {
 
       if (data?.bullsOwned > 0) {
         toast({
-          title: `🐂 ${data.bullsOwned} Bulls Detected!`,
-          description: `+${data.rarityBonus}% bonus applied. Highest rarity: ${data.highestRarity}`,
+          title: `🐂 ${data.bullsOwned} Bull${data.bullsOwned > 1 ? 's' : ''} Detected!`,
+          description: `+${data.rarityBonus}% bonus applied (10% per bull)`,
         });
       }
     } catch (err) {
