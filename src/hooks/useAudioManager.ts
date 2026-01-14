@@ -1,5 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
 import backgroundMusicFile from '@/assets/background-music.mp3';
+import letItSinkIn from '@/assets/let-it-sink-in.mp3';
+import turnItOn2 from '@/assets/turn-it-on-2.mp3';
+import benjaminOnAda from '@/assets/benjamin-on-ada.mp3';
+
+// Playlist in order
+const MUSIC_PLAYLIST = [
+  backgroundMusicFile,  // Turn it on (original)
+  letItSinkIn,          // Let it sink in
+  turnItOn2,            // Turn it on (version 2)
+  benjaminOnAda,        // Benjamin on Ada
+];
 
 // Audio configuration - adjust volumes here only
 const AUDIO_CONFIG = {
@@ -60,6 +71,7 @@ class AudioManager {
   private masterGain: GainNode | null = null;
   private backgroundAudio: HTMLAudioElement | null = null;
   private isBackgroundPlaying = false;
+  private currentTrackIndex = 0;
 
   private initContext() {
     if (!this.audioContext) {
@@ -85,7 +97,29 @@ class AudioManager {
     }
   }
 
-  // Start playing the custom background music file on loop - instant start
+  // Play next track in playlist
+  private playNextTrack() {
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % MUSIC_PLAYLIST.length;
+    this.loadAndPlayTrack(MUSIC_PLAYLIST[this.currentTrackIndex]);
+  }
+
+  // Load and play a specific track
+  private loadAndPlayTrack(trackSrc: string) {
+    if (!this.backgroundAudio) return;
+    
+    this.backgroundAudio.src = trackSrc;
+    this.backgroundAudio.load();
+    
+    const playPromise = this.backgroundAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay blocked - will be started on user interaction
+        this.isBackgroundPlaying = false;
+      });
+    }
+  }
+
+  // Start playing the playlist - instant start
   startBackgroundMusic() {
     if (this.isBackgroundPlaying) return;
     
@@ -94,10 +128,15 @@ class AudioManager {
     
     // Create audio element for the music file
     if (!this.backgroundAudio) {
-      this.backgroundAudio = new Audio(backgroundMusicFile);
-      this.backgroundAudio.loop = true;
+      this.backgroundAudio = new Audio(MUSIC_PLAYLIST[this.currentTrackIndex]);
+      this.backgroundAudio.loop = false; // Don't loop single track, we'll handle playlist progression
       this.backgroundAudio.volume = AUDIO_CONFIG.backgroundMusicVolume * AUDIO_CONFIG.masterVolume;
       this.backgroundAudio.preload = 'auto';
+      
+      // When track ends, play next in playlist
+      this.backgroundAudio.addEventListener('ended', () => {
+        this.playNextTrack();
+      });
     }
     
     // Attempt to play immediately
