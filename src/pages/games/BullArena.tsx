@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Swords } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start background music immediately
+audioManager.startBackgroundMusic();
 
 const BullArena = () => {
   const navigate = useNavigate();
@@ -13,10 +17,12 @@ const BullArena = () => {
 
   const playGame = () => {
     if (credits < 15) {
+      audioManager.playSFX('error');
       toast({ title: "Not enough credits!", variant: "destructive" });
       return;
     }
     
+    audioManager.playSFX('attack');
     setPlaying(true);
     setCredits(credits - 15);
     
@@ -24,11 +30,13 @@ const BullArena = () => {
       const outcome = Math.random();
       if (outcome > 0.6) {
         const diamonds = Math.floor(Math.random() * 25) + 15;
+        audioManager.playSFX('jackpot');
         toast({ 
           title: "⚔️ Victory!", 
           description: `You dominated the arena! ${diamonds} diamonds!` 
         });
       } else {
+        audioManager.playSFX('lose');
         toast({ title: "Defeated!", description: "Train harder and return!", variant: "destructive" });
       }
       setPlaying(false);

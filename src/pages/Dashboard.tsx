@@ -902,6 +902,54 @@ const Dashboard = () => {
                 buttonVariant="key" 
                 isHolder={bullsOwned > 0} 
               />
+              <GameCard 
+                title="🔨 Bull Blacksmith" 
+                description="Forge legendary items from materials!" 
+                icon={Flame} 
+                gradient="from-orange-600 to-red-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/bull-blacksmith') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Forge" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="📈 Bull Trader" 
+                description="Trade assets - profit in 20 days!" 
+                icon={TrendingUp} 
+                gradient="from-cyan-600 to-blue-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/bull-trader') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Trade" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🛡️ Chain Defender" 
+                description="Tower defense - survive 5 waves!" 
+                icon={Shield} 
+                gradient="from-blue-600 to-indigo-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/chain-defender') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Defend" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="🌍 ADA Conquest" 
+                description="Conquer territories for domination!" 
+                icon={Globe} 
+                gradient="from-purple-600 to-pink-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/ada-conquest') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Conquer" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
             </div>
           </div>
 

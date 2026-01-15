@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Map } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start background music immediately
+audioManager.startBackgroundMusic();
 
 const BullQuest = () => {
   const navigate = useNavigate();
@@ -13,10 +17,12 @@ const BullQuest = () => {
 
   const playGame = () => {
     if (credits < 12) {
+      audioManager.playSFX('error');
       toast({ title: "Not enough credits!", variant: "destructive" });
       return;
     }
     
+    audioManager.playSFX('spin');
     setPlaying(true);
     setCredits(credits - 12);
     
@@ -24,11 +30,13 @@ const BullQuest = () => {
       const success = Math.random() > 0.4;
       if (success) {
         const diamonds = Math.floor(Math.random() * 18) + 8;
+        audioManager.playSFX('jackpot');
         toast({ 
           title: "🗺️ Quest Complete!", 
           description: `Journey successful! Found ${diamonds} diamonds!` 
         });
       } else {
+        audioManager.playSFX('lose');
         toast({ title: "Quest Failed", description: "The path was too dangerous!" });
       }
       setPlaying(false);
