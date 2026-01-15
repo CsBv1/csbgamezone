@@ -150,6 +150,10 @@ import FortressBuilder from "./pages/games/holders/FortressBuilder";
 import CardanoConquest from "./pages/games/holders/CardanoConquest";
 import BullDiplomacy from "./pages/games/holders/BullDiplomacy";
 import StrategicStacks from "./pages/games/holders/StrategicStacks";
+import BullBlacksmith from "./pages/games/holders/BullBlacksmith";
+import BullTrader from "./pages/games/holders/BullTrader";
+import ChainDefender from "./pages/games/holders/ChainDefender";
+import ADAConquest from "./pages/games/holders/ADAConquest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -308,6 +312,10 @@ const App = () => (
           <Route path="/games/race-day" element={<ProtectedGameRoute><RaceDay /></ProtectedGameRoute>} />
           <Route path="/games/prize-path" element={<ProtectedGameRoute><PrizePath /></ProtectedGameRoute>} />
           <Route path="/games/bonanza-spin" element={<ProtectedGameRoute><BonanzaSpin /></ProtectedGameRoute>} />
+          <Route path="/games/bull-blacksmith" element={<BullBlacksmith />} />
+          <Route path="/games/bull-trader" element={<BullTrader />} />
+          <Route path="/games/chain-defender" element={<ChainDefender />} />
+          <Route path="/games/ada-conquest" element={<ADAConquest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
         </Routes>

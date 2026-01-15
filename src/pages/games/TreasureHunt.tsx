@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import holyBull from "@/assets/holy-bull.jpeg";
+import { audioManager } from "@/hooks/useAudioManager";
+
+// Start background music immediately
+audioManager.startBackgroundMusic();
 
 const TreasureHunt = () => {
   const navigate = useNavigate();
@@ -19,10 +23,12 @@ const TreasureHunt = () => {
 
   const startGame = () => {
     if (credits < betAmount) {
+      audioManager.playSFX('error');
       toast.error("Not enough credits!");
       return;
     }
 
+    audioManager.playSFX('buttonPress');
     setCredits(prev => prev - betAmount);
     setPlaying(true);
     setRevealed(new Array(16).fill(""));
@@ -33,24 +39,28 @@ const TreasureHunt = () => {
   const pick = (index: number) => {
     if (!playing || revealed[index] || picksLeft === 0) return;
 
+    audioManager.playSFX('cardFlip');
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
     const newRevealed = [...revealed];
     newRevealed[index] = prize;
     setRevealed(newRevealed);
 
     if (prize === "💣") {
+      audioManager.playSFX('lose');
       toast.error("Hit a bomb!");
       setPlaying(false);
       if (totalWin > 0) {
         setCredits(prev => prev + totalWin);
       }
     } else {
+      audioManager.playSFX('collect');
       const winValue = prize === "💎" ? 100 : prize === "👑" ? 75 : prize === "💰" ? 50 : 25;
       setTotalWin(prev => prev + winValue);
       const newPicks = picksLeft - 1;
       setPicksLeft(newPicks);
       
       if (newPicks === 0) {
+        audioManager.playSFX('jackpot');
         setCredits(prev => prev + totalWin + winValue);
         toast.success(`🐂 Completed! Won ${totalWin + winValue} credits!`);
         setPlaying(false);
