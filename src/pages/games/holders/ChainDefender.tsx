@@ -13,6 +13,7 @@ interface Tower {
   id: number;
   type: 'basic' | 'cannon' | 'laser';
   lane: number;
+  slot: number; // Position in lane (0, 1, 2)
   damage: number;
   cost: number;
 }
@@ -27,10 +28,12 @@ interface Enemy {
 }
 
 const TOWER_TYPES = {
-  basic: { damage: 10, cost: 25, emoji: '🏹', name: 'Archer' },
-  cannon: { damage: 25, cost: 50, emoji: '💣', name: 'Cannon' },
-  laser: { damage: 40, cost: 100, emoji: '⚡', name: 'Laser' },
+  basic: { damage: 10, cost: 20, emoji: '🏹', name: 'Archer' },
+  cannon: { damage: 25, cost: 40, emoji: '💣', name: 'Cannon' },
+  laser: { damage: 40, cost: 75, emoji: '⚡', name: 'Laser' },
 };
+
+const MAX_TOWERS_PER_LANE = 3;
 
 export default function ChainDefender() {
   const { isLoading, isAuthorized, bullsOwned, awardKeys, navigate } = useHolderGame({ 
@@ -48,19 +51,20 @@ export default function ChainDefender() {
   const [waveActive, setWaveActive] = useState(false);
   const [nextTowerId, setNextTowerId] = useState(1);
   const [nextEnemyId, setNextEnemyId] = useState(1);
+  const [selectedTowerType, setSelectedTowerType] = useState<keyof typeof TOWER_TYPES>('basic');
   
   const maxWaves = 5;
   const lanes = 3;
 
-  const placeTower = (type: keyof typeof TOWER_TYPES, lane: number) => {
-    const towerInfo = TOWER_TYPES[type];
+  const placeTower = (lane: number, slot: number) => {
+    const towerInfo = TOWER_TYPES[selectedTowerType];
     if (gold < towerInfo.cost) {
       audioManager.playSFX('error');
       return;
     }
     
-    // Check if lane already has a tower
-    if (towers.some(t => t.lane === lane)) {
+    // Check if this specific slot is taken
+    if (towers.some(t => t.lane === lane && t.slot === slot)) {
       audioManager.playSFX('error');
       return;
     }
@@ -69,8 +73,9 @@ export default function ChainDefender() {
     setGold(g => g - towerInfo.cost);
     setTowers(t => [...t, { 
       id: nextTowerId, 
-      type, 
+      type: selectedTowerType, 
       lane, 
+      slot,
       damage: towerInfo.damage,
       cost: towerInfo.cost 
     }]);
@@ -93,8 +98,8 @@ export default function ChainDefender() {
         hp: 20 + wave * 10,
         maxHp: 20 + wave * 10,
         lane: Math.floor(Math.random() * lanes),
-        position: -10 - i * 5, // Stagger spawn positions
-        reward: 10 + wave * 5,
+        position: -10 - i * 8, // Stagger spawn positions
+        reward: 15 + wave * 5,
       });
     }
     
@@ -102,16 +107,16 @@ export default function ChainDefender() {
     setEnemies(newEnemies);
   };
 
-  // Game loop
+  // Game loop - much faster enemy movement (200ms instead of 500ms, move 4 instead of 2)
   useEffect(() => {
     if (!waveActive || gameOver) return;
     
     const interval = setInterval(() => {
       setEnemies(prevEnemies => {
-        // Move enemies forward
-        let updatedEnemies = prevEnemies.map(e => ({ ...e, position: e.position + 2 }));
+        // Move enemies forward faster
+        let updatedEnemies = prevEnemies.map(e => ({ ...e, position: e.position + 5 }));
         
-        // Towers attack enemies in their lane
+        // All towers attack enemies in their lane
         towers.forEach(tower => {
           const enemyInLane = updatedEnemies.find(e => e.lane === tower.lane && e.hp > 0);
           if (enemyInLane) {
@@ -134,7 +139,7 @@ export default function ChainDefender() {
           updatedEnemies = updatedEnemies.filter(e => e.position < 100);
         }
         
-        // Check if wave complete
+        // Check if wave complete - auto advance to next wave
         if (updatedEnemies.length === 0 && prevEnemies.length > 0) {
           audioManager.playSFX('levelUp');
           setWaveActive(false);
@@ -143,6 +148,9 @@ export default function ChainDefender() {
             // Win!
             setWon(true);
             setGameOver(true);
+          } else {
+            // Auto-advance to next wave
+            setWave(w => w + 1);
           }
         }
         
@@ -157,7 +165,7 @@ export default function ChainDefender() {
         }
         return h;
       });
-    }, 500);
+    }, 200); // Much faster game tick
     
     return () => clearInterval(interval);
   }, [waveActive, gameOver, towers, wave]);
@@ -185,10 +193,6 @@ export default function ChainDefender() {
     setWon(false);
     setKeysEarned(0);
     setWaveActive(false);
-  };
-
-  const nextWave = () => {
-    setWave(w => w + 1);
   };
 
   if (isLoading) {
@@ -250,17 +254,57 @@ export default function ChainDefender() {
               </div>
             </div>
 
-            {/* Lanes */}
+            {/* Tower type selector - always visible between waves */}
+            {!waveActive && (
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground mb-2 text-center">Select tower type, then click a slot:</p>
+                <div className="flex justify-center gap-2 mb-3">
+                  {Object.entries(TOWER_TYPES).map(([type, info]) => (
+                    <Button
+                      key={type}
+                      variant={selectedTowerType === type ? "default" : "outline"}
+                      className={`flex flex-col h-auto py-2 ${selectedTowerType === type ? 'ring-2 ring-primary' : ''}`}
+                      onClick={() => setSelectedTowerType(type as keyof typeof TOWER_TYPES)}
+                      disabled={gold < info.cost}
+                    >
+                      <span className="text-xl">{info.emoji}</span>
+                      <span className="text-xs">{info.name}</span>
+                      <span className="text-xs text-yellow-400">{info.cost}g</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Lanes with tower slots */}
             <div className="space-y-2 mb-4">
               {Array(lanes).fill(0).map((_, lane) => {
-                const tower = towers.find(t => t.lane === lane);
+                const laneTowers = towers.filter(t => t.lane === lane);
                 const laneEnemies = enemies.filter(e => e.lane === lane);
                 
                 return (
                   <div key={lane} className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
-                    {/* Tower slot */}
-                    <div className="w-12 h-12 flex items-center justify-center bg-muted/40 rounded-lg text-2xl">
-                      {tower ? TOWER_TYPES[tower.type].emoji : '➕'}
+                    {/* Tower slots - 3 per lane */}
+                    <div className="flex gap-1">
+                      {Array(MAX_TOWERS_PER_LANE).fill(0).map((_, slot) => {
+                        const tower = laneTowers.find(t => t.slot === slot);
+                        const canPlace = !waveActive && !tower && gold >= TOWER_TYPES[selectedTowerType].cost;
+                        
+                        return (
+                          <button
+                            key={slot}
+                            className={`w-10 h-10 flex items-center justify-center rounded-lg text-xl transition-all
+                              ${tower ? 'bg-primary/30' : 'bg-muted/40'}
+                              ${canPlace ? 'hover:bg-primary/20 cursor-pointer ring-1 ring-primary/50' : ''}
+                              ${!waveActive && !tower ? 'animate-pulse' : ''}
+                            `}
+                            onClick={() => !waveActive && placeTower(lane, slot)}
+                            disabled={waveActive || !!tower}
+                          >
+                            {tower ? TOWER_TYPES[tower.type].emoji : (canPlace ? '➕' : '·')}
+                          </button>
+                        );
+                      })}
                     </div>
                     
                     {/* Lane path */}
@@ -268,7 +312,7 @@ export default function ChainDefender() {
                       {laneEnemies.map(enemy => (
                         <div 
                           key={enemy.id}
-                          className="absolute top-1/2 -translate-y-1/2 text-xl transition-all"
+                          className="absolute top-1/2 -translate-y-1/2 text-xl transition-all duration-150"
                           style={{ left: `${Math.min(90, Math.max(0, enemy.position))}%` }}
                         >
                           👹
@@ -283,36 +327,6 @@ export default function ChainDefender() {
               })}
             </div>
 
-            {/* Tower shop */}
-            {!waveActive && (
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground mb-2">Place towers (1 per lane):</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(TOWER_TYPES).map(([type, info]) => (
-                    <div key={type} className="text-center">
-                      <div className="text-xl mb-1">{info.emoji}</div>
-                      <p className="text-xs">{info.name}</p>
-                      <p className="text-xs text-yellow-400">{info.cost}g</p>
-                      <div className="flex gap-1 justify-center mt-1">
-                        {Array(lanes).fill(0).map((_, lane) => (
-                          <Button
-                            key={lane}
-                            size="sm"
-                            variant="outline"
-                            className="w-6 h-6 p-0 text-xs"
-                            disabled={gold < info.cost || towers.some(t => t.lane === lane)}
-                            onClick={() => placeTower(type as keyof typeof TOWER_TYPES, lane)}
-                          >
-                            {lane + 1}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Wave controls */}
             {!waveActive ? (
               <Button onClick={startWave} className="w-full" size="lg">
@@ -323,12 +337,6 @@ export default function ChainDefender() {
               <div className="text-center p-4 bg-red-500/20 rounded-lg">
                 <p className="text-lg font-bold animate-pulse">⚔️ Wave {wave} in progress...</p>
               </div>
-            )}
-            
-            {!waveActive && wave > 1 && wave <= maxWaves && (
-              <Button onClick={nextWave} variant="outline" className="w-full mt-2">
-                Prepare Wave {wave}
-              </Button>
             )}
           </>
         )}
