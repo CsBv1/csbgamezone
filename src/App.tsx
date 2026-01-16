@@ -154,6 +154,8 @@ import BullBlacksmith from "./pages/games/holders/BullBlacksmith";
 import BullTrader from "./pages/games/holders/BullTrader";
 import ChainDefender from "./pages/games/holders/ChainDefender";
 import ADAConquest from "./pages/games/holders/ADAConquest";
+import BullTycoon from "./pages/games/holders/BullTycoon";
+import StakeWars from "./pages/games/holders/StakeWars";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -316,6 +318,8 @@ const App = () => (
           <Route path="/games/bull-trader" element={<BullTrader />} />
           <Route path="/games/chain-defender" element={<ChainDefender />} />
           <Route path="/games/ada-conquest" element={<ADAConquest />} />
+          <Route path="/games/bull-tycoon" element={<BullTycoon />} />
+          <Route path="/games/stake-wars" element={<StakeWars />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
         </Routes>

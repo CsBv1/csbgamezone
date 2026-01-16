@@ -950,6 +950,30 @@ const Dashboard = () => {
                 buttonVariant="key" 
                 isHolder={bullsOwned > 0} 
               />
+              <GameCard 
+                title="🏢 Bull Tycoon" 
+                description="Build your business empire to 100K!" 
+                icon={TrendingUp} 
+                gradient="from-amber-600 to-orange-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/bull-tycoon') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Build Empire" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
+              <GameCard 
+                title="⚔️ Stake Wars" 
+                description="PvP battles - defeat all opponents!" 
+                icon={Flame} 
+                gradient="from-red-600 to-rose-700" 
+                onClick={() => bullsOwned > 0 ? navigate('/games/stake-wars') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT to unlock!", variant: "destructive" })} 
+                badge={bullsOwned > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
+                badgeColor={bullsOwned > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
+                buttonText={bullsOwned > 0 ? "Battle" : "🔒 Locked"} 
+                buttonVariant="key" 
+                isHolder={bullsOwned > 0} 
+              />
             </div>
           </div>
 
