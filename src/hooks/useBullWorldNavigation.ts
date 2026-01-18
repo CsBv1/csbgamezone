@@ -5,17 +5,26 @@ export const useBullWorldNavigation = () => {
   
   const goBack = () => {
     const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
+    const fromHoldersArena = sessionStorage.getItem('fromHoldersArena') === 'true';
+    
     if (fromBullWorld) {
       sessionStorage.removeItem('fromBullWorld');
       navigate('/games/bull-world');
+    } else if (fromHoldersArena) {
+      sessionStorage.removeItem('fromHoldersArena');
+      navigate('/games/holders-arena');
     } else {
-      navigate('/games');
+      navigate('/');
     }
   };
 
   const getBackLabel = () => {
     const fromBullWorld = sessionStorage.getItem('fromBullWorld') === 'true';
-    return fromBullWorld ? 'Back to Bull World' : 'Back to Games';
+    const fromHoldersArena = sessionStorage.getItem('fromHoldersArena') === 'true';
+    
+    if (fromBullWorld) return 'Back to Bull World';
+    if (fromHoldersArena) return 'Back to Holders Arena';
+    return 'Back to Dashboard';
   };
 
   return { goBack, getBackLabel };

@@ -142,6 +142,9 @@ import BullWorld from "./pages/games/BullWorld";
 import MultiplayerCrash from "./pages/games/MultiplayerCrash";
 import BullStampede from "./pages/games/BullStampede";
 import HoldersArena from "./pages/games/HoldersArena";
+import BullSprint from "./pages/games/BullSprint";
+import BullRelay from "./pages/games/BullRelay";
+import ObstacleRush from "./pages/games/ObstacleRush";
 import BullTactician from "./pages/games/holders/BullTactician";
 import KingdomSiege from "./pages/games/holders/KingdomSiege";
 import MarketMaster from "./pages/games/holders/MarketMaster";
@@ -190,6 +193,9 @@ const App = () => (
           <Route path="/games/bull-world" element={<ProtectedGameRoute><BullWorld /></ProtectedGameRoute>} />
           <Route path="/games/multiplayer-crash" element={<MultiplayerCrash />} />
           <Route path="/games/bull-stampede" element={<BullStampede />} />
+          <Route path="/games/bull-sprint" element={<BullSprint />} />
+          <Route path="/games/bull-relay" element={<BullRelay />} />
+          <Route path="/games/obstacle-rush" element={<ObstacleRush />} />
           <Route path="/games/holders-arena" element={<HoldersArena />} />
           <Route path="/games/bull-tactician" element={<BullTactician />} />
           <Route path="/games/kingdom-siege" element={<KingdomSiege />} />
