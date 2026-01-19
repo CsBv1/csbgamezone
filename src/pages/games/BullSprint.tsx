@@ -193,22 +193,22 @@ export default function BullSprint() {
       const elapsed = (Date.now() - raceStartTime.current) / 1000;
       setRaceTime(elapsed);
 
-      // Decay speed boost
-      speedBoost.current *= 0.98;
+      // Slower decay so momentum lasts longer
+      speedBoost.current *= 0.96;
 
-      // Apply movement from taps
-      if (speedBoost.current > 0.1) {
-        setMyPosition(prev => {
-          const newPos = Math.min(TRACK_LENGTH, prev + speedBoost.current * 0.5);
-          
-          if (newPos >= FINISH_LINE && prev < FINISH_LINE) {
-            finishRace(elapsed);
-            return newPos;
-          }
-          
+      // Always apply movement - even small boost moves the bull forward
+      setMyPosition(prev => {
+        // Base movement + boost movement
+        const boostMovement = speedBoost.current * 0.8;
+        const newPos = Math.min(TRACK_LENGTH, prev + boostMovement);
+        
+        if (newPos >= FINISH_LINE && prev < FINISH_LINE) {
+          finishRace(elapsed);
           return newPos;
-        });
-      }
+        }
+        
+        return newPos;
+      });
 
       animationRef.current = requestAnimationFrame(loop);
     };
@@ -223,9 +223,9 @@ export default function BullSprint() {
     const timeSinceLastTap = now - lastTapTime.current;
     lastTapTime.current = now;
 
-    // Faster tapping = more boost
-    const tapBonus = Math.max(0.5, 3 - timeSinceLastTap / 100);
-    speedBoost.current = Math.min(10, speedBoost.current + tapBonus);
+    // Each tap gives significant boost - faster tapping = more boost
+    const tapBonus = Math.max(1.5, 5 - timeSinceLastTap / 80);
+    speedBoost.current = Math.min(15, speedBoost.current + tapBonus);
     
     setTapCount(prev => prev + 1);
     audioManager.playSFX('coin');

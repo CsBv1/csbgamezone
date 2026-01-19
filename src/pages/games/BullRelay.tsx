@@ -107,16 +107,19 @@ export default function BullRelay() {
       const elapsed = (Date.now() - raceStartTime.current) / 1000;
       setTeamTime(elapsed);
 
-      // Calculate movement speed
-      let moveSpeed = runners[currentRunner].speed * 0.5;
+      // Base movement - bulls always run forward automatically
+      let moveSpeed = runners[currentRunner].speed * 0.8;
+      
+      // Sprint boost when holding button (uses stamina faster)
       if (isSprinting && stamina > 0) {
-        moveSpeed *= 2;
-        setStamina(s => Math.max(0, s - 2));
+        moveSpeed *= 2.5;
+        setStamina(s => Math.max(0, s - 3));
       } else if (!isSprinting) {
-        setStamina(s => Math.min(runners[currentRunner].stamina, s + 0.5));
+        // Recover stamina slowly when not sprinting
+        setStamina(s => Math.min(runners[currentRunner].stamina, s + 0.8));
       }
 
-      // Update position
+      // Update position - bulls move automatically
       setRunnerPositions(prev => {
         const newPositions = [...prev];
         newPositions[currentRunner] = Math.min(100, prev[currentRunner] + moveSpeed);

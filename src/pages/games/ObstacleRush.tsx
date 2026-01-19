@@ -109,31 +109,37 @@ export default function ObstacleRush() {
   };
 
   const startRace = () => {
+    let localDistance = 0;
+    let localSpeed = 6;
+    
     gameLoopRef.current = setInterval(() => {
-      setDistance(d => d + 1);
-      setScore(s => s + 1);
+      localDistance += 1;
+      localSpeed = Math.min(14, 6 + Math.floor(localDistance / 300));
       
-      // Increase speed over time (slower ramp up)
-      setSpeed(s => Math.min(12, 3 + Math.floor(score / 800)));
+      setDistance(localDistance);
+      setScore(s => s + 1);
+      setSpeed(localSpeed);
 
-      // Spawn obstacles - MUCH easier at start, gradually increases
-      // No obstacles for first 50 distance, then slowly increase spawn rate
-      const spawnChance = distance < 50 ? 0 : Math.min(0.04, 0.01 + (distance - 50) * 0.00005);
-      if (Math.random() < spawnChance) {
-        spawnObstacle();
+      // Spawn obstacles - starts after distance 80, then increases gradually
+      // Much more reliable spawning with guaranteed obstacles
+      if (localDistance > 80) {
+        const spawnChance = Math.min(0.08, 0.03 + (localDistance - 80) * 0.0001);
+        if (Math.random() < spawnChance) {
+          spawnObstacle();
+        }
       }
 
-      // Move obstacles
+      // Move obstacles with current speed
       setObstacles(prev => {
-        const moved = prev.map(o => ({ ...o, x: o.x - speed })).filter(o => o.x > -100);
+        const moved = prev.map(o => ({ ...o, x: o.x - localSpeed })).filter(o => o.x > -100);
         
-        // Check collision - slightly more forgiving hitbox
+        // Check collision - forgiving hitbox
         const playerX = 100;
         const playerY = lane * LANE_HEIGHT + LANE_HEIGHT / 2;
         
         for (const obs of moved) {
-          // More forgiving hitbox (smaller collision area)
-          const hitboxPadding = 8;
+          // Forgiving hitbox (smaller collision area)
+          const hitboxPadding = 12;
           if (
             playerX + hitboxPadding < obs.x + obs.width &&
             playerX + PLAYER_SIZE - hitboxPadding > obs.x &&
