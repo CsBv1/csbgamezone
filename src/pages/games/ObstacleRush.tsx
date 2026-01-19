@@ -18,9 +18,11 @@ interface Obstacle {
 
 const TRACK_WIDTH = 800;
 const TRACK_HEIGHT = 400;
-const PLAYER_SIZE = 30;
+const PLAYER_SIZE = 20; // Smaller player hitbox
 const LANE_COUNT = 3;
 const LANE_HEIGHT = TRACK_HEIGHT / LANE_COUNT;
+const OBSTACLE_WIDTH = 25; // Smaller obstacles
+const OBSTACLE_HEIGHT = 50; // Much smaller height - fits in lane center only
 
 export default function ObstacleRush() {
   const { goBack } = useBullWorldNavigation();
@@ -41,6 +43,7 @@ export default function ObstacleRush() {
 
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const obstacleIdRef = useRef(0);
+  const laneRef = useRef(1); // Track lane with ref to avoid stale closures
 
   useEffect(() => {
     const init = async () => {
@@ -90,6 +93,7 @@ export default function ObstacleRush() {
     setDistance(0);
     setSpeed(5);
     setLane(1);
+    laneRef.current = 1;
     setObstacles([]);
     obstacleIdRef.current = 0;
     audioManager.playSFX('buttonPress');
@@ -110,20 +114,19 @@ export default function ObstacleRush() {
 
   const startRace = () => {
     let localDistance = 0;
-    let localSpeed = 6;
+    let localSpeed = 8;
     
     gameLoopRef.current = setInterval(() => {
       localDistance += 1;
-      localSpeed = Math.min(14, 6 + Math.floor(localDistance / 300));
+      localSpeed = Math.min(16, 8 + Math.floor(localDistance / 400));
       
       setDistance(localDistance);
       setScore(s => s + 1);
       setSpeed(localSpeed);
 
-      // Spawn obstacles - starts after distance 80, then increases gradually
-      // Much more reliable spawning with guaranteed obstacles
-      if (localDistance > 80) {
-        const spawnChance = Math.min(0.08, 0.03 + (localDistance - 80) * 0.0001);
+      // Spawn obstacles - starts after distance 150 for breathing room
+      if (localDistance > 150) {
+        const spawnChance = Math.min(0.06, 0.02 + (localDistance - 150) * 0.00005);
         if (Math.random() < spawnChance) {
           spawnObstacle();
         }
@@ -133,21 +136,24 @@ export default function ObstacleRush() {
       setObstacles(prev => {
         const moved = prev.map(o => ({ ...o, x: o.x - localSpeed })).filter(o => o.x > -100);
         
-        // Check collision - forgiving hitbox
+        // Get current lane from ref (not stale closure!)
+        const currentLane = laneRef.current;
         const playerX = 100;
-        const playerY = lane * LANE_HEIGHT + LANE_HEIGHT / 2;
         
+        // Simple lane-based collision - only collide if SAME LANE
         for (const obs of moved) {
-          // Forgiving hitbox (smaller collision area)
-          const hitboxPadding = 12;
-          if (
-            playerX + hitboxPadding < obs.x + obs.width &&
-            playerX + PLAYER_SIZE - hitboxPadding > obs.x &&
-            playerY - PLAYER_SIZE / 2 + hitboxPadding < obs.y + obs.height &&
-            playerY + PLAYER_SIZE / 2 - hitboxPadding > obs.y
-          ) {
-            handleCrash();
-            return [];
+          // Check if obstacle is near player X position
+          const obstacleReachesPlayer = obs.x < playerX + PLAYER_SIZE && obs.x + obs.width > playerX - PLAYER_SIZE;
+          
+          if (obstacleReachesPlayer) {
+            // Get obstacle lane from its Y position
+            const obstacleLane = Math.floor((obs.y + obs.height / 2) / LANE_HEIGHT);
+            
+            // Only crash if in SAME lane
+            if (currentLane === obstacleLane) {
+              handleCrash();
+              return [];
+            }
           }
         }
         
@@ -158,15 +164,16 @@ export default function ObstacleRush() {
 
   const spawnObstacle = () => {
     const laneIndex = Math.floor(Math.random() * LANE_COUNT);
-    const types: ('wall' | 'spike' | 'gap')[] = ['wall', 'spike', 'wall'];
+    const types: ('wall' | 'spike')[] = ['wall', 'spike'];
     const type = types[Math.floor(Math.random() * types.length)];
     
+    // Center obstacle in lane - smaller size
     const newObstacle: Obstacle = {
       id: obstacleIdRef.current++,
       x: TRACK_WIDTH + 50,
-      y: laneIndex * LANE_HEIGHT + 10,
-      width: type === 'gap' ? 100 : 40,
-      height: LANE_HEIGHT - 20,
+      y: laneIndex * LANE_HEIGHT + (LANE_HEIGHT - OBSTACLE_HEIGHT) / 2, // Centered in lane
+      width: OBSTACLE_WIDTH,
+      height: OBSTACLE_HEIGHT,
       type
     };
     
@@ -232,10 +239,12 @@ export default function ObstacleRush() {
     
     audioManager.playSFX('buttonPress');
     
-    if (direction === 'up' && lane > 0) {
-      setLane(l => l - 1);
-    } else if (direction === 'down' && lane < LANE_COUNT - 1) {
-      setLane(l => l + 1);
+    if (direction === 'up' && laneRef.current > 0) {
+      laneRef.current -= 1;
+      setLane(laneRef.current);
+    } else if (direction === 'down' && laneRef.current < LANE_COUNT - 1) {
+      laneRef.current += 1;
+      setLane(laneRef.current);
     }
   };
 
