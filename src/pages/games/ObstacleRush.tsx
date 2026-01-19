@@ -74,7 +74,7 @@ export default function ObstacleRush() {
   const fetchLeaderboard = async () => {
     const { data } = await supabase
       .from('game_results')
-      .select('*')
+      .select('*, profiles:user_id(username)')
       .eq('game_name', 'Obstacle Rush')
       .eq('result', 'win')
       .order('multiplier', { ascending: false })
@@ -113,11 +113,13 @@ export default function ObstacleRush() {
       setDistance(d => d + 1);
       setScore(s => s + 1);
       
-      // Increase speed over time
-      setSpeed(s => Math.min(15, 5 + Math.floor(score / 500)));
+      // Increase speed over time (slower ramp up)
+      setSpeed(s => Math.min(12, 3 + Math.floor(score / 800)));
 
-      // Spawn obstacles
-      if (Math.random() < 0.05 + distance * 0.0001) {
+      // Spawn obstacles - MUCH easier at start, gradually increases
+      // No obstacles for first 50 distance, then slowly increase spawn rate
+      const spawnChance = distance < 50 ? 0 : Math.min(0.04, 0.01 + (distance - 50) * 0.00005);
+      if (Math.random() < spawnChance) {
         spawnObstacle();
       }
 
@@ -125,16 +127,18 @@ export default function ObstacleRush() {
       setObstacles(prev => {
         const moved = prev.map(o => ({ ...o, x: o.x - speed })).filter(o => o.x > -100);
         
-        // Check collision
+        // Check collision - slightly more forgiving hitbox
         const playerX = 100;
         const playerY = lane * LANE_HEIGHT + LANE_HEIGHT / 2;
         
         for (const obs of moved) {
+          // More forgiving hitbox (smaller collision area)
+          const hitboxPadding = 8;
           if (
-            playerX < obs.x + obs.width &&
-            playerX + PLAYER_SIZE > obs.x &&
-            playerY - PLAYER_SIZE / 2 < obs.y + obs.height &&
-            playerY + PLAYER_SIZE / 2 > obs.y
+            playerX + hitboxPadding < obs.x + obs.width &&
+            playerX + PLAYER_SIZE - hitboxPadding > obs.x &&
+            playerY - PLAYER_SIZE / 2 + hitboxPadding < obs.y + obs.height &&
+            playerY + PLAYER_SIZE / 2 - hitboxPadding > obs.y
           ) {
             handleCrash();
             return [];
@@ -490,7 +494,7 @@ export default function ObstacleRush() {
             {leaderboard.slice(0, 5).map((entry, i) => (
               <div key={entry.id} className="flex justify-between items-center text-sm">
                 <span className="text-red-300">
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.user_id?.slice(0, 8)}...
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.profiles?.username || 'Anonymous'}
                 </span>
                 <span className="text-yellow-400 font-bold">{entry.multiplier}</span>
               </div>
