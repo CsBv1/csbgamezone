@@ -72,7 +72,7 @@ export default function BullSprint() {
   const fetchLeaderboard = async () => {
     const { data } = await supabase
       .from('game_results')
-      .select('*')
+      .select('*, profiles:user_id(username)')
       .eq('game_name', 'Bull Sprint')
       .eq('result', 'win')
       .order('multiplier', { ascending: true })
@@ -189,11 +189,6 @@ export default function BullSprint() {
 
   const gameLoop = () => {
     const loop = () => {
-      if (gameState !== 'racing' && myPosition < FINISH_LINE) {
-        animationRef.current = requestAnimationFrame(loop);
-        return;
-      }
-
       // Update race time
       const elapsed = (Date.now() - raceStartTime.current) / 1000;
       setRaceTime(elapsed);
@@ -208,16 +203,14 @@ export default function BullSprint() {
           
           if (newPos >= FINISH_LINE && prev < FINISH_LINE) {
             finishRace(elapsed);
+            return newPos;
           }
           
           return newPos;
         });
       }
 
-      // Continue loop
-      if (gameState === 'racing') {
-        animationRef.current = requestAnimationFrame(loop);
-      }
+      animationRef.current = requestAnimationFrame(loop);
     };
 
     animationRef.current = requestAnimationFrame(loop);
@@ -244,6 +237,7 @@ export default function BullSprint() {
   };
 
   const finishRace = async (time: number) => {
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
     setGameState('finished');
     setFinalTime(time);
     audioManager.playSFX('jackpot');
@@ -273,7 +267,8 @@ export default function BullSprint() {
         game_name: 'Bull Sprint',
         result: 'win',
         diamonds_won: diamonds,
-        multiplier: time
+        multiplier: time,
+        credits_spent: 0
       });
 
       toast.success(`🏁 Finished in ${time.toFixed(2)}s! +${diamonds} 💎`);
@@ -495,7 +490,7 @@ export default function BullSprint() {
             {leaderboard.slice(0, 5).map((entry, i) => (
               <div key={entry.id} className="flex justify-between items-center text-sm">
                 <span className="text-purple-300">
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.user_id?.slice(0, 8)}...
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.profiles?.username || 'Anonymous'}
                 </span>
                 <span className="text-yellow-400 font-bold">{entry.multiplier?.toFixed(2)}s</span>
               </div>

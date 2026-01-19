@@ -68,7 +68,7 @@ export default function BullRelay() {
   const fetchLeaderboard = async () => {
     const { data } = await supabase
       .from('game_results')
-      .select('*')
+      .select('*, profiles:user_id(username)')
       .eq('game_name', 'Bull Relay')
       .eq('result', 'win')
       .order('multiplier', { ascending: true })
@@ -432,7 +432,7 @@ export default function BullRelay() {
             {leaderboard.slice(0, 5).map((entry, i) => (
               <div key={entry.id} className="flex justify-between items-center text-sm">
                 <span className="text-green-300">
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.user_id?.slice(0, 8)}...
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.profiles?.username || 'Anonymous'}
                 </span>
                 <span className="text-yellow-400 font-bold">{entry.multiplier?.toFixed(2)}s</span>
               </div>
