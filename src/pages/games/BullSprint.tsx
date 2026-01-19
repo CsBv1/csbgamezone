@@ -162,6 +162,7 @@ export default function BullSprint() {
   const startGame = (singlePlayer = false) => {
     setIsSinglePlayer(singlePlayer);
     setMyPosition(0);
+    positionRef.current = 0;
     setTapCount(0);
     speedBoost.current = 0;
     startCountdown();
@@ -187,28 +188,30 @@ export default function BullSprint() {
     }, 1000);
   };
 
+  const positionRef = useRef(0);
+  const gameStateRef = useRef<"waiting" | "countdown" | "racing" | "finished">("waiting");
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
   const gameLoop = () => {
     const loop = () => {
+      if (gameStateRef.current !== 'racing') return;
+      
       // Update race time
       const elapsed = (Date.now() - raceStartTime.current) / 1000;
       setRaceTime(elapsed);
 
-      // Slower decay so momentum lasts longer
-      speedBoost.current *= 0.96;
+      // Check if finished
+      if (positionRef.current >= FINISH_LINE) {
+        finishRace(elapsed);
+        return;
+      }
 
-      // Always apply movement - even small boost moves the bull forward
-      setMyPosition(prev => {
-        // Base movement + boost movement
-        const boostMovement = speedBoost.current * 0.8;
-        const newPos = Math.min(TRACK_LENGTH, prev + boostMovement);
-        
-        if (newPos >= FINISH_LINE && prev < FINISH_LINE) {
-          finishRace(elapsed);
-          return newPos;
-        }
-        
-        return newPos;
-      });
+      // Update display position
+      setMyPosition(positionRef.current);
 
       animationRef.current = requestAnimationFrame(loop);
     };
@@ -217,17 +220,14 @@ export default function BullSprint() {
   };
 
   const handleTap = () => {
-    if (gameState !== 'racing') return;
+    if (gameStateRef.current !== 'racing') return;
 
-    const now = Date.now();
-    const timeSinceLastTap = now - lastTapTime.current;
-    lastTapTime.current = now;
-
-    // Each tap gives significant boost - faster tapping = more boost
-    const tapBonus = Math.max(1.5, 5 - timeSinceLastTap / 80);
-    speedBoost.current = Math.min(15, speedBoost.current + tapBonus);
+    // DIRECT position movement on every tap - guaranteed progress!
+    const tapDistance = 1.8; // Each tap moves bull forward
+    positionRef.current = Math.min(TRACK_LENGTH, positionRef.current + tapDistance);
     
     setTapCount(prev => prev + 1);
+    setMyPosition(positionRef.current);
     audioManager.playSFX('coin');
 
     // Haptic feedback

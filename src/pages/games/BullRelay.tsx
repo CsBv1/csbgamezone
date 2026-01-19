@@ -44,6 +44,10 @@ export default function BullRelay() {
   const raceStartTime = useRef<number>(0);
   const legStartTime = useRef<number>(0);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const isSprintingRef = useRef(false);
+  const currentRunnerRef = useRef(0);
+  const staminaRef = useRef(100);
+  const runnersRef = useRef(runners);
 
   useEffect(() => {
     const init = async () => {
@@ -81,9 +85,13 @@ export default function BullRelay() {
     setGameState('countdown');
     setCountdown(3);
     setCurrentRunner(0);
+    currentRunnerRef.current = 0;
     setRunnerPositions([0, 0, 0, 0]);
     setLegTimes([]);
     setStamina(runners[0].stamina);
+    staminaRef.current = runners[0].stamina;
+    isSprintingRef.current = false;
+    runnersRef.current = runners;
     audioManager.playSFX('buttonPress');
 
     const timer = setInterval(() => {
@@ -107,49 +115,54 @@ export default function BullRelay() {
       const elapsed = (Date.now() - raceStartTime.current) / 1000;
       setTeamTime(elapsed);
 
-      // Base movement - bulls always run forward automatically
-      let moveSpeed = runners[currentRunner].speed * 0.8;
+      const runner = currentRunnerRef.current;
+      const runnerData = runnersRef.current[runner];
       
-      // Sprint boost when holding button (uses stamina faster)
-      if (isSprinting && stamina > 0) {
-        moveSpeed *= 2.5;
-        setStamina(s => Math.max(0, s - 3));
-      } else if (!isSprinting) {
-        // Recover stamina slowly when not sprinting
-        setStamina(s => Math.min(runners[currentRunner].stamina, s + 0.8));
+      // Base movement - bulls always run forward automatically
+      let moveSpeed = runnerData.speed * 1.2;
+      
+      // Sprint boost when holding button (uses stamina faster) - use ref!
+      if (isSprintingRef.current && staminaRef.current > 0) {
+        moveSpeed *= 3;
+        staminaRef.current = Math.max(0, staminaRef.current - 2);
+        setStamina(staminaRef.current);
+      } else if (!isSprintingRef.current) {
+        // Recover stamina when not sprinting
+        staminaRef.current = Math.min(runnerData.stamina, staminaRef.current + 1);
+        setStamina(staminaRef.current);
       }
 
       // Update position - bulls move automatically
       setRunnerPositions(prev => {
         const newPositions = [...prev];
-        newPositions[currentRunner] = Math.min(100, prev[currentRunner] + moveSpeed);
+        const oldPos = prev[runner];
+        newPositions[runner] = Math.min(100, oldPos + moveSpeed);
         
         // Check if runner finished their leg
-        if (newPositions[currentRunner] >= 100 && prev[currentRunner] < 100) {
-          handleLegComplete();
+        if (newPositions[runner] >= 100 && oldPos < 100) {
+          // Handle leg complete
+          const legTime = (Date.now() - legStartTime.current) / 1000;
+          setLegTimes(prevTimes => [...prevTimes, legTime]);
+          audioManager.playSFX('levelUp');
+
+          if (runner >= 3) {
+            // Race finished!
+            setTimeout(() => finishRace(), 100);
+          } else {
+            // Pass baton to next runner
+            const nextRunner = runner + 1;
+            currentRunnerRef.current = nextRunner;
+            setCurrentRunner(nextRunner);
+            staminaRef.current = runnersRef.current[nextRunner].stamina;
+            setStamina(staminaRef.current);
+            legStartTime.current = Date.now();
+            toast.success(`🏃 Baton passed to ${runnersRef.current[nextRunner].name}!`);
+          }
         }
         
         return newPositions;
       });
     }, 50);
-  };
-
-  const handleLegComplete = () => {
-    const legTime = (Date.now() - legStartTime.current) / 1000;
-    setLegTimes(prev => [...prev, legTime]);
-    audioManager.playSFX('levelUp');
-
-    if (currentRunner >= 3) {
-      // Race finished!
-      finishRace();
-    } else {
-      // Pass baton to next runner
-      const nextRunner = currentRunner + 1;
-      setCurrentRunner(nextRunner);
-      setStamina(runners[nextRunner].stamina);
-      legStartTime.current = Date.now();
-      toast.success(`🏃 Baton passed to ${runners[nextRunner].name}!`);
-    }
   };
 
   const finishRace = async () => {
@@ -193,6 +206,7 @@ export default function BullRelay() {
   };
 
   const handleSprint = (sprinting: boolean) => {
+    isSprintingRef.current = sprinting;
     setIsSprinting(sprinting);
   };
 
