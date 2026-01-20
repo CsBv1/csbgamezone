@@ -165,6 +165,24 @@ export default function BullRelay() {
     }, 50);
   };
 
+  const [diamondsWon, setDiamondsWon] = useState(0);
+  const [username, setUsername] = useState<string>("Player");
+
+  // Fetch username on init
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .single();
+        if (profile) setUsername((profile as any).username || "Player");
+      }
+    };
+    fetchUsername();
+  }, [userId]);
+
   const finishRace = async () => {
     setGameState('finished');
     if (gameLoopRef.current) clearInterval(gameLoopRef.current);
@@ -175,6 +193,7 @@ export default function BullRelay() {
 
     if (userId) {
       const diamonds = Math.max(10, Math.floor(60 - finalTime));
+      setDiamondsWon(diamonds);
 
       const { data: current } = await supabase
         .from('user_diamonds')
@@ -192,6 +211,10 @@ export default function BullRelay() {
           .eq('user_id', userId);
       }
 
+      // Store diamonds in sessionStorage so BullWorld can show them as "collected"
+      const currentCollected = parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+      sessionStorage.setItem('mazeDiamondsCollected', String(currentCollected + diamonds));
+
       await supabase.from('game_results').insert({
         user_id: userId,
         game_name: 'Bull Relay',
@@ -200,7 +223,7 @@ export default function BullRelay() {
         multiplier: finalTime
       });
 
-      toast.success(`🏆 Race Complete! Time: ${finalTime.toFixed(2)}s | +${diamonds} 💎`);
+      toast.success(`🏆 Victory! +${diamonds} 💎 added to wallet!`);
       fetchLeaderboard();
     }
   };
@@ -420,9 +443,11 @@ export default function BullRelay() {
 
         {gameState === 'finished' && (
           <Card className="p-6 bg-gradient-to-r from-green-900/50 to-emerald-900/50 border-green-500/30 text-center">
-            <Trophy className="w-16 h-16 mx-auto text-yellow-400 mb-4" />
-            <h2 className="text-3xl font-bold text-green-400 mb-2">Relay Complete!</h2>
+            <Trophy className="w-16 h-16 mx-auto text-yellow-400 mb-4 animate-bounce" />
+            <h2 className="text-4xl font-bold text-green-400 mb-2">🏆 VICTORY! 🏆</h2>
+            <p className="text-lg text-green-300 mb-1">{username}</p>
             <p className="text-2xl text-white mb-2">Total Time: {teamTime.toFixed(2)}s</p>
+            <p className="text-2xl text-yellow-400 font-bold mb-2">+{diamondsWon} 💎 Added to Wallet!</p>
             <div className="grid grid-cols-4 gap-2 my-4">
               {legTimes.map((time, i) => (
                 <div key={i} className="bg-black/30 p-2 rounded">
