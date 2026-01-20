@@ -496,6 +496,7 @@ export default function ObstacleRush() {
         {gameState === 'crashed' && (
           <Card className="p-6 bg-gradient-to-r from-red-900/50 to-orange-900/50 border-red-500/30 text-center">
             <h2 className="text-3xl font-bold text-red-400 mb-2">💥 Game Over!</h2>
+            <p className="text-lg text-orange-300 mb-1">{username}</p>
             <p className="text-xl text-white mb-2">Score: {score}</p>
             <p className="text-lg text-orange-300 mb-2">Distance: {distance}m</p>
             <p className="text-xl text-green-400 font-bold mb-4">+{diamondsWon} 💎 Added to Wallet!</p>
