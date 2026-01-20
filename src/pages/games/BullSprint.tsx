@@ -70,15 +70,32 @@ export default function BullSprint() {
   }, []);
 
   const fetchLeaderboard = async () => {
+    // Query game_results and join with profiles to get username
     const { data } = await supabase
       .from('game_results')
-      .select('*, profiles:user_id(username)')
+      .select('id, user_id, diamonds_won, multiplier, created_at')
       .eq('game_name', 'Bull Sprint')
       .eq('result', 'win')
       .order('multiplier', { ascending: true })
       .limit(10);
     
-    if (data) setLeaderboard(data as any[]);
+    if (data) {
+      // Fetch usernames for each result
+      const resultsWithUsernames = await Promise.all(
+        data.map(async (result: any) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', result.user_id)
+            .single();
+          return {
+            ...result,
+            username: profile?.username || 'Anonymous'
+          };
+        })
+      );
+      setLeaderboard(resultsWithUsernames);
+    }
   };
 
   const joinOrCreateRoom = async () => {
@@ -198,17 +215,19 @@ export default function BullSprint() {
 
   const gameLoop = () => {
     const loop = () => {
-      if (gameStateRef.current !== 'racing') return;
-      
-      // Update race time
+      // Only check racing state AFTER checking position
       const elapsed = (Date.now() - raceStartTime.current) / 1000;
       setRaceTime(elapsed);
 
-      // Check if finished
-      if (positionRef.current >= FINISH_LINE) {
+      // Check if finished FIRST - before state check
+      if (positionRef.current >= FINISH_LINE && gameStateRef.current === 'racing') {
+        gameStateRef.current = 'finished'; // Prevent multiple triggers
         finishRace(elapsed);
         return;
       }
+
+      // Exit if not racing
+      if (gameStateRef.current !== 'racing') return;
 
       // Update display position
       setMyPosition(positionRef.current);
@@ -497,9 +516,9 @@ export default function BullSprint() {
           </h3>
           <div className="space-y-2">
             {leaderboard.slice(0, 5).map((entry, i) => (
-              <div key={entry.id} className="flex justify-between items-center text-sm">
+              <div key={entry.id} className="flex justify-between items-center text-sm bg-purple-900/30 px-3 py-2 rounded">
                 <span className="text-purple-300">
-                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.profiles?.username || 'Anonymous'}
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {entry.username || 'Anonymous'}
                 </span>
                 <span className="text-yellow-400 font-bold">{entry.multiplier?.toFixed(2)}s</span>
               </div>
