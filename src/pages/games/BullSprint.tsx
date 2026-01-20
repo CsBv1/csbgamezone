@@ -477,6 +477,7 @@ export default function BullSprint() {
           <Card className="p-6 bg-gradient-to-r from-yellow-900/50 to-orange-900/50 border-yellow-500/30 text-center">
             <Trophy className="w-16 h-16 mx-auto text-yellow-400 mb-4 animate-bounce" />
             <h2 className="text-4xl font-bold text-yellow-400 mb-2">🏆 VICTORY! 🏆</h2>
+            <p className="text-lg text-purple-300 mb-1">{username}</p>
             <p className="text-2xl text-white mb-2">Time: {finalTime?.toFixed(2)}s</p>
             <p className="text-lg text-purple-300 mb-2">Taps: {tapCount}</p>
             <p className="text-2xl text-green-400 font-bold mb-4">+{diamondsWon} 💎 Added to Wallet!</p>
