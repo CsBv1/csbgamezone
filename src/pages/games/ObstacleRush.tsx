@@ -194,10 +194,13 @@ export default function ObstacleRush() {
     saveScore();
   };
 
+  const [diamondsWon, setDiamondsWon] = useState(0);
+
   const saveScore = async () => {
     if (!userId) return;
 
-    const diamonds = Math.floor(score / 50);
+    const diamonds = Math.max(1, Math.floor(score / 30)); // More generous diamond rewards
+    setDiamondsWon(diamonds);
     
     if (diamonds > 0) {
       const { data: current } = await supabase
@@ -215,6 +218,10 @@ export default function ObstacleRush() {
           })
           .eq('user_id', userId);
       }
+
+      // Store diamonds in sessionStorage so BullWorld can show them as "collected"
+      const currentCollected = parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+      sessionStorage.setItem('mazeDiamondsCollected', String(currentCollected + diamonds));
     }
 
     await supabase.from('game_results').insert({
@@ -230,7 +237,7 @@ export default function ObstacleRush() {
       toast.success(`🏆 New High Score: ${score}!`);
     }
 
-    toast.info(`Distance: ${distance}m | +${diamonds} 💎`);
+    toast.success(`+${diamonds} 💎 added to wallet!`);
     fetchLeaderboard();
   };
 
@@ -488,9 +495,10 @@ export default function ObstacleRush() {
 
         {gameState === 'crashed' && (
           <Card className="p-6 bg-gradient-to-r from-red-900/50 to-orange-900/50 border-red-500/30 text-center">
-            <h2 className="text-3xl font-bold text-red-400 mb-2">Game Over!</h2>
+            <h2 className="text-3xl font-bold text-red-400 mb-2">💥 Game Over!</h2>
             <p className="text-xl text-white mb-2">Score: {score}</p>
-            <p className="text-lg text-orange-300 mb-4">Distance: {distance}m</p>
+            <p className="text-lg text-orange-300 mb-2">Distance: {distance}m</p>
+            <p className="text-xl text-green-400 font-bold mb-4">+{diamondsWon} 💎 Added to Wallet!</p>
             <Button
               onClick={startGame}
               className="bg-gradient-to-r from-red-600 to-orange-600"

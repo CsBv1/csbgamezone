@@ -236,6 +236,8 @@ export default function BullSprint() {
     }
   };
 
+  const [diamondsWon, setDiamondsWon] = useState(0);
+
   const finishRace = async (time: number) => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     setGameState('finished');
@@ -243,8 +245,9 @@ export default function BullSprint() {
     audioManager.playSFX('jackpot');
 
     if (userId) {
-      // Award diamonds based on time
+      // Award diamonds based on time (faster = more diamonds)
       const diamonds = Math.max(5, Math.floor(30 - time));
+      setDiamondsWon(diamonds);
       
       const { data: current } = await supabase
         .from('user_diamonds')
@@ -262,6 +265,10 @@ export default function BullSprint() {
           .eq('user_id', userId);
       }
 
+      // Store diamonds in sessionStorage so BullWorld can show them as "collected"
+      const currentCollected = parseInt(sessionStorage.getItem('mazeDiamondsCollected') || '0');
+      sessionStorage.setItem('mazeDiamondsCollected', String(currentCollected + diamonds));
+
       await supabase.from('game_results').insert({
         user_id: userId,
         game_name: 'Bull Sprint',
@@ -271,7 +278,7 @@ export default function BullSprint() {
         credits_spent: 0
       });
 
-      toast.success(`🏁 Finished in ${time.toFixed(2)}s! +${diamonds} 💎`);
+      toast.success(`🏆 Victory! +${diamonds} 💎 added to wallet!`);
       fetchLeaderboard();
     }
   };
@@ -468,12 +475,13 @@ export default function BullSprint() {
 
         {gameState === 'finished' && (
           <Card className="p-6 bg-gradient-to-r from-yellow-900/50 to-orange-900/50 border-yellow-500/30 text-center">
-            <Trophy className="w-16 h-16 mx-auto text-yellow-400 mb-4" />
-            <h2 className="text-3xl font-bold text-yellow-400 mb-2">Race Complete!</h2>
-            <p className="text-2xl text-white mb-4">Time: {finalTime?.toFixed(2)}s</p>
-            <p className="text-lg text-green-400 mb-4">Taps: {tapCount}</p>
+            <Trophy className="w-16 h-16 mx-auto text-yellow-400 mb-4 animate-bounce" />
+            <h2 className="text-4xl font-bold text-yellow-400 mb-2">🏆 VICTORY! 🏆</h2>
+            <p className="text-2xl text-white mb-2">Time: {finalTime?.toFixed(2)}s</p>
+            <p className="text-lg text-purple-300 mb-2">Taps: {tapCount}</p>
+            <p className="text-2xl text-green-400 font-bold mb-4">+{diamondsWon} 💎 Added to Wallet!</p>
             <Button
-              onClick={() => { setGameState('waiting'); setMyPosition(0); }}
+              onClick={() => { setGameState('waiting'); setMyPosition(0); positionRef.current = 0; }}
               className="bg-gradient-to-r from-purple-600 to-pink-600"
             >
               Race Again
