@@ -1,1 +1,7 @@
 project_id = "uhamcugnjzcmwfquyeom"
+
+[functions.create-subscription]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false

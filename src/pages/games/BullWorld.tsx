@@ -9,6 +9,9 @@ import { WorldChat } from "@/components/WorldChat";
 import { EmoteBubble } from "@/components/EmoteBubble";
 import { useToast } from "@/hooks/use-toast";
 import { useNFTBonuses } from "@/hooks/useNFTBonuses";
+import { useSubscription } from "@/hooks/useSubscription";
+import { SubscriptionBox } from "@/components/SubscriptionBox";
+import { audioManager } from "@/hooks/useAudioManager";
 
 interface Player {
   id: string;
@@ -91,6 +94,12 @@ export default function BullWorld() {
 
   // NFT bonuses hook
   const { bullsOwned } = useNFTBonuses(walletAddress);
+  
+  // Subscription hook
+  const { bulls: subBulls, buff: subBuff, subscribed } = useSubscription();
+  
+  // Total bulls = wallet + subscription
+  const totalBulls = bullsOwned + subBulls;
 
   // Initialize user and game
   useEffect(() => {
@@ -418,11 +427,14 @@ export default function BullWorld() {
   };
 
   const enterPortal = (portal: GamePortal) => {
-    // Check if portal requires holding bulls
-    if (portal.holdersOnly && bullsOwned === 0) {
+    // Play sound when entering portal
+    audioManager.playSFX('buttonPress');
+    
+    // Check if portal requires holding bulls (either wallet or subscription)
+    if (portal.holdersOnly && totalBulls === 0) {
       toast({ 
         title: "🔒 Holders Only", 
-        description: "You need to hold a CSB Bull NFT in your wallet to enter the Holders Arena!", 
+        description: "You need to hold a CSB Bull NFT or subscribe to enter the Holders Arena!", 
         variant: "destructive" 
       });
       return;
@@ -590,9 +602,9 @@ export default function BullWorld() {
           ctx.fillText('👥 MULTIPLAYER', portal.x, portal.y - 55);
         }
 
-        // HOLDERS ONLY badge with lock/crown
+        // HOLDERS ONLY badge with lock/crown - check totalBulls (wallet + subscription)
         if (portal.holdersOnly) {
-          const hasAccess = bullsOwned > 0;
+          const hasAccess = totalBulls > 0;
           ctx.fillStyle = hasAccess ? '#FFD700' : '#FF4444';
           ctx.font = 'bold 10px Arial';
           ctx.fillText(hasAccess ? '👑 EXCLUSIVE' : '🔒 HOLDERS ONLY', portal.x, portal.y - 70);
@@ -606,6 +618,7 @@ export default function BullWorld() {
             ctx.beginPath();
             ctx.arc(portal.x, portal.y, 60, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.shadowBlur = 0;
             ctx.shadowBlur = 0;
           }
         }
@@ -677,7 +690,7 @@ export default function BullWorld() {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearPortal]);
+  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearPortal, totalBulls]);
 
   const drawHexagon = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
     ctx.beginPath();
@@ -952,6 +965,11 @@ export default function BullWorld() {
               {portal.emoji} {portal.name}
             </Button>
           ))}
+        </div>
+
+        {/* Subscription Box */}
+        <div className="mt-6">
+          <SubscriptionBox bullsOwned={bullsOwned} />
         </div>
       </div>
 

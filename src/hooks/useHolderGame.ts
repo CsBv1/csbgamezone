@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { audioManager } from "@/hooks/useAudioManager";
 
 interface UseHolderGameOptions {
   gameName: string;
@@ -15,6 +16,7 @@ export function useHolderGame({ gameName, requireBulls = true }: UseHolderGameOp
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [bullsOwned, setBullsOwned] = useState(0);
+  const [subscriptionBulls, setSubscriptionBulls] = useState(0);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export function useHolderGame({ gameName, requireBulls = true }: UseHolderGameOp
       
       setUserId(user.id);
       
+      // Get NFT bulls owned
       const { data: nftData } = await supabase
         .from('user_nft_bonuses')
         .select('bulls_owned')
@@ -37,15 +40,35 @@ export function useHolderGame({ gameName, requireBulls = true }: UseHolderGameOp
       const bulls = (nftData as any)?.bulls_owned || 0;
       setBullsOwned(bulls);
       
-      if (requireBulls && bulls === 0) {
+      // Check subscription bulls
+      let subBulls = 0;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: subData } = await supabase.functions.invoke('check-subscription', {
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          });
+          subBulls = subData?.bulls || 0;
+          setSubscriptionBulls(subBulls);
+        }
+      } catch (e) {
+        console.log('[HolderGame] Error checking subscription:', e);
+      }
+      
+      const totalBulls = bulls + subBulls;
+      
+      if (requireBulls && totalBulls === 0) {
         toast({ 
           title: "🔒 Holders Only", 
-          description: "You need to hold a CSB Bull NFT to access this game!", 
+          description: "You need to hold a CSB Bull NFT or subscribe to access this game!", 
           variant: "destructive" 
         });
         navigate('/');
         return;
       }
+      
+      // Play sound when entering game
+      audioManager.playSFX('buttonPress');
       
       setIsAuthorized(true);
       setIsLoading(false);
@@ -128,10 +151,15 @@ export function useHolderGame({ gameName, requireBulls = true }: UseHolderGameOp
     return success;
   }, [saveKeysToWallet, toast]);
 
+  // Total bulls = wallet + subscription
+  const totalBulls = bullsOwned + subscriptionBulls;
+
   return {
     userId,
     isLoading,
     bullsOwned,
+    subscriptionBulls,
+    totalBulls,
     isAuthorized,
     awardKeys,
     navigate,
