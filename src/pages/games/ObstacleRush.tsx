@@ -64,6 +64,9 @@ export default function ObstacleRush() {
       
       setUsername((profile as any)?.username || "Player");
       fetchLeaderboard();
+      
+      // Play sound when entering game
+      audioManager.playSFX('buttonPress');
     };
 
     init();

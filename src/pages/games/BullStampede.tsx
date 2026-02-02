@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
 import { TournamentLobby } from "@/components/TournamentLobby";
 import { TournamentBracket } from "@/components/TournamentBracket";
+import { audioManager } from "@/hooks/useAudioManager";
 interface RacePlayer {
   id: string;
   user_id: string;
@@ -246,6 +247,9 @@ const BullStampede = () => {
     if (worldPlayerRes.data?.color) {
       setBullColor(worldPlayerRes.data.color);
     }
+    
+    // Play sound when entering game
+    audioManager.playSFX('buttonPress');
     
     joinOrCreateRoom(user.id, (profileRes.data as any)?.username);
   };

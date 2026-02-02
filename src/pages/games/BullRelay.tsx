@@ -59,6 +59,9 @@ export default function BullRelay() {
       }
       setUserId(user.id);
       fetchLeaderboard();
+      
+      // Play sound when entering game
+      audioManager.playSFX('buttonPress');
     };
 
     init();
