@@ -80,11 +80,26 @@ serve(async (req) => {
       cancel_url: `${origin}/games/bull-world?subscription=canceled`,
       metadata: {
         user_id: user.id,
+        user_email: user.email,
         tier: tier,
         bulls: tierConfig.bulls.toString(),
         buff: tierConfig.buff.toString()
       }
     });
+
+    // Send welcome email in background (don't wait for it)
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-welcome-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+      },
+      body: JSON.stringify({
+        email: user.email,
+        tier: tier,
+        bulls: tierConfig.bulls
+      })
+    }).catch(err => console.error('Failed to send welcome email:', err));
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
