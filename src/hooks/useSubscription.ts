@@ -81,25 +81,36 @@ export function useSubscription() {
 
   const subscribe = useCallback(async (tier: 'tier1' | 'tier2' | 'tier3') => {
     try {
-      // Get current session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('[SUBSCRIBE] Starting subscription for tier:', tier);
+      toast.loading('Opening Stripe checkout...', { id: 'stripe-checkout' });
+
+      // First, try to refresh the session to get a fresh token
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       
-      if (sessionError) {
-        console.error('[SUBSCRIBE] Session error:', sessionError);
-        toast.error('Session error - please login again');
-        return;
-      }
+      let accessToken: string | undefined;
+      let userEmail: string | undefined;
       
-      const session = sessionData?.session;
-      if (!session?.access_token) {
-        console.error('[SUBSCRIBE] No valid session found');
-        toast.error('Please login first to subscribe');
-        return;
+      if (refreshError || !refreshData.session) {
+        console.log('[SUBSCRIBE] Refresh failed, trying getSession:', refreshError?.message);
+        // Fallback to getSession
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !sessionData?.session?.access_token) {
+          console.error('[SUBSCRIBE] No valid session found');
+          toast.dismiss('stripe-checkout');
+          toast.error('Please connect your wallet first to subscribe');
+          return;
+        }
+        
+        accessToken = sessionData.session.access_token;
+        userEmail = sessionData.session.user?.email;
+      } else {
+        accessToken = refreshData.session.access_token;
+        userEmail = refreshData.session.user?.email;
       }
 
-      console.log('[SUBSCRIBE] Starting subscription for tier:', tier);
-      console.log('[SUBSCRIBE] Session user:', session.user?.email);
-      toast.loading('Opening Stripe checkout...', { id: 'stripe-checkout' });
+      console.log('[SUBSCRIBE] Session user:', userEmail);
+      console.log('[SUBSCRIBE] Token length:', accessToken?.length);
 
       // Make the API call with explicit authorization header
       const response = await fetch(
@@ -108,7 +119,7 @@ export function useSubscription() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${accessToken}`,
             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
           },
           body: JSON.stringify({ tier })
@@ -136,7 +147,7 @@ export function useSubscription() {
         console.log('[SUBSCRIBE] Opening Stripe URL:', data.url);
         toast.dismiss('stripe-checkout');
         toast.success('Redirecting to Stripe checkout...');
-        // Open in new tab
+        // Open checkout in new tab
         window.open(data.url, '_blank');
       } else {
         console.error('[SUBSCRIBE] No URL returned:', data);
