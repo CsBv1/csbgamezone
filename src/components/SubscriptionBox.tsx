@@ -76,10 +76,10 @@ export function SubscriptionBox({ bullsOwned }: SubscriptionBoxProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-xs"
                       style={{ backgroundColor: tierInfo.color + '30', borderColor: tierInfo.color }}
                     >
-                      {tierInfo.bulls === 1 ? '🐂' : tierInfo.bulls === 4 ? '🐂🐂' : '👑'}
+                      {tierInfo.bulls === 1 ? '🐂' : tierInfo.bulls === 4 ? '🐂🐂🐂🐂' : '👑'}
                     </div>
                     <div>
                       <p className="font-bold text-white">{tierInfo.bulls} Bull{tierInfo.bulls > 1 ? 's' : ''} Hodl</p>

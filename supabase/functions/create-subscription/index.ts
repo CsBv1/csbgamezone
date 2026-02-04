@@ -48,9 +48,18 @@ serve(async (req) => {
 
     const tierConfig = SUBSCRIPTION_TIERS[tier as keyof typeof SUBSCRIPTION_TIERS];
 
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header provided - please log in first");
+    }
+    
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError) {
+      throw new Error(`Authentication error: ${authError.message}`);
+    }
+    
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 

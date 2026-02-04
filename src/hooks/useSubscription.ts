@@ -83,9 +83,12 @@ export function useSubscription() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast.error('Please login first');
+        toast.error('Please login first to subscribe');
         return;
       }
+
+      console.log('[SUBSCRIBE] Starting subscription for tier:', tier);
+      toast.loading('Opening Stripe checkout...', { id: 'stripe-checkout' });
 
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { tier },
@@ -94,17 +97,35 @@ export function useSubscription() {
         }
       });
 
+      console.log('[SUBSCRIBE] Response:', { data, error });
+
       if (error) {
-        toast.error('Failed to create subscription');
-        console.error('Subscription error:', error);
+        console.error('[SUBSCRIBE] Error:', error);
+        toast.dismiss('stripe-checkout');
+        toast.error(`Subscription error: ${error.message || 'Unknown error'}`);
+        return;
+      }
+
+      if (data?.error) {
+        console.error('[SUBSCRIBE] Data error:', data.error);
+        toast.dismiss('stripe-checkout');
+        toast.error(`Subscription error: ${data.error}`);
         return;
       }
 
       if (data?.url) {
+        console.log('[SUBSCRIBE] Opening Stripe URL:', data.url);
+        toast.dismiss('stripe-checkout');
+        toast.success('Redirecting to Stripe checkout...');
         window.open(data.url, '_blank');
+      } else {
+        console.error('[SUBSCRIBE] No URL returned:', data);
+        toast.dismiss('stripe-checkout');
+        toast.error('Failed to create checkout session - no URL returned');
       }
     } catch (err) {
-      console.error('Subscription error:', err);
+      console.error('[SUBSCRIBE] Exception:', err);
+      toast.dismiss('stripe-checkout');
       toast.error('Failed to start subscription');
     }
   }, []);
