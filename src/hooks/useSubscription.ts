@@ -81,28 +81,47 @@ export function useSubscription() {
 
   const subscribe = useCallback(async (tier: 'tier1' | 'tier2' | 'tier3') => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      // Get current session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('[SUBSCRIBE] Session error:', sessionError);
+        toast.error('Session error - please login again');
+        return;
+      }
+      
+      const session = sessionData?.session;
+      if (!session?.access_token) {
+        console.error('[SUBSCRIBE] No valid session found');
         toast.error('Please login first to subscribe');
         return;
       }
 
       console.log('[SUBSCRIBE] Starting subscription for tier:', tier);
+      console.log('[SUBSCRIBE] Session user:', session.user?.email);
       toast.loading('Opening Stripe checkout...', { id: 'stripe-checkout' });
 
-      const { data, error } = await supabase.functions.invoke('create-subscription', {
-        body: { tier },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+      // Make the API call with explicit authorization header
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+          },
+          body: JSON.stringify({ tier })
         }
-      });
+      );
 
-      console.log('[SUBSCRIBE] Response:', { data, error });
+      const data = await response.json();
+      console.log('[SUBSCRIBE] Response:', data);
 
-      if (error) {
-        console.error('[SUBSCRIBE] Error:', error);
+      if (!response.ok) {
+        console.error('[SUBSCRIBE] API Error:', data);
         toast.dismiss('stripe-checkout');
-        toast.error(`Subscription error: ${error.message || 'Unknown error'}`);
+        toast.error(`Subscription error: ${data.error || 'Unknown error'}`);
         return;
       }
 
@@ -117,6 +136,7 @@ export function useSubscription() {
         console.log('[SUBSCRIBE] Opening Stripe URL:', data.url);
         toast.dismiss('stripe-checkout');
         toast.success('Redirecting to Stripe checkout...');
+        // Open in new tab
         window.open(data.url, '_blank');
       } else {
         console.error('[SUBSCRIBE] No URL returned:', data);
