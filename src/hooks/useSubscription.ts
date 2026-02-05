@@ -82,7 +82,56 @@ export function useSubscription() {
   const subscribe = useCallback(async (tier: 'tier1' | 'tier2' | 'tier3') => {
     try {
       console.log('[SUBSCRIBE] Starting subscription for tier:', tier);
-      toast.loading('Opening Stripe checkout...', { id: 'stripe-checkout' });
+     
+     // CRITICAL: Open popup IMMEDIATELY on user click to avoid popup blocker
+     // Browsers block popups that aren't triggered synchronously from user action
+     const checkoutWindow = window.open('about:blank', '_blank');
+     
+     if (!checkoutWindow) {
+       toast.error('Popup blocked! Please allow popups for this site and try again.');
+       return;
+     }
+     
+     // Show loading message in the popup
+     checkoutWindow.document.write(`
+       <html>
+         <head>
+           <title>Loading Stripe Checkout...</title>
+           <style>
+             body {
+               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+               background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+               color: white;
+               display: flex;
+               justify-content: center;
+               align-items: center;
+               height: 100vh;
+               margin: 0;
+               flex-direction: column;
+             }
+             .spinner {
+               width: 50px;
+               height: 50px;
+               border: 3px solid rgba(255,255,255,0.3);
+               border-top-color: #00D4FF;
+               border-radius: 50%;
+               animation: spin 1s linear infinite;
+             }
+             @keyframes spin {
+               to { transform: rotate(360deg); }
+             }
+             h2 { margin-top: 20px; }
+           </style>
+         </head>
+         <body>
+           <div class="spinner"></div>
+           <h2>🐂 Loading Stripe Checkout...</h2>
+           <p>Please wait while we prepare your subscription.</p>
+         </body>
+       </html>
+     `);
+     
+     toast.loading('Preparing checkout...', { id: 'stripe-checkout' });
 
       // First, try to refresh the session to get a fresh token
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
@@ -99,6 +148,7 @@ export function useSubscription() {
           console.error('[SUBSCRIBE] No valid session found');
           toast.dismiss('stripe-checkout');
           toast.error('Please connect your wallet first to subscribe');
+         checkoutWindow.close();
           return;
         }
         
@@ -112,47 +162,57 @@ export function useSubscription() {
       console.log('[SUBSCRIBE] Session user:', userEmail);
       console.log('[SUBSCRIBE] Token length:', accessToken?.length);
 
-      // Make the API call with explicit authorization header
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-          },
-          body: JSON.stringify({ tier })
+     try {
+       // Make the API call with explicit authorization header
+       const response = await fetch(
+         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
+         {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+             'Authorization': `Bearer ${accessToken}`,
+             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+           },
+           body: JSON.stringify({ tier })
+         }
+       );
+
+       const data = await response.json();
+       console.log('[SUBSCRIBE] Response:', data);
+
+       if (!response.ok) {
+         console.error('[SUBSCRIBE] API Error:', data);
+         toast.dismiss('stripe-checkout');
+         toast.error(`Subscription error: ${data.error || 'Unknown error'}`);
+         checkoutWindow.close();
+         return;
         }
-      );
 
-      const data = await response.json();
-      console.log('[SUBSCRIBE] Response:', data);
+       if (data?.error) {
+         console.error('[SUBSCRIBE] Data error:', data.error);
+         toast.dismiss('stripe-checkout');
+         toast.error(`Subscription error: ${data.error}`);
+         checkoutWindow.close();
+         return;
+       }
 
-      if (!response.ok) {
-        console.error('[SUBSCRIBE] API Error:', data);
-        toast.dismiss('stripe-checkout');
-        toast.error(`Subscription error: ${data.error || 'Unknown error'}`);
-        return;
-      }
-
-      if (data?.error) {
-        console.error('[SUBSCRIBE] Data error:', data.error);
-        toast.dismiss('stripe-checkout');
-        toast.error(`Subscription error: ${data.error}`);
-        return;
-      }
-
-      if (data?.url) {
-        console.log('[SUBSCRIBE] Opening Stripe URL:', data.url);
-        toast.dismiss('stripe-checkout');
-        toast.success('Redirecting to Stripe checkout...');
-        // Open checkout in new tab
-        window.open(data.url, '_blank');
-      } else {
-        console.error('[SUBSCRIBE] No URL returned:', data);
-        toast.dismiss('stripe-checkout');
-        toast.error('Failed to create checkout session - no URL returned');
+       if (data?.url) {
+         console.log('[SUBSCRIBE] Redirecting popup to Stripe URL:', data.url);
+         toast.dismiss('stripe-checkout');
+         toast.success('Opening Stripe checkout!');
+         // Redirect the already-open popup to Stripe
+         checkoutWindow.location.href = data.url;
+       } else {
+         console.error('[SUBSCRIBE] No URL returned:', data);
+         toast.dismiss('stripe-checkout');
+         toast.error('Failed to create checkout session - no URL returned');
+         checkoutWindow.close();
+       }
+     } catch (fetchError) {
+       console.error('[SUBSCRIBE] Fetch error:', fetchError);
+       toast.dismiss('stripe-checkout');
+       toast.error('Network error - please try again');
+       checkoutWindow.close();
       }
     } catch (err) {
       console.error('[SUBSCRIBE] Exception:', err);
