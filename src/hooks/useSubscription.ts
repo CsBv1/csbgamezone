@@ -148,7 +148,7 @@ export function useSubscription() {
           console.error('[SUBSCRIBE] No valid session found');
           toast.dismiss('stripe-checkout');
           toast.error('Please connect your wallet first to subscribe');
-         checkoutWindow.close();
+          if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
           return;
         }
         
@@ -163,20 +163,35 @@ export function useSubscription() {
       console.log('[SUBSCRIBE] Token length:', accessToken?.length);
 
      try {
-       // Make the API call with explicit authorization header
-       const response = await fetch(
-         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        
+        console.log('[SUBSCRIBE] Supabase URL:', supabaseUrl);
+        console.log('[SUBSCRIBE] Making request to:', `${supabaseUrl}/functions/v1/create-subscription`);
+        
+        if (!supabaseUrl || !apiKey) {
+          console.error('[SUBSCRIBE] Missing environment variables');
+          toast.dismiss('stripe-checkout');
+          toast.error('Configuration error - please refresh the page');
+          if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
+          return;
+        }
+        
+        const response = await fetch(
+          `${supabaseUrl}/functions/v1/create-subscription`,
          {
            method: 'POST',
            headers: {
              'Content-Type': 'application/json',
              'Authorization': `Bearer ${accessToken}`,
-             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+              'apikey': apiKey
            },
            body: JSON.stringify({ tier })
          }
        );
 
+        console.log('[SUBSCRIBE] Response status:', response.status);
+        
        const data = await response.json();
        console.log('[SUBSCRIBE] Response:', data);
 
@@ -184,7 +199,7 @@ export function useSubscription() {
          console.error('[SUBSCRIBE] API Error:', data);
          toast.dismiss('stripe-checkout');
          toast.error(`Subscription error: ${data.error || 'Unknown error'}`);
-         checkoutWindow.close();
+          if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
          return;
         }
 
@@ -192,7 +207,7 @@ export function useSubscription() {
          console.error('[SUBSCRIBE] Data error:', data.error);
          toast.dismiss('stripe-checkout');
          toast.error(`Subscription error: ${data.error}`);
-         checkoutWindow.close();
+          if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
          return;
        }
 
@@ -201,18 +216,24 @@ export function useSubscription() {
          toast.dismiss('stripe-checkout');
          toast.success('Opening Stripe checkout!');
          // Redirect the already-open popup to Stripe
-         checkoutWindow.location.href = data.url;
+          try {
+            checkoutWindow.location.href = data.url;
+          } catch (navError) {
+            console.error('[SUBSCRIBE] Navigation error:', navError);
+            // Fallback: open in same tab
+            window.location.href = data.url;
+          }
        } else {
          console.error('[SUBSCRIBE] No URL returned:', data);
          toast.dismiss('stripe-checkout');
          toast.error('Failed to create checkout session - no URL returned');
-         checkoutWindow.close();
+          if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
        }
      } catch (fetchError) {
        console.error('[SUBSCRIBE] Fetch error:', fetchError);
        toast.dismiss('stripe-checkout');
        toast.error('Network error - please try again');
-       checkoutWindow.close();
+        if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
       }
     } catch (err) {
       console.error('[SUBSCRIBE] Exception:', err);
