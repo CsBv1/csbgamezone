@@ -76,51 +76,35 @@ export function useSubscription() {
   }, []);
 
   const subscribe = useCallback(async (tier: 'tier1' | 'tier2' | 'tier3') => {
-    console.log('[SUBSCRIBE] Starting subscription for tier:', tier);
-    
-    // First check if user is logged in BEFORE opening popup
+    // Check auth first
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in first to subscribe!');
       return;
     }
-    
-    console.log('[SUBSCRIBE] User authenticated, creating checkout session...');
-    toast.loading('Creating checkout session...', { id: 'stripe-checkout' });
+
+    toast.loading('Opening Stripe checkout...', { id: 'checkout' });
 
     try {
-      // Call edge function with proper auth
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { tier }
       });
 
-      console.log('[SUBSCRIBE] Response:', data, 'Error:', error);
-      toast.dismiss('stripe-checkout');
+      toast.dismiss('checkout');
 
-      if (error) {
-        console.error('[SUBSCRIBE] Function error:', error);
-        toast.error(`Error: ${error.message || 'Failed to create checkout'}`);
-        return;
-      }
-
-      if (data?.error) {
-        console.error('[SUBSCRIBE] Data error:', data.error);
-        toast.error(`Error: ${data.error}`);
+      if (error || data?.error) {
+        toast.error(error?.message || data?.error || 'Failed to create checkout');
         return;
       }
 
       if (data?.url) {
-        console.log('[SUBSCRIBE] Got Stripe URL, redirecting:', data.url);
-        toast.success('Redirecting to Stripe checkout...');
-        // Open Stripe directly in new tab - most reliable method
-        window.open(data.url, '_blank');
+        // Direct redirect - most reliable method
+        window.location.href = data.url;
       } else {
-        console.error('[SUBSCRIBE] No URL returned:', data);
-        toast.error('Failed to get checkout URL');
+        toast.error('No checkout URL received');
       }
     } catch (err) {
-      console.error('[SUBSCRIBE] Exception:', err);
-      toast.dismiss('stripe-checkout');
+      toast.dismiss('checkout');
       toast.error('Network error - please try again');
     }
   }, []);
