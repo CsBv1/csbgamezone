@@ -8,6 +8,9 @@ import { ColorSelector } from "@/components/ColorSelector";
 import { CSBGameMaster } from "@/components/CSBGameMaster";
 import { NFTBonusDisplay } from "@/components/NFTBonusDisplay";
 import { SubscriptionBox } from "@/components/SubscriptionBox";
+import { EmailAuthForm } from "@/components/EmailAuthForm";
+import { ProfileSettings } from "@/components/ProfileSettings";
+import { VESPRDownloadButton } from "@/components/VESPRDownloadButton";
 import { useCardanoWallet } from "@/hooks/useCardanoWallet";
 import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -342,29 +345,46 @@ const Dashboard = () => {
                 <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">
                   Connect Wallet
                 </h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-muted-foreground mb-4">
                   Connect your Cardano wallet to start playing
                 </p>
-                <CardanoWalletConnector 
-                  variant="gold"
-                  size="lg"
-                  className="w-full"
-                />
+                <div className="space-y-3">
+                  <CardanoWalletConnector 
+                    variant="gold"
+                    size="lg"
+                    className="w-full"
+                  />
+                  <VESPRDownloadButton className="w-full" />
+                </div>
+                
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+                
+                {/* Email Login */}
+                <EmailAuthForm onSuccess={() => window.location.reload()} />
               </Card>
             ) : (
               <Card className="p-6 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40">
                 <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">
                   Welcome to Cardano Stake Bulls Game Zone 💎🐂
                 </h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-muted-foreground mb-4">
                   Your wallet is connected! Start playing and earning diamonds!
                 </p>
-                <div className="mt-4">
+                <div className="space-y-3">
                   <CardanoWalletConnector 
                     variant="gold"
                     size="sm"
                     className="w-full"
                   />
+                  <ProfileSettings />
                 </div>
               </Card>
             )}

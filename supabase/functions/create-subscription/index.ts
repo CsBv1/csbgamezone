@@ -61,23 +61,48 @@ serve(async (req) => {
     }
     
     const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user) throw new Error("User not authenticated");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
+
+    // Try to get email from profile first (for wallet users who linked email)
+    let userEmail = user.email;
     
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Check if this is a wallet user (email ends with @cardano.wallet)
+    const isWalletUser = user.email?.endsWith('@cardano.wallet');
+    
+    if (isWalletUser) {
+      // Try to get linked email from profile
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.email) {
+        userEmail = profile.email;
+      } else {
+        // No linked email - Stripe will collect it at checkout
+        userEmail = undefined;
+      }
+    }
+    
+    // Check if customer exists in Stripe
     let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    if (userEmail) {
+      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+      }
     }
 
     const origin = req.headers.get("origin") || "https://csbgamezone.lovable.app";
 
-    const session = await stripe.checkout.sessions.create({
+    // Build checkout session config
+    const sessionConfig: any = {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [
         {
           price: tierConfig.priceId,
@@ -89,12 +114,23 @@ serve(async (req) => {
       cancel_url: `${origin}/games/bull-world?subscription=canceled`,
       metadata: {
         user_id: user.id,
-        user_email: user.email,
         tier: tier,
         bulls: tierConfig.bulls.toString(),
         buff: tierConfig.buff.toString()
-      }
-    });
+      },
+      // Always collect email at checkout for billing
+      customer_email: customerId ? undefined : userEmail,
+      // For wallet users without linked email, Stripe will collect it
+      billing_address_collection: 'required',
+    };
+    
+    // If no customer and no email, let Stripe collect it
+    if (!customerId && !userEmail) {
+      delete sessionConfig.customer_email;
+      // Stripe will show email field automatically
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     // Send welcome email in background (don't wait for it)
     fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-welcome-email`, {
