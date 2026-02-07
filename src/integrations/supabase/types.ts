@@ -297,6 +297,39 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          active: boolean
+          badge_color: string
+          badge_id: string
+          badge_name: string
+          diamond_cost: number
+          id: string
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          badge_color: string
+          badge_id: string
+          badge_name: string
+          diamond_cost: number
+          id?: string
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          badge_color?: string
+          badge_id?: string
+          badge_name?: string
+          diamond_cost?: number
+          id?: string
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_bukals: {
         Row: {
           balance: number

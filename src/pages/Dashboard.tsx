@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle, Key, Shield } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
-import { ColorSelector } from "@/components/ColorSelector";
+import { ColorSelectorDialog } from "@/components/ColorSelectorDialog";
+import { BadgeSelectorDialog } from "@/components/BadgeSelectorDialog";
 import { CSBGameMaster } from "@/components/CSBGameMaster";
 import { NFTBonusDisplay } from "@/components/NFTBonusDisplay";
 import { SubscriptionBox } from "@/components/SubscriptionBox";
@@ -384,13 +385,14 @@ const Dashboard = () => {
                     size="sm"
                     className="w-full"
                   />
-                  <ProfileSettings />
+                  <div className="flex flex-wrap gap-2">
+                    <ProfileSettings />
+                    <ColorSelectorDialog />
+                    <BadgeSelectorDialog />
+                  </div>
                 </div>
               </Card>
             )}
-
-          {/* Color Selector */}
-          <ColorSelector />
 
           {/* Leaderboard */}
           <Leaderboard />
