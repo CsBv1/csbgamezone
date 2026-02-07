@@ -10,7 +10,7 @@ import { EmoteBubble } from "@/components/EmoteBubble";
 import { useToast } from "@/hooks/use-toast";
 import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useSubscription } from "@/hooks/useSubscription";
-import { SubscriptionBox } from "@/components/SubscriptionBox";
+import { BadgeMarketplace } from "@/components/BadgeMarketplace";
 import { audioManager } from "@/hooks/useAudioManager";
 
 interface Player {
@@ -967,9 +967,9 @@ export default function BullWorld() {
           ))}
         </div>
 
-        {/* Subscription Box */}
+        {/* Badge Marketplace */}
         <div className="mt-6">
-          <SubscriptionBox bullsOwned={bullsOwned} />
+          <BadgeMarketplace />
         </div>
       </div>
 
