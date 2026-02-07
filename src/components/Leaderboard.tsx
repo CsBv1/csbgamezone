@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Gem, Trophy } from "lucide-react";
+import { Gem, Trophy, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaderboardEntry {
@@ -30,11 +30,19 @@ interface UserBukal {
   balance: number;
 }
 
+interface UserBadge {
+  user_id: string;
+  badge_name: string;
+  badge_color: string;
+  active: boolean;
+}
+
 export const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   const [userBulls, setUserBulls] = useState<Record<string, number>>({});
   const [userBukals, setUserBukals] = useState<Record<string, number>>({});
+  const [userBadges, setUserBadges] = useState<Record<string, { name: string; color: string }>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -115,7 +123,7 @@ export const Leaderboard = () => {
 
       // Fetch bukals to show on leaderboard
       const { data: bukalsData } = await supabase
-        .from('user_bukals' as any)
+        .from('user_bukals')
         .select('user_id, balance');
       
       if (bukalsData && Array.isArray(bukalsData)) {
@@ -126,6 +134,20 @@ export const Leaderboard = () => {
           }
         });
         setUserBukals(bukalsMap);
+      }
+
+      // Fetch active badges to show on leaderboard
+      const { data: badgesData } = await supabase
+        .from('user_badges')
+        .select('user_id, badge_name, badge_color, active')
+        .eq('active', true);
+      
+      if (badgesData && Array.isArray(badgesData)) {
+        const badgesMap: Record<string, { name: string; color: string }> = {};
+        badgesData.forEach((badge: any) => {
+          badgesMap[badge.user_id] = { name: badge.badge_name, color: badge.badge_color };
+        });
+        setUserBadges(badgesMap);
       }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
@@ -174,6 +196,7 @@ export const Leaderboard = () => {
             const diamondGap = nextRank ? nextRank.total_diamonds - entry.total_diamonds : 0;
             const isHolder = entry.user_id && userBulls[entry.user_id] > 0;
             const hasBukals = entry.user_id && userBukals[entry.user_id] > 0;
+            const userBadge = entry.user_id ? userBadges[entry.user_id] : null;
             
             return (
               <div
@@ -219,9 +242,25 @@ export const Leaderboard = () => {
                     >
                       {entry.username}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.total_wins} wins • {entry.total_games} games
-                    </p>
+                    {userBadge ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <Award className="w-3 h-3" style={{ color: userBadge.color }} />
+                        <span 
+                          className="font-medium"
+                          style={{ 
+                            color: userBadge.color,
+                            textShadow: `0 0 6px ${userBadge.color}40`
+                          }}
+                        >
+                          {userBadge.name}
+                        </span>
+                        <span className="text-muted-foreground">• {entry.total_wins} wins</span>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {entry.total_wins} wins • {entry.total_games} games
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="text-right ml-4 relative z-10">
