@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useSubscription } from "@/hooks/useSubscription";
 import { BadgeMarketplace } from "@/components/BadgeMarketplace";
+import { RuneMarketplace } from "@/components/RuneMarketplace";
 import { audioManager } from "@/hooks/useAudioManager";
 
 interface Player {
@@ -970,6 +971,11 @@ export default function BullWorld() {
         {/* Badge Marketplace */}
         <div className="mt-6">
           <BadgeMarketplace />
+        </div>
+
+        {/* Rune Marketplace */}
+        <div className="mt-6">
+          <RuneMarketplace />
         </div>
       </div>
 

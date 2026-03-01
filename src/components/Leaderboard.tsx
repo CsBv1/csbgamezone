@@ -37,12 +37,20 @@ interface UserBadge {
   active: boolean;
 }
 
+interface UserRune {
+  user_id: string;
+  rune_name: string;
+  rune_symbol: string;
+  active: boolean;
+}
+
 export const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   const [userBulls, setUserBulls] = useState<Record<string, number>>({});
   const [userBukals, setUserBukals] = useState<Record<string, number>>({});
   const [userBadges, setUserBadges] = useState<Record<string, { name: string; color: string }>>({});
+  const [userRunes, setUserRunes] = useState<Record<string, { name: string; symbol: string }>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -149,6 +157,20 @@ export const Leaderboard = () => {
         });
         setUserBadges(badgesMap);
       }
+
+      // Fetch active runes to show on leaderboard
+      const { data: runesData } = await supabase
+        .from('user_runes' as any)
+        .select('user_id, rune_name, rune_symbol, active')
+        .eq('active', true);
+      
+      if (runesData && Array.isArray(runesData)) {
+        const runesMap: Record<string, { name: string; symbol: string }> = {};
+        (runesData as any[]).forEach((rune: any) => {
+          runesMap[rune.user_id] = { name: rune.rune_name, symbol: rune.rune_symbol };
+        });
+        setUserRunes(runesMap);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
@@ -197,6 +219,7 @@ export const Leaderboard = () => {
             const isHolder = entry.user_id && userBulls[entry.user_id] > 0;
             const hasBukals = entry.user_id && userBukals[entry.user_id] > 0;
             const userBadge = entry.user_id ? userBadges[entry.user_id] : null;
+            const userRune = entry.user_id ? userRunes[entry.user_id] : null;
             
             return (
               <div
@@ -242,25 +265,26 @@ export const Leaderboard = () => {
                     >
                       {entry.username}
                     </p>
-                    {userBadge ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <Award className="w-3 h-3" style={{ color: userBadge.color }} />
-                        <span 
-                          className="font-medium"
-                          style={{ 
-                            color: userBadge.color,
-                            textShadow: `0 0 6px ${userBadge.color}40`
-                          }}
-                        >
-                          {userBadge.name}
+                    <div className="flex items-center gap-1 text-xs flex-wrap">
+                      {userBadge && (
+                        <>
+                          <Award className="w-3 h-3" style={{ color: userBadge.color }} />
+                          <span className="font-medium" style={{ color: userBadge.color, textShadow: `0 0 6px ${userBadge.color}40` }}>
+                            {userBadge.name}
+                          </span>
+                        </>
+                      )}
+                      {userRune && (
+                        <span className="font-medium text-purple-400">
+                          {userRune.symbol} {userRune.name}
                         </span>
+                      )}
+                      {!userBadge && !userRune ? (
+                        <span className="text-muted-foreground">{entry.total_wins} wins • {entry.total_games} games</span>
+                      ) : (
                         <span className="text-muted-foreground">• {entry.total_wins} wins</span>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {entry.total_wins} wins • {entry.total_games} games
-                      </p>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right ml-4 relative z-10">

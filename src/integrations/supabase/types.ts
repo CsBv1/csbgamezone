@@ -492,6 +492,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_runes: {
+        Row: {
+          active: boolean
+          credit_cost: number
+          id: string
+          purchased_at: string
+          rune_id: string
+          rune_name: string
+          rune_symbol: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          credit_cost: number
+          id?: string
+          purchased_at?: string
+          rune_id: string
+          rune_name: string
+          rune_symbol: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          credit_cost?: number
+          id?: string
+          purchased_at?: string
+          rune_id?: string
+          rune_name?: string
+          rune_symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       world_chat: {
         Row: {
           created_at: string
