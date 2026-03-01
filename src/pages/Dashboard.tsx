@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Dices, Flame, CreditCard, TrendingUp, CircleDollarSign, Spade, Target, ArrowUpDown, Pickaxe, TrendingDown, Grid3x3, PlayCircle, Award, Sparkles, Zap, BadgeDollarSign, Plane, Music, Lock, Gauge, Globe, Users, ExternalLink, Book, ShoppingBag, MessageCircle, Key, Shield } from "lucide-react";
+import { Trophy, Gem, Coins, Flame, TrendingUp, Pickaxe, Target, Lock, Gauge, Globe, Users, ExternalLink, Key, Shield, Sparkles, Music, ChevronDown } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelectorDialog } from "@/components/ColorSelectorDialog";
 import { BadgeSelectorDialog } from "@/components/BadgeSelectorDialog";
+import { RuneSelectorDialog } from "@/components/RuneSelectorDialog";
 import { CSBGameMaster } from "@/components/CSBGameMaster";
 import { NFTBonusDisplay } from "@/components/NFTBonusDisplay";
 import { SubscriptionBox } from "@/components/SubscriptionBox";
@@ -21,789 +22,258 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { GameCard } from "@/components/GameCard";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isConnected, connectedWallet } = useCardanoWallet();
   const { toast } = useToast();
   const [isSwapping, setIsSwapping] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
   
-  // Initialize background music - starts immediately
   const { playSFX, startMusic } = useAudioManager();
   startMusic();
   
-  // NFT bonuses from wallet scan
-  const { bullsOwned, rarityBonus, highestRarity, isScanning, rescan } = useNFTBonuses(
-    connectedWallet?.address || null
-  );
-  
-  // Subscription status
+  const { bullsOwned, rarityBonus, highestRarity, isScanning, rescan } = useNFTBonuses(connectedWallet?.address || null);
   const { bulls: subscriptionBulls, subscribed } = useSubscription();
-  
-  // Total bulls = wallet NFTs + subscription bulls
   const totalBulls = bullsOwned + subscriptionBulls;
 
-  const games = [
-    { id: "slots", name: "Bull Slots 🐂", icon: CircleDollarSign, description: "Spin the reels for jackpot rewards", color: "from-yellow-500 to-orange-500" },
-    { id: "blackjack", name: "Blackjack 🐂", icon: Spade, description: "Beat the dealer to 21", color: "from-zinc-800 to-zinc-600" },
-    { id: "roulette", name: "Roulette 🐂", icon: Target, description: "Spin the wheel of fortune", color: "from-red-600 to-rose-500" },
-    { id: "plinko", name: "Plinko 🐂", icon: TrendingDown, description: "Drop and win multipliers", color: "from-cyan-500 to-blue-600" },
-    { id: "coin-flip", name: "Coin Flip 🐂", icon: Coins, description: "Heads or tails, double or nothing", color: "from-amber-500 to-yellow-600" },
-    { id: "hi-lo", name: "Hi-Lo 🐂", icon: ArrowUpDown, description: "Guess higher or lower", color: "from-violet-500 to-purple-600" },
-    { id: "mines", name: "Mines 🐂", icon: Pickaxe, description: "Find gems, avoid bombs", color: "from-emerald-500 to-green-600" },
-    { id: "crash", name: "Crash 🐂", icon: TrendingUp, description: "Cash out before the crash", color: "from-orange-500 to-red-600" },
-    { id: "keno", name: "Keno 🐂", icon: Grid3x3, description: "Pick numbers and win big", color: "from-pink-500 to-rose-600" },
-    { id: "number-bet", name: "Number Bet 🐂", icon: Dices, description: "Bet on lucky numbers", color: "from-blue-500 to-purple-500" },
-    { id: "card-flip", name: "Card Flip 🐂", icon: CreditCard, description: "Match the bulls and win", color: "from-green-500 to-teal-500" },
-    { id: "bull-run", name: "Bull Run 🐂", icon: TrendingUp, description: "Race to the finish line", color: "from-red-500 to-pink-500" },
-    { id: "dice-roll", name: "Dice Roll 🐂", icon: Flame, description: "Roll your way to victory", color: "from-purple-500 to-indigo-500" },
-    { id: "baccarat", name: "Baccarat 🐂", icon: Spade, description: "Player, Banker, or Tie", color: "from-slate-700 to-slate-500" },
-    { id: "wheel-of-fortune", name: "Wheel of Fortune 🐂", icon: Target, description: "Spin the mega wheel", color: "from-pink-600 to-purple-600" },
-    { id: "scratch", name: "Scratch Card 🐂", icon: Award, description: "Scratch and match symbols", color: "from-amber-600 to-yellow-500" },
-    { id: "limbo", name: "Limbo 🐂", icon: TrendingUp, description: "Set your target multiplier", color: "from-cyan-600 to-blue-700" },
-    { id: "video-poker", name: "Video Poker 🐂", icon: PlayCircle, description: "Hold and draw to win", color: "from-indigo-600 to-purple-700" },
-    { id: "sic-bo", name: "Sic Bo 🐂", icon: Dices, description: "Three dice betting", color: "from-rose-600 to-red-700" },
-    { id: "dragon-tiger", name: "Dragon Tiger 🐂", icon: Zap, description: "Fast-paced card showdown", color: "from-orange-600 to-red-600" },
-    { id: "aviator", name: "Aviator 🐂", icon: Plane, description: "Cash out before crash", color: "from-sky-500 to-blue-600" },
-    { id: "texas-holdem", name: "Texas Hold'em 🐂", icon: Sparkles, description: "Classic poker showdown", color: "from-green-700 to-emerald-600" },
-    { id: "three-card-poker", name: "3-Card Poker 🐂", icon: BadgeDollarSign, description: "Quick poker action", color: "from-teal-600 to-cyan-600" },
-    { id: "war", name: "War 🐂", icon: Target, description: "Highest card wins", color: "from-red-700 to-orange-700" },
-    // Add more games here - condensed for brevity
-  ];
-
-  const handleGameClick = (gameId: string) => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Required 🔒",
-        description: "Please connect your Cardano wallet to play games",
-        variant: "destructive",
-      });
-      return;
-    }
-    navigate(`/games/${gameId}`);
-  };
-
   const handleSwap = async (creditsCost: number, diamondsAmount: number) => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Required 🔒",
-        description: "Please connect your wallet to swap",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!isConnected) { toast({ title: "Wallet Required 🔒", description: "Please connect your wallet to swap", variant: "destructive" }); return; }
     setIsSwapping(true);
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-
-      // Fetch both credits and diamonds in parallel
       const [creditsResult, diamondsResult] = await Promise.all([
         supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_diamonds' as any).select('balance, total_earned').eq('user_id', user.id).single()
       ]);
-
       if (!(creditsResult.data as any) || (creditsResult.data as any).balance < creditsCost) {
-        toast({
-          title: "Not Enough Credits! 💰",
-          description: `You need ${creditsCost} credits for this swap`,
-          variant: "destructive",
-        });
-        setIsSwapping(false);
-        return;
+        toast({ title: "Not Enough Credits! 💰", description: `You need ${creditsCost} credits`, variant: "destructive" });
+        setIsSwapping(false); return;
       }
-
-      // Update both in parallel for instant response
-      const [creditsUpdate, diamondsUpdate] = await Promise.all([
-        supabase.from('user_credits' as any)
-          .update({ balance: (creditsResult.data as any).balance - creditsCost })
-          .eq('user_id', user.id),
-        supabase.from('user_diamonds' as any)
-          .update({ 
-            balance: ((diamondsResult.data as any)?.balance || 0) + diamondsAmount,
-            total_earned: ((diamondsResult.data as any)?.total_earned || 0) + diamondsAmount
-          })
-          .eq('user_id', user.id)
+      await Promise.all([
+        supabase.from('user_credits' as any).update({ balance: (creditsResult.data as any).balance - creditsCost }).eq('user_id', user.id),
+        supabase.from('user_diamonds' as any).update({ balance: ((diamondsResult.data as any)?.balance || 0) + diamondsAmount, total_earned: ((diamondsResult.data as any)?.total_earned || 0) + diamondsAmount }).eq('user_id', user.id)
       ]);
-
-      if (creditsUpdate.error) throw creditsUpdate.error;
-      if (diamondsUpdate.error) throw diamondsUpdate.error;
-
-      toast({
-        title: "Swap Successful! 🎉",
-        description: `Traded ${creditsCost} credits for ${diamondsAmount} 💎`,
-      });
-
-    } catch (error) {
-      console.error('Swap error:', error);
-      toast({
-        title: "Swap Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSwapping(false);
-    }
+      toast({ title: "Swap Successful! 🎉", description: `Traded ${creditsCost} credits for ${diamondsAmount} 💎` });
+    } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
+    finally { setIsSwapping(false); }
   };
 
   const handleCreditToBukalSwap = async (creditsCost: number, bukalsAmount: number) => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Required 🔒",
-        description: "Please connect your wallet to swap",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!isConnected) { toast({ title: "Wallet Required 🔒", description: "Please connect your wallet to swap", variant: "destructive" }); return; }
     setIsSwapping(true);
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-
-      // Fetch credits balance
-      const creditsResult = await supabase
-        .from('user_credits' as any)
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
-
+      const creditsResult = await supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single();
       if (!(creditsResult.data as any) || (creditsResult.data as any).balance < creditsCost) {
-        toast({
-          title: "Not Enough Credits! 💰",
-          description: `You need ${creditsCost.toLocaleString()} credits for this swap`,
-          variant: "destructive",
-        });
-        setIsSwapping(false);
-        return;
+        toast({ title: "Not Enough Credits! 💰", description: `You need ${creditsCost.toLocaleString()} credits`, variant: "destructive" });
+        setIsSwapping(false); return;
       }
-
-      // Deduct credits
-      const creditsUpdate = await supabase
-        .from('user_credits' as any)
-        .update({ balance: (creditsResult.data as any).balance - creditsCost })
-        .eq('user_id', user.id);
-
-      if (creditsUpdate.error) throw creditsUpdate.error;
-
-      // Upsert bukals (insert if not exists, update if exists)
-      const { data: existingBukals } = await supabase
-        .from('user_bukals' as any)
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      await supabase.from('user_credits' as any).update({ balance: (creditsResult.data as any).balance - creditsCost }).eq('user_id', user.id);
+      const { data: existingBukals } = await supabase.from('user_bukals' as any).select('balance').eq('user_id', user.id).maybeSingle();
       if (existingBukals && (existingBukals as any).balance !== undefined) {
-        // Update existing
-        const bukalsUpdate = await supabase
-          .from('user_bukals' as any)
-          .update({ balance: (existingBukals as any).balance + bukalsAmount })
-          .eq('user_id', user.id);
-        
-        if (bukalsUpdate.error) throw bukalsUpdate.error;
+        await supabase.from('user_bukals' as any).update({ balance: (existingBukals as any).balance + bukalsAmount }).eq('user_id', user.id);
       } else {
-        // Insert new
-        const bukalsInsert = await supabase
-          .from('user_bukals' as any)
-          .insert({ user_id: user.id, balance: bukalsAmount });
-        
-        if (bukalsInsert.error) throw bukalsInsert.error;
+        await supabase.from('user_bukals' as any).insert({ user_id: user.id, balance: bukalsAmount });
       }
-
-      toast({
-        title: "Swap Successful! 🏆",
-        description: `Traded ${creditsCost.toLocaleString()} credits for ${bukalsAmount} 🏆 Bukal!`,
-      });
-
-      // Refresh page to update all displays
+      toast({ title: "Swap Successful! 🏆", description: `Traded ${creditsCost.toLocaleString()} credits for ${bukalsAmount} 🏆 Bukal!` });
       window.location.reload();
-
-    } catch (error) {
-      console.error('Swap error:', error);
-      toast({
-        title: "Swap Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSwapping(false);
-    }
+    } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
+    finally { setIsSwapping(false); }
   };
 
   const handleDiamondToKeySwap = async (diamondsCost: number, keysAmount: number) => {
-    if (!isConnected) {
-      toast({
-        title: "Wallet Required 🔒",
-        description: "Please connect your wallet to swap",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!isConnected) { toast({ title: "Wallet Required 🔒", description: "Please connect your wallet to swap", variant: "destructive" }); return; }
     setIsSwapping(true);
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-
-      // Fetch diamonds balance
-      const diamondsResult = await supabase
-        .from('user_diamonds' as any)
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
-
+      const diamondsResult = await supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single();
       if (!(diamondsResult.data as any) || (diamondsResult.data as any).balance < diamondsCost) {
-        toast({
-          title: "Not Enough Diamonds! 💎",
-          description: `You need ${diamondsCost.toLocaleString()} diamonds for this swap`,
-          variant: "destructive",
-        });
-        setIsSwapping(false);
-        return;
+        toast({ title: "Not Enough Diamonds! 💎", description: `You need ${diamondsCost.toLocaleString()} diamonds`, variant: "destructive" });
+        setIsSwapping(false); return;
       }
-
-      // Deduct diamonds
-      const diamondsUpdate = await supabase
-        .from('user_diamonds' as any)
-        .update({ balance: (diamondsResult.data as any).balance - diamondsCost })
-        .eq('user_id', user.id);
-
-      if (diamondsUpdate.error) throw diamondsUpdate.error;
-
-      // Upsert keys (insert if not exists, update if exists)
-      const { data: existingKeys } = await supabase
-        .from('user_keys' as any)
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      await supabase.from('user_diamonds' as any).update({ balance: (diamondsResult.data as any).balance - diamondsCost }).eq('user_id', user.id);
+      const { data: existingKeys } = await supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).maybeSingle();
       if (existingKeys && (existingKeys as any).balance !== undefined) {
-        // Update existing
-        const keysUpdate = await supabase
-          .from('user_keys' as any)
-          .update({ balance: (existingKeys as any).balance + keysAmount })
-          .eq('user_id', user.id);
-        
-        if (keysUpdate.error) throw keysUpdate.error;
+        await supabase.from('user_keys' as any).update({ balance: (existingKeys as any).balance + keysAmount }).eq('user_id', user.id);
       } else {
-        // Insert new
-        const keysInsert = await supabase
-          .from('user_keys' as any)
-          .insert({ user_id: user.id, balance: keysAmount });
-        
-        if (keysInsert.error) throw keysInsert.error;
+        await supabase.from('user_keys' as any).insert({ user_id: user.id, balance: keysAmount });
       }
-
-      toast({
-        title: "Swap Successful! 🎉",
-        description: `Traded ${diamondsCost.toLocaleString()} 💎 for ${keysAmount} 🔑`,
-      });
-
-      // Refresh page to update all displays
+      toast({ title: "Swap Successful! 🎉", description: `Traded ${diamondsCost.toLocaleString()} 💎 for ${keysAmount} 🔑` });
       window.location.reload();
-
-    } catch (error) {
-      console.error('Swap error:', error);
-      toast({
-        title: "Swap Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSwapping(false);
-    }
+    } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
+    finally { setIsSwapping(false); }
   };
 
   return (
     <div className="min-h-screen bull-pattern">
-      {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Trophy className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent">
-                Cardano Stake Bulls
-              </h1>
+              <h1 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent">Cardano Stake Bulls</h1>
             </div>
             {isConnected && <CreditBar />}
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          {/* Wallet Connector & Stats Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Wallet Connection Card */}
             {!isConnected ? (
               <Card className="p-6 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40">
-                <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">
-                  Connect Wallet
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Connect your Cardano wallet to start playing
-                </p>
+                <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">Connect Wallet</h3>
+                <p className="text-muted-foreground mb-4">Connect your Cardano wallet to start playing</p>
                 <div className="space-y-3">
-                  <CardanoWalletConnector 
-                    variant="gold"
-                    size="lg"
-                    className="w-full"
-                  />
+                  <CardanoWalletConnector variant="gold" size="lg" className="w-full" />
                   <VESPRDownloadButton className="w-full" />
                 </div>
                 
-                {/* Divider */}
                 <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or</span>
-                  </div>
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                  <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Or</span></div>
                 </div>
                 
-                {/* Email Login */}
-                <EmailAuthForm onSuccess={() => window.location.reload()} />
+                <Collapsible open={emailOpen} onOpenChange={setEmailOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      ✉️ Email Login <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${emailOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-3">
+                    <EmailAuthForm onSuccess={() => window.location.reload()} />
+                  </CollapsibleContent>
+                </Collapsible>
               </Card>
             ) : (
               <Card className="p-6 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40">
-                <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">
-                  Welcome to Cardano Stake Bulls Game Zone 💎🐂
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Your wallet is connected! Start playing and earning diamonds!
-                </p>
+                <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">Welcome to Cardano Stake Bulls Game Zone 💎🐂</h3>
+                <p className="text-muted-foreground mb-4">Your wallet is connected! Start playing and earning diamonds!</p>
                 <div className="space-y-3">
-                  <CardanoWalletConnector 
-                    variant="gold"
-                    size="sm"
-                    className="w-full"
-                  />
+                  <CardanoWalletConnector variant="gold" size="sm" className="w-full" />
                   <div className="flex flex-wrap gap-2">
                     <ProfileSettings />
                     <ColorSelectorDialog />
                     <BadgeSelectorDialog />
+                    <RuneSelectorDialog />
                   </div>
                 </div>
               </Card>
             )}
 
-          {/* Leaderboard */}
-          <Leaderboard />
+            <Leaderboard />
 
-            {/* Purchase Diamonds */}
             <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
               <div className="flex items-center gap-3 mb-4">
                 <Gem className="w-6 h-6 text-cyan-400" />
                 <h3 className="text-xl font-bold text-foreground">Get Diamonds</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Trade credits for diamonds
-              </p>
+              <p className="text-sm text-muted-foreground mb-4">Trade credits for diamonds</p>
               <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-foreground">100 Credits</span>
-                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                    5 💎
-                  </span>
+                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">5 💎</span>
                 </div>
-                <Button 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => handleSwap(100, 5)}
-                  disabled={isSwapping || !isConnected}
-                >
-                  Swap Now
-                </Button>
+                <Button size="sm" className="w-full" onClick={() => handleSwap(100, 5)} disabled={isSwapping || !isConnected}>Swap Now</Button>
               </div>
             </Card>
           </div>
 
-          {/* Credits to Bukal Swap */}
+          {/* Bukal & Key Swaps */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-yellow-500/30 max-w-md mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-2xl">🏆</div>
-              <h3 className="text-xl font-bold text-foreground">Get Bukals</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Trade credits for Bukals - the ultimate trophy currency!
-            </p>
+            <div className="flex items-center gap-3 mb-4"><div className="text-2xl">🏆</div><h3 className="text-xl font-bold text-foreground">Get Bukals</h3></div>
             <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-foreground">1,000,000 Credits</span>
-                <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                  1 🏆
-                </span>
-              </div>
-              <Button 
-                size="sm" 
-                className="w-full"
-                onClick={() => handleCreditToBukalSwap(1000000, 1)}
-                disabled={isSwapping || !isConnected}
-              >
-                Get Bukal
-              </Button>
+              <div className="flex justify-between items-center mb-2"><span className="text-sm text-foreground">1,000,000 Credits</span><span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">1 🏆</span></div>
+              <Button size="sm" className="w-full" onClick={() => handleCreditToBukalSwap(1000000, 1)} disabled={isSwapping || !isConnected}>Get Bukal</Button>
             </div>
           </Card>
 
-          {/* Diamond to Keys Swap */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-accent/30 max-w-md mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-2xl">🔑</div>
-              <h3 className="text-xl font-bold text-foreground">Get Keys</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Trade diamonds for keys to unlock the Wheel of Fortune!
-            </p>
+            <div className="flex items-center gap-3 mb-4"><div className="text-2xl">🔑</div><h3 className="text-xl font-bold text-foreground">Get Keys</h3></div>
             <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-foreground">1,000,000 💎</span>
-                <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">
-                  1 🔑
-                </span>
-              </div>
-              <Button 
-                size="sm" 
-                className="w-full"
-                onClick={() => handleDiamondToKeySwap(1000000, 1)}
-                disabled={isSwapping || !isConnected}
-              >
-                Get Key
-              </Button>
+              <div className="flex justify-between items-center mb-2"><span className="text-sm text-foreground">1,000,000 💎</span><span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">1 🔑</span></div>
+              <Button size="sm" className="w-full" onClick={() => handleDiamondToKeySwap(1000000, 1)} disabled={isSwapping || !isConnected}>Get Key</Button>
             </div>
           </Card>
 
           {/* Wheel of Fortune */}
-          <Card 
-            className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
-            onClick={() => navigate('/games/wheel-of-fortune')}
-          >
+          <Card className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
+            onClick={() => navigate('/games/wheel-of-fortune')}>
             <div className="h-40 bg-gradient-to-br from-pink-600 to-purple-700 flex items-center justify-center relative">
-              <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
-                COSMETIC!
-              </div>
+              <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">COSMETIC!</div>
               <Target className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold mb-2 text-foreground">🎯 Wheel of Fortune</h3>
-              <p className="text-sm text-muted-foreground mb-4">Spin for exclusive neon name colors! Stand out on the leaderboard!</p>
-              <Button variant="outline" size="sm" className="w-full">
-                Spin the Wheel
-              </Button>
+              <p className="text-sm text-muted-foreground mb-4">Spin for exclusive neon name colors!</p>
+              <Button variant="outline" size="sm" className="w-full">Spin the Wheel</Button>
             </div>
           </Card>
 
           {/* Diamond Earning Games */}
           <div>
-            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">
-              💎 Earn Diamonds & Credits
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">💎 Earn Diamonds & Credits</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card
-                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${
-                  bullsOwned > 0 
-                    ? 'border-amber-400 animate-pulse-glow' 
-                    : 'border-primary hover:border-accent'
-                }`}
-                onClick={() => navigate('/games/bull-mining')}
-              >
-                {bullsOwned > 0 && (
-                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">
-                    🐂 HOLDER BOOST
+              {[
+                { id: 'bull-mining', name: '🐂 Bull Mining Idle', desc: 'Bulls work together mining diamonds & credits!', gradient: 'from-emerald-600 to-green-700', icon: Pickaxe, btn: 'Start Mining' },
+                { id: 'milk-the-bull', name: '🥛 Milk The Bull', desc: 'Click to milk! Build streaks for bonuses!', gradient: 'from-blue-600 to-cyan-700', icon: Gem, btn: 'Start Milking' },
+                { id: 'bull-kingdom', name: '🏰 Bull Kingdom', desc: 'Build your empire & earn passive rewards!', gradient: 'from-purple-600 to-pink-700', icon: Trophy, btn: 'Build Kingdom' },
+              ].map(game => (
+                <Card key={game.id} className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${bullsOwned > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-primary hover:border-accent'}`}
+                  onClick={() => navigate(`/games/${game.id}`)}>
+                  {bullsOwned > 0 && <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">🐂 HOLDER BOOST</div>}
+                  <div className={`h-40 bg-gradient-to-br ${game.gradient} flex items-center justify-center relative`}>
+                    <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">NEW!</div>
+                    <game.icon className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
                   </div>
-                )}
-                <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
-                    NEW!
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2 text-foreground">{game.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{game.desc}</p>
+                    <Button variant="outline" size="sm" className="w-full">{game.btn}</Button>
                   </div>
-                  <Pickaxe className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🐂 Bull Mining Idle</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Bulls work together mining diamonds & credits!</p>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Start Mining
-                  </Button>
-                </div>
-              </Card>
-
-              <Card
-                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${
-                  bullsOwned > 0 
-                    ? 'border-amber-400 animate-pulse-glow' 
-                    : 'border-primary hover:border-accent'
-                }`}
-                onClick={() => navigate('/games/milk-the-bull')}
-              >
-                {bullsOwned > 0 && (
-                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">
-                    🐂 HOLDER BOOST
-                  </div>
-                )}
-                <div className="h-40 bg-gradient-to-br from-blue-600 to-cyan-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
-                    NEW!
-                  </div>
-                  <Gem className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🥛 Milk The Bull</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Click to milk! Build streaks for bonuses!</p>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Start Milking
-                  </Button>
-                </div>
-              </Card>
-
-              <Card
-                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${
-                  bullsOwned > 0 
-                    ? 'border-amber-400 animate-pulse-glow' 
-                    : 'border-primary hover:border-accent'
-                }`}
-                onClick={() => navigate('/games/bull-kingdom')}
-              >
-                {bullsOwned > 0 && (
-                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">
-                    🐂 HOLDER BOOST
-                  </div>
-                )}
-                <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-700 flex items-center justify-center relative">
-                  <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">
-                    NEW!
-                  </div>
-                  <Trophy className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-foreground">🏰 Bull Kingdom</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Build your empire & earn passive rewards!</p>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Build Kingdom
-                  </Button>
-                </div>
-              </Card>
+                </Card>
+              ))}
             </div>
           </div>
 
           {/* Advanced Key-Only Games */}
           <div>
-            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent text-center">
-              🔑 Advanced Key-Only Games
-            </h2>
-            <p className="text-center text-muted-foreground mb-6">
-              Exclusive games requiring keys. Higher stakes, bigger rewards!
-            </p>
+            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent text-center">🔑 Advanced Key-Only Games</h2>
+            <p className="text-center text-muted-foreground mb-6">Exclusive games requiring keys. Higher stakes, bigger rewards!</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <GameCard
-                title="⚔️ Bull Gauntlet"
-                description="Battle through waves for massive rewards!"
-                icon={Trophy}
-                gradient="from-orange-600 to-red-700"
-                onClick={() => navigate('/games/bull-gauntlet')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Enter Arena"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
+              {[
+                { title: "⚔️ Bull Gauntlet", desc: "Battle through waves!", icon: Trophy, gradient: "from-orange-600 to-red-700", route: "bull-gauntlet", btn: "Enter Arena" },
+                { title: "💎 Diamond Fortress", desc: "Defend and collect!", icon: Gem, gradient: "from-cyan-600 to-blue-700", route: "diamond-fortress", btn: "Enter Fortress" },
+                { title: "🏆 Treasure Vault", desc: "Unlock chests!", icon: Coins, gradient: "from-purple-600 to-pink-700", route: "treasure-vault", btn: "Enter Vault" },
+                { title: "🚀 Cosmic Gauntlet", desc: "Navigate space!", icon: Trophy, gradient: "from-purple-600 to-blue-700", route: "cosmic-gauntlet", btn: "Launch Mission" },
+                { title: "🎲 Fortune's Trial", desc: "Risk vs Reward!", icon: Coins, gradient: "from-amber-600 to-orange-700", route: "fortune-trial", btn: "Begin Trial" },
+                { title: "🌑 Shadow Vault", desc: "Mystery boxes!", icon: Gem, gradient: "from-purple-600 to-indigo-700", route: "shadow-vault", btn: "Enter Shadows" },
+                { title: "⚔️ Eternal Arena", desc: "Boss battles!", icon: Trophy, gradient: "from-red-600 to-orange-700", route: "eternal-arena", btn: "Enter Arena" },
+                { title: "🔗 Lucky Chain", desc: "Build multipliers!", icon: Coins, gradient: "from-purple-600 to-pink-700", route: "lucky-chain", btn: "Start Chain" },
+                { title: "🧠 Pattern Master", desc: "Test memory!", icon: Gem, gradient: "from-cyan-600 to-blue-700", route: "pattern-master", btn: "Test Memory" },
+                { title: "⏱️ Perfect Timing", desc: "Hit the zone!", icon: Trophy, gradient: "from-orange-600 to-red-700", route: "perfect-timing", btn: "Test Timing" },
+                { title: "🎵 Rhythm Rush", desc: "Hit beats!", icon: Music, gradient: "from-purple-600 to-pink-700", route: "rhythm-rush", btn: "Start Rhythm" },
+                { title: "💎 Gem Chain", desc: "Match-3 puzzle!", icon: Gem, gradient: "from-emerald-600 to-green-700", route: "gem-chain", btn: "Match Gems" },
+                { title: "🔐 Risk Vault", desc: "High-risk!", icon: Lock, gradient: "from-red-600 to-orange-700", route: "risk-vault", btn: "Take Risk" },
+                { title: "⚡ Speed Run", desc: "Reflex arcade!", icon: Gauge, gradient: "from-yellow-600 to-amber-700", route: "speed-run", btn: "Start Run" },
+              ].map(g => (
+                <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
+                  onClick={() => navigate(`/games/${g.route}`)} badge="🔑 KEY REQUIRED" badgeColor="bg-yellow-500 text-black"
+                  buttonText={g.btn} buttonVariant="key" isHolder={bullsOwned > 0} />
+              ))}
 
-              <GameCard
-                title="💎 Diamond Fortress"
-                description="Defend and collect diamonds in waves!"
-                icon={Gem}
-                gradient="from-cyan-600 to-blue-700"
-                onClick={() => navigate('/games/diamond-fortress')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Enter Fortress"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🏆 Treasure Vault"
-                description="Unlock chests for legendary prizes!"
-                icon={Coins}
-                gradient="from-purple-600 to-pink-700"
-                onClick={() => navigate('/games/treasure-vault')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Enter Vault"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🚀 Cosmic Gauntlet"
-                description="Navigate space for cosmic rewards!"
-                icon={Trophy}
-                gradient="from-purple-600 to-blue-700"
-                onClick={() => navigate('/games/cosmic-gauntlet')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Launch Mission"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🎲 Fortune's Trial"
-                description="Risk vs Reward - Choose wisely!"
-                icon={Coins}
-                gradient="from-amber-600 to-orange-700"
-                onClick={() => navigate('/games/fortune-trial')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Begin Trial"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🌑 Shadow Vault"
-                description="Progressive mystery boxes & tiers!"
-                icon={Gem}
-                gradient="from-purple-600 to-indigo-700"
-                onClick={() => navigate('/games/shadow-vault')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Enter Shadows"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="⚔️ Eternal Arena"
-                description="Boss battle through 5 phases!"
-                icon={Trophy}
-                gradient="from-red-600 to-orange-700"
-                onClick={() => navigate('/games/eternal-arena')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Enter Arena"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🔗 Lucky Chain"
-                description="Build multipliers, don't get greedy!"
-                icon={Coins}
-                gradient="from-purple-600 to-pink-700"
-                onClick={() => navigate('/games/lucky-chain')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Start Chain"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🧠 Pattern Master"
-                description="Test your memory with patterns!"
-                icon={Gem}
-                gradient="from-cyan-600 to-blue-700"
-                onClick={() => navigate('/games/pattern-master')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Test Memory"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="⏱️ Perfect Timing"
-                description="Hit the target zone perfectly!"
-                icon={Trophy}
-                gradient="from-orange-600 to-red-700"
-                onClick={() => navigate('/games/perfect-timing')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Test Timing"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🎵 Rhythm Rush"
-                description="Hit beats, build combos, earn diamonds!"
-                icon={Music}
-                gradient="from-purple-600 to-pink-700"
-                onClick={() => navigate('/games/rhythm-rush')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Start Rhythm"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="💎 Gem Chain"
-                description="Match-3 puzzle with levels & rewards!"
-                icon={Gem}
-                gradient="from-emerald-600 to-green-700"
-                onClick={() => navigate('/games/gem-chain')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Match Gems"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="🔐 Risk Vault"
-                description="High-risk progression - cash out or bust!"
-                icon={Lock}
-                gradient="from-red-600 to-orange-700"
-                onClick={() => navigate('/games/risk-vault')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Take Risk"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              <GameCard
-                title="⚡ Speed Run"
-                description="Reflex arcade - click targets fast!"
-                icon={Gauge}
-                gradient="from-yellow-600 to-amber-700"
-                onClick={() => navigate('/games/speed-run')}
-                badge="🔑 KEY REQUIRED"
-                badgeColor="bg-yellow-500 text-black"
-                buttonText="Start Run"
-                buttonVariant="key"
-                isHolder={bullsOwned > 0}
-              />
-
-              {/* FEATURED: Bull World - Multiplayer Virtual World */}
-              <Card
-                className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3 ${
-                  totalBulls > 0 
-                    ? 'border-amber-400 animate-pulse-glow' 
-                    : 'border-cyan-400 hover:border-cyan-300'
-                }`}
-                onClick={() => navigate('/games/bull-world')}
-              >
-                {totalBulls > 0 && (
-                  <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-20 animate-pulse">
-                    🐂 HOLDER BOOST ({totalBulls} Bulls)
-                  </div>
-                )}
+              {/* Bull World */}
+              <Card className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3 ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-cyan-400 hover:border-cyan-300'}`}
+                onClick={() => navigate('/games/bull-world')}>
                 <div className="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%220.1%22%3E%3Cpath%20d%3D%22M0%2020L20%200L40%2020L20%2040z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"></div>
-                  <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-                    🌍 MULTIPLAYER WORLD
-                  </div>
-                  <div className="absolute top-10 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                    🔑 KEY REQUIRED
-                  </div>
+                  <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌍 MULTIPLAYER WORLD</div>
+                  <div className="absolute top-10 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">🔑 KEY REQUIRED</div>
                   <div className="flex items-center gap-6">
                     <Globe className="w-24 h-24 text-white group-hover:scale-110 transition-transform animate-pulse" />
                     <Users className="w-16 h-16 text-cyan-300 group-hover:scale-110 transition-transform" />
@@ -812,354 +282,97 @@ const Dashboard = () => {
                 <div className="p-6 text-center">
                   <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 Bull World 🌍</h3>
                   <p className="text-sm text-muted-foreground mb-4">Enter a virtual world! See other players, collect diamonds, explore & play mini-games together!</p>
-                  <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">
-                    Enter Bull World
-                  </Button>
+                  <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Bull World</Button>
                 </div>
               </Card>
             </div>
           </div>
 
-          {/* Subscription Box - Unlock Holder Status */}
+          {/* Subscription Box */}
           <div className="max-w-2xl mx-auto">
             <SubscriptionBox bullsOwned={bullsOwned} />
           </div>
 
-          {/* Holder-Only Strategy Games - Visible to all, locked for non-holders OR subscribers */}
+          {/* Holder-Only Strategy Games */}
           <div>
-            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">
-              👑 Holder-Only Strategy Games (Earn 🔑 Keys)
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">👑 Holder-Only Strategy Games (Earn 🔑 Keys)</h2>
             {totalBulls === 0 && (
               <div className="mb-4 p-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-xl border border-amber-500/40 flex items-center gap-3">
                 <Lock className="w-6 h-6 text-amber-400" />
-                <p className="text-amber-300 text-sm">
-                  <span className="font-bold">🔒 Hold a CSB Bull NFT or Subscribe above to unlock these exclusive games!</span>
-                  {' '}
+                <p className="text-amber-300 text-sm"><span className="font-bold">🔒 Hold a CSB Bull NFT or Subscribe to unlock!</span>{' '}
                   <a href="https://www.jpg.store/collection/cardanostakebulls?tab=items" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-200">Get yours on JPG.Store →</a>
                 </p>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <GameCard 
-                title="⚔️ Bull Tactician" 
-                description="Chess-like strategy - capture enemy bulls!" 
-                icon={Target} 
-                gradient="from-indigo-600 to-purple-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/bull-tactician') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Play" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🏰 Kingdom Siege" 
-                description="Tower defense - survive 5 waves!" 
-                icon={Shield} 
-                gradient="from-slate-600 to-gray-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/kingdom-siege') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Defend" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="📈 Market Master" 
-                description="Trading sim - profit 2000g in 20 days!" 
-                icon={TrendingUp} 
-                gradient="from-green-600 to-emerald-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/market-master') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Trade" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🪖 Bull Commander" 
-                description="Army management - conquer 5 waves!" 
-                icon={Flame} 
-                gradient="from-red-600 to-orange-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/bull-commander') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Command" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🏗️ Fortress Builder" 
-                description="Resource management - reach 5000g!" 
-                icon={Pickaxe} 
-                gradient="from-amber-600 to-yellow-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/fortress-builder') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Build" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🗺️ Cardano Conquest" 
-                description="Territory control - dominate the map!" 
-                icon={Globe} 
-                gradient="from-blue-600 to-cyan-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/cardano-conquest') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Conquer" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🤝 Bull Diplomacy" 
-                description="Negotiation - ally 3+ factions!" 
-                icon={Users} 
-                gradient="from-violet-600 to-purple-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/bull-diplomacy') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Negotiate" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="📦 Strategic Stacks" 
-                description="2048-style puzzle - reach 2048!" 
-                icon={Gem} 
-                gradient="from-pink-600 to-rose-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/strategic-stacks') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Stack" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🔨 Bull Blacksmith" 
-                description="Forge legendary items from materials!" 
-                icon={Flame} 
-                gradient="from-orange-600 to-red-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/bull-blacksmith') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Forge" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="📈 Bull Trader" 
-                description="Trade assets - profit in 20 days!" 
-                icon={TrendingUp} 
-                gradient="from-cyan-600 to-blue-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/bull-trader') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Trade" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🛡️ Chain Defender" 
-                description="Tower defense - survive 5 waves!" 
-                icon={Shield} 
-                gradient="from-blue-600 to-indigo-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/chain-defender') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Defend" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🌍 ADA Conquest" 
-                description="Conquer territories for domination!" 
-                icon={Globe} 
-                gradient="from-purple-600 to-pink-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/ada-conquest') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Conquer" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="🏢 Bull Tycoon" 
-                description="Build your business empire to 100K!" 
-                icon={TrendingUp} 
-                gradient="from-amber-600 to-orange-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/bull-tycoon') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Build Empire" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
-              <GameCard 
-                title="⚔️ Stake Wars" 
-                description="PvP battles - defeat all opponents!" 
-                icon={Flame} 
-                gradient="from-red-600 to-rose-700" 
-                onClick={() => totalBulls > 0 ? navigate('/games/stake-wars') : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })} 
-                badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} 
-                badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"} 
-                buttonText={totalBulls > 0 ? "Battle" : "🔒 Locked"} 
-                buttonVariant="key" 
-                isHolder={totalBulls > 0} 
-              />
+              {[
+                { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
+                { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
+                { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },
+                { title: "🪖 Bull Commander", desc: "Army management!", icon: Flame, gradient: "from-red-600 to-orange-700", route: "bull-commander", btn: "Command" },
+                { title: "🏗️ Fortress Builder", desc: "Resource management!", icon: Pickaxe, gradient: "from-amber-600 to-yellow-700", route: "fortress-builder", btn: "Build" },
+                { title: "🗺️ Cardano Conquest", desc: "Territory control!", icon: Globe, gradient: "from-blue-600 to-cyan-700", route: "cardano-conquest", btn: "Conquer" },
+                { title: "🤝 Bull Diplomacy", desc: "Negotiation!", icon: Users, gradient: "from-violet-600 to-purple-700", route: "bull-diplomacy", btn: "Negotiate" },
+                { title: "📦 Strategic Stacks", desc: "2048 puzzle!", icon: Gem, gradient: "from-pink-600 to-rose-700", route: "strategic-stacks", btn: "Stack" },
+                { title: "🔨 Bull Blacksmith", desc: "Forge items!", icon: Flame, gradient: "from-orange-600 to-red-700", route: "bull-blacksmith", btn: "Forge" },
+                { title: "📈 Bull Trader", desc: "Trade assets!", icon: TrendingUp, gradient: "from-cyan-600 to-blue-700", route: "bull-trader", btn: "Trade" },
+                { title: "🛡️ Chain Defender", desc: "Tower defense!", icon: Shield, gradient: "from-blue-600 to-indigo-700", route: "chain-defender", btn: "Defend" },
+                { title: "🌍 ADA Conquest", desc: "Conquer territories!", icon: Globe, gradient: "from-purple-600 to-pink-700", route: "ada-conquest", btn: "Conquer" },
+                { title: "🏢 Bull Tycoon", desc: "Build empire!", icon: TrendingUp, gradient: "from-amber-600 to-orange-700", route: "bull-tycoon", btn: "Build Empire" },
+                { title: "⚔️ Stake Wars", desc: "PvP battles!", icon: Flame, gradient: "from-red-600 to-rose-700", route: "stake-wars", btn: "Battle" },
+                { title: "⚗️ Bull Alchemist", desc: "Combine elements!", icon: Sparkles, gradient: "from-emerald-600 to-teal-700", route: "bull-alchemist", btn: "Brew" },
+                { title: "🏪 Crypto Merchant", desc: "Buy low sell high!", icon: Coins, gradient: "from-yellow-600 to-amber-700", route: "crypto-merchant", btn: "Trade" },
+                { title: "⚔️ Bull Warlord", desc: "Conquer 7 zones!", icon: Target, gradient: "from-red-700 to-orange-800", route: "bull-warlord", btn: "Attack" },
+                { title: "🏛️ Stake Architect", desc: "Build a city!", icon: Pickaxe, gradient: "from-blue-700 to-indigo-800", route: "stake-architect", btn: "Build" },
+                { title: "🕵️ Bull Saboteur", desc: "Stealth missions!", icon: Shield, gradient: "from-gray-700 to-slate-800", route: "bull-saboteur", btn: "Infiltrate" },
+                { title: "🏴‍☠️ Cardano Raider", desc: "Raid dungeons!", icon: Flame, gradient: "from-orange-700 to-red-800", route: "cardano-raider", btn: "Raid" },
+                { title: "🔗 Bull Nexus", desc: "Connect nodes!", icon: Gem, gradient: "from-cyan-700 to-blue-800", route: "bull-nexus", btn: "Connect" },
+                { title: "🔮 ADA Oracle", desc: "Gather prophecies!", icon: Sparkles, gradient: "from-purple-700 to-pink-800", route: "ada-oracle", btn: "Divine" },
+              ].map(g => (
+                <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
+                  onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
+                  badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"}
+                  buttonText={totalBulls > 0 ? g.btn : "🔒 Locked"} buttonVariant="key" isHolder={totalBulls > 0} />
+              ))}
             </div>
           </div>
 
-          {/* Link to Casino Games */}
-          <div className="text-center">
-            <Card className="inline-block p-8 bg-gradient-to-r from-primary/20 to-card border-2 border-primary/40">
-              <p className="text-3xl font-bold gradient-gold bg-clip-text text-transparent mb-3">🎰 100+ Free Casino Games! 🎮</p>
-              <p className="text-muted-foreground mb-6">Play classic casino games for free - no wallet needed!</p>
-              <Button 
-                size="lg" 
-                onClick={() => navigate("/games")}
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-              >
-                Free Game Zone →
-              </Button>
-            </Card>
-          </div>
-
-          {/* CSB Game Master Section */}
+          {/* CSB Game Master */}
           <div className="mt-8">
             <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-card border-2 max-w-2xl mx-auto overflow-hidden relative border-amber-500/40">
               <div className="flex items-center gap-3 mb-4 relative z-10">
-                <div className="p-3 rounded-full bg-amber-500/20">
-                  <Sparkles className="w-8 h-8 text-amber-400" />
-                </div>
+                <div className="p-3 rounded-full bg-amber-500/20"><Sparkles className="w-8 h-8 text-amber-400" /></div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                    🤖 CSB Game Master
-                  </h3>
+                  <h3 className="text-xl font-bold text-foreground flex items-center gap-2">🤖 CSB Game Master</h3>
                   <p className="text-sm text-muted-foreground">Your AI assistant for tips, strategies & bonuses!</p>
                 </div>
               </div>
-              <CSBGameMaster 
-                bullsOwned={bullsOwned} 
-                rarityBonus={rarityBonus} 
-                context="Dashboard - browsing games"
-                embedded={true}
-              />
+              <CSBGameMaster bullsOwned={bullsOwned} rarityBonus={rarityBonus} context="Dashboard - browsing games" embedded={true} />
             </Card>
           </div>
 
           {/* Community Links */}
           <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-6 text-center gradient-gold bg-clip-text text-transparent">
-              🐂 Cardano Stake Bulls Community 🐂
-            </h2>
+            <h2 className="text-2xl font-bold mb-6 text-center gradient-gold bg-clip-text text-transparent">🐂 Cardano Stake Bulls Community 🐂</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
-              <a
-                href="https://arena2.cardanostakebulls.space/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="p-4 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40 hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-full bg-primary/20">
-                      <TrendingUp className="w-6 h-6 text-primary" />
+              {[
+                { href: "https://arena2.cardanostakebulls.space/", icon: TrendingUp, title: "Stake Platform", desc: "Stake your ADA!", color: "primary" },
+                { href: "https://www.jpg.store/collection/cardanostakebulls?tab=items", icon: Key, title: "Mint Bull Key 🔑", desc: "Get CSB Bulls!", color: "amber" },
+                { href: "https://discord.gg/cardanostakebulls", icon: Users, title: "Discord", desc: "Join our Discord!", color: "indigo" },
+                { href: "https://x.com/CStakeBulls", icon: Globe, title: "Twitter / X", desc: "Follow us!", color: "blue" },
+                { href: "https://cardanostakebulls.space", icon: ExternalLink, title: "Website", desc: "Learn more!", color: "cyan" },
+              ].map(link => (
+                <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className="group">
+                  <Card className="p-4 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40 hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-full bg-primary/20"><link.icon className="w-6 h-6 text-primary" /></div>
+                      <h3 className="font-bold text-foreground">{link.title}</h3>
                     </div>
-                    <h3 className="font-bold text-foreground">Stake Platform</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Stake your ADA with our pool and earn rewards!</p>
-                  <div className="flex items-center gap-1 text-primary text-xs mt-2">
-                    <span>Visit Site</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                </Card>
-              </a>
-
-              <a
-                href="https://www.jpg.store/collection/cardanostakebulls?tab=items"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-card border-2 border-amber-500/40 hover:border-amber-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-full bg-amber-500/20">
-                      <Key className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <h3 className="font-bold text-foreground">Mint Bull Key 🔑</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Get your CSB Bulls on JPG.Store!</p>
-                  <div className="flex items-center gap-1 text-amber-400 text-xs mt-2">
-                    <span>Mint Now</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                </Card>
-              </a>
-
-              <a
-                href="https://discord.gg/FCyYYwryYW"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="p-4 bg-gradient-to-br from-indigo-500/20 to-card border-2 border-indigo-500/40 hover:border-indigo-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-full bg-indigo-500/20">
-                      <MessageCircle className="w-6 h-6 text-indigo-400" />
-                    </div>
-                    <h3 className="font-bold text-foreground">Discord</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Join our community and chat with fellow bulls!</p>
-                  <div className="flex items-center gap-1 text-indigo-400 text-xs mt-2">
-                    <span>Join Server</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                </Card>
-              </a>
-
-              <a
-                href="https://csbmerch.lovable.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="p-4 bg-gradient-to-br from-pink-500/20 to-card border-2 border-pink-500/40 hover:border-pink-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-full bg-pink-500/20">
-                      <ShoppingBag className="w-6 h-6 text-pink-400" />
-                    </div>
-                    <h3 className="font-bold text-foreground">Merch Store</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Get exclusive Bull merchandise and apparel!</p>
-                  <div className="flex items-center gap-1 text-pink-400 text-xs mt-2">
-                    <span>Shop Now</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                </Card>
-              </a>
-
-              <a
-                href="https://csbpubliclibrary.lovable.app/#library"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="p-4 bg-gradient-to-br from-emerald-500/20 to-card border-2 border-emerald-500/40 hover:border-emerald-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-full bg-emerald-500/20">
-                      <Book className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <h3 className="font-bold text-foreground">Library</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Browse our collection of resources and guides!</p>
-                  <div className="flex items-center gap-1 text-emerald-400 text-xs mt-2">
-                    <span>Explore</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                </Card>
-              </a>
+                    <p className="text-sm text-muted-foreground">{link.desc}</p>
+                    <div className="flex items-center gap-1 text-primary text-xs mt-2"><span>Visit</span><ExternalLink className="w-3 h-3" /></div>
+                  </Card>
+                </a>
+              ))}
             </div>
           </div>
         </div>
