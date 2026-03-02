@@ -9,17 +9,20 @@ import holyBull from "@/assets/holy-bull.jpeg";
 
 const BullMining = () => {
   const navigate = useNavigate();
-  const { credits, diamonds, awardDiamonds, awardCredits, loading } = useGameLogic("Bull Mining");
+  const { credits, diamonds, awardDiamonds, awardCredits, deductCredits, loading } = useGameLogic("Bull Mining");
   const [bulls, setBulls] = useState(1);
   const [miningProgress, setMiningProgress] = useState(0);
   const [isMining, setIsMining] = useState(false);
   const [totalMined, setTotalMined] = useState({ diamonds: 0, credits: 0 });
+  const [pendingReward, setPendingReward] = useState<{ diamonds: number; credits: number } | null>(null);
 
   const bullCost = 100;
   const miningSpeed = bulls * 2;
 
-  const buyBull = () => {
-    if (credits >= bullCost && bulls < 100) {
+  const buyBull = async () => {
+    if (bulls >= 100 || loading) return;
+    const paid = await deductCredits(bullCost);
+    if (paid) {
       setBulls(prev => prev + 1);
     }
   };
@@ -30,22 +33,14 @@ const BullMining = () => {
     const interval = setInterval(() => {
       setMiningProgress(prev => {
         const newProgress = prev + miningSpeed;
-        
+
         if (newProgress >= 100) {
           const diamondsEarned = Math.floor(Math.random() * bulls * 5) + bulls;
           const creditsEarned = Math.floor(Math.random() * bulls * 10) + bulls * 5;
-          
-          awardDiamonds(diamondsEarned);
-          awardCredits(creditsEarned);
-          
-          setTotalMined(prev => ({
-            diamonds: prev.diamonds + diamondsEarned,
-            credits: prev.credits + creditsEarned
-          }));
-          
-          return 0;
+          setPendingReward({ diamonds: diamondsEarned, credits: creditsEarned });
+          return newProgress - 100;
         }
-        
+
         return newProgress;
       });
     }, 100);
@@ -53,10 +48,26 @@ const BullMining = () => {
     return () => clearInterval(interval);
   }, [isMining, bulls, miningSpeed]);
 
+  useEffect(() => {
+    if (!pendingReward) return;
+
+    const applyReward = async () => {
+      await awardDiamonds(pendingReward.diamonds);
+      await awardCredits(pendingReward.credits);
+      setTotalMined(prev => ({
+        diamonds: prev.diamonds + pendingReward.diamonds,
+        credits: prev.credits + pendingReward.credits
+      }));
+      setPendingReward(null);
+    };
+
+    applyReward();
+  }, [pendingReward]);
+
   return (
     <div className="min-h-screen bull-pattern p-4">
-      <Button variant="ghost" onClick={() => navigate("/games")} className="mb-4">
-        <ArrowLeft className="w-5 h-5" /> Back to Games
+      <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-4">
+        <ArrowLeft className="w-5 h-5" /> Back to Dashboard
       </Button>
 
       <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">

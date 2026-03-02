@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,61 +8,85 @@ import holyBull from "@/assets/holy-bull.jpeg";
 
 const BullKingdom = () => {
   const navigate = useNavigate();
-  const { credits, diamonds, awardDiamonds, awardCredits, loading } = useGameLogic("Bull Kingdom");
+  const { credits, diamonds, awardDiamonds, awardCredits, deductCredits, loading } = useGameLogic("Bull Kingdom");
   
   const MAX_BUILDINGS = 30;
   
   const [kingdom, setKingdom] = useState({ bulls: 5, farms: 1, mines: 0, castles: 0 });
   const [resources, setResources] = useState({ food: 100, gems: 0 });
   const [autoCollect, setAutoCollect] = useState(false);
+  const resourcesRef = useRef(resources);
 
   const prices = { bull: 50, farm: 200, mine: 500, castle: 1000 };
-  const production = { foodPerFarm: 10, gemsPerMine: 5, bonusPerCastle: 1.2 };
+  const production = {
+    foodPerFarm: 10,
+    foodPerBull: 2,
+    gemsPerMine: 5,
+    gemsPerBullGroup: 1,
+    bonusPerCastle: 1.2
+  };
+
+  useEffect(() => {
+    resourcesRef.current = resources;
+  }, [resources]);
 
   useEffect(() => {
     if (!autoCollect) return;
+
     const interval = setInterval(() => {
       const castleBonus = Math.pow(production.bonusPerCastle, kingdom.castles);
-      const foodProduced = kingdom.farms * production.foodPerFarm;
-      const gemsProduced = kingdom.mines * production.gemsPerMine;
+      const foodBase = kingdom.farms * production.foodPerFarm + kingdom.bulls * production.foodPerBull;
+      const passiveGemsFromBulls = Math.max(1, Math.floor(kingdom.bulls / 5)) * production.gemsPerBullGroup;
+      const gemsBase = kingdom.mines * production.gemsPerMine + passiveGemsFromBulls;
       
       setResources(prev => ({
-        food: prev.food + Math.floor(foodProduced * castleBonus),
-        gems: prev.gems + Math.floor(gemsProduced * castleBonus)
+        food: prev.food + Math.floor(foodBase * castleBonus),
+        gems: prev.gems + Math.floor(gemsBase * castleBonus)
       }));
     }, 3000);
+
     return () => clearInterval(interval);
   }, [autoCollect, kingdom]);
 
   // Auto-collect rewards every 10 seconds when auto mode is on
   useEffect(() => {
     if (!autoCollect) return;
-    const collectInterval = setInterval(async () => {
-      if (resources.food > 10 || resources.gems > 0) {
-        const creditsEarned = Math.floor(resources.food / 10);
-        const gemsEarned = resources.gems;
-        
-        if (creditsEarned > 0) await awardCredits(creditsEarned);
-        if (gemsEarned > 0) await awardDiamonds(gemsEarned);
-        
-        setResources({ food: resources.food % 10, gems: 0 });
-      }
-    }, 10000);
-    return () => clearInterval(collectInterval);
-  }, [autoCollect, resources]);
 
-  const buyBuilding = (type: string) => {
+    const collectInterval = setInterval(async () => {
+      const current = resourcesRef.current;
+      const creditsEarned = Math.floor(current.food / 10);
+      const gemsEarned = current.gems;
+
+      if (creditsEarned <= 0 && gemsEarned <= 0) return;
+
+      if (creditsEarned > 0) await awardCredits(creditsEarned);
+      if (gemsEarned > 0) await awardDiamonds(gemsEarned);
+
+      setResources(prev => ({ food: prev.food % 10, gems: 0 }));
+    }, 10000);
+
+    return () => clearInterval(collectInterval);
+  }, [autoCollect]);
+
+  const buyBuilding = async (type: string) => {
     const cost = prices[type as keyof typeof prices];
     const key = type === 'bull' ? 'bulls' : type === 'farm' ? 'farms' : type === 'mine' ? 'mines' : 'castles';
-    if (credits >= cost && kingdom[key] < MAX_BUILDINGS) {
-      setKingdom(prev => ({ ...prev, [key]: prev[key] + 1 }));
-    }
+    if (credits < cost || kingdom[key] >= MAX_BUILDINGS || loading) return;
+
+    const paid = await deductCredits(cost);
+    if (!paid) return;
+
+    setKingdom(prev => ({ ...prev, [key]: prev[key] + 1 }));
   };
 
   const collectRewards = async () => {
-    if (resources.food > 0) await awardCredits(Math.floor(resources.food / 10));
-    if (resources.gems > 0) await awardDiamonds(resources.gems);
-    setResources({ food: 0, gems: 0 });
+    const creditsEarned = Math.floor(resources.food / 10);
+    const gemsEarned = resources.gems;
+
+    if (creditsEarned > 0) await awardCredits(creditsEarned);
+    if (gemsEarned > 0) await awardDiamonds(gemsEarned);
+
+    setResources({ food: resources.food % 10, gems: 0 });
   };
 
   const totalPower = kingdom.bulls + kingdom.farms * 2 + kingdom.mines * 5 + kingdom.castles * 10;
@@ -107,13 +131,13 @@ const BullKingdom = () => {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-2"><span>🌾 Food:</span><span className="font-bold">{resources.food}</span></div>
-                <div className="text-xs text-muted-foreground">= {Math.floor(resources.food / 10)} credits</div>
+                <div className="text-xs text-muted-foreground">= {Math.floor(resources.food / 10)} credits (remainder stays)</div>
               </div>
               <div>
                 <div className="flex justify-between mb-2"><span>💎 Gems:</span><span className="font-bold">{resources.gems}</span></div>
-                <div className="text-xs text-muted-foreground">= {resources.gems} diamonds</div>
+                <div className="text-xs text-muted-foreground">= {resources.gems} diamonds (bulls + mines produce gems)</div>
               </div>
-              <Button onClick={collectRewards} className="w-full" disabled={resources.food === 0 && resources.gems === 0 || loading}>Collect Rewards</Button>
+              <Button onClick={collectRewards} className="w-full" disabled={(resources.food === 0 && resources.gems === 0) || loading}>Collect Rewards</Button>
             </div>
           </Card>
         </div>
@@ -143,7 +167,7 @@ const BullKingdom = () => {
             {autoCollect ? "⏸ Auto-Collect ON" : "▶ Start Auto-Collect"}
           </Button>
           <p className="text-sm text-muted-foreground mt-2">
-            Production every 3s • Auto-collect 💎 & 💰 every 10s • Castles multiply all production by {production.bonusPerCastle}x each
+            Production every 3s • Bulls and mines generate 💎 • Auto-collect cashes out every 10s • Castles multiply all production by {production.bonusPerCastle}x each
           </p>
         </div>
       </Card>

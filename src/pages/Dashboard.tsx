@@ -328,6 +328,11 @@ const Dashboard = () => {
                 { title: "🏴‍☠️ Cardano Raider", desc: "Raid dungeons!", icon: Flame, gradient: "from-orange-700 to-red-800", route: "cardano-raider", btn: "Raid" },
                 { title: "🔗 Bull Nexus", desc: "Connect nodes!", icon: Gem, gradient: "from-cyan-700 to-blue-800", route: "bull-nexus", btn: "Connect" },
                 { title: "🔮 ADA Oracle", desc: "Gather prophecies!", icon: Sparkles, gradient: "from-purple-700 to-pink-800", route: "ada-oracle", btn: "Divine" },
+                { title: "🧠 Bull Cipher", desc: "Decrypt 4-symbol vaults!", icon: Target, gradient: "from-indigo-700 to-blue-800", route: "bull-cipher", btn: "Decrypt" },
+                { title: "✨ Rune Forge", desc: "Align starsign runes!", icon: Sparkles, gradient: "from-purple-700 to-indigo-800", route: "rune-forge", btn: "Forge" },
+                { title: "🏛️ Council Strategy", desc: "Rule through 8 rounds!", icon: Users, gradient: "from-amber-700 to-orange-800", route: "council-strategy", btn: "Govern" },
+                { title: "🛡️ Chain Citadel", desc: "Defend 5 sectors!", icon: Shield, gradient: "from-slate-700 to-indigo-800", route: "chain-citadel", btn: "Defend" },
+                { title: "🌌 Zodiac Trials", desc: "Master all 12 signs!", icon: Globe, gradient: "from-blue-700 to-cyan-800", route: "zodiac-trials", btn: "Challenge" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
@@ -358,8 +363,10 @@ const Dashboard = () => {
               {[
                 { href: "https://arena2.cardanostakebulls.space/", icon: TrendingUp, title: "Stake Platform", desc: "Stake your ADA!", color: "primary" },
                 { href: "https://www.jpg.store/collection/cardanostakebulls?tab=items", icon: Key, title: "Mint Bull Key 🔑", desc: "Get CSB Bulls!", color: "amber" },
-                { href: "https://discord.gg/cardanostakebulls", icon: Users, title: "Discord", desc: "Join our Discord!", color: "indigo" },
-                { href: "https://x.com/CStakeBulls", icon: Globe, title: "Twitter / X", desc: "Follow us!", color: "blue" },
+                { href: "https://discord.gg/FCyYYwryYW", icon: Users, title: "Discord", desc: "Join our Discord!", color: "indigo" },
+                { href: "https://x.com/worldofgaia5art?s=21&t=mSdrl7vSEhr5s0minUvc-w", icon: Globe, title: "Twitter / X", desc: "Follow us!", color: "blue" },
+                { href: "https://csbpubliclibrary.lovable.app/", icon: ExternalLink, title: "Library", desc: "Read the public library", color: "cyan" },
+                { href: "https://csbmerch.lovable.app/", icon: Sparkles, title: "Merchandise", desc: "Shop official merch", color: "primary" },
                 { href: "https://cardanostakebulls.space", icon: ExternalLink, title: "Website", desc: "Learn more!", color: "cyan" },
               ].map(link => (
                 <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className="group">
