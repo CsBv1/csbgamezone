@@ -53,8 +53,8 @@ const MilkTheBull = () => {
 
   return (
     <div className="min-h-screen bull-pattern p-4">
-      <Button variant="ghost" onClick={() => navigate("/games")} className="mb-4">
-        <ArrowLeft className="w-5 h-5" /> Back to Games
+      <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-4">
+        <ArrowLeft className="w-5 h-5" /> Back to Dashboard
       </Button>
 
       <Card className="max-w-4xl mx-auto p-6 bg-card/95 backdrop-blur">

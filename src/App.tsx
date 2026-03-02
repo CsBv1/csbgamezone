@@ -70,6 +70,11 @@ import BullSaboteur from "./pages/games/holders/BullSaboteur";
 import CardanoRaider from "./pages/games/holders/CardanoRaider";
 import BullNexus from "./pages/games/holders/BullNexus";
 import ADAOracle from "./pages/games/holders/ADAOracle";
+import BullCipher from "./pages/games/holders/BullCipher";
+import RuneForge from "./pages/games/holders/RuneForge";
+import CouncilStrategy from "./pages/games/holders/CouncilStrategy";
+import ChainCitadel from "./pages/games/holders/ChainCitadel";
+import ZodiacTrials from "./pages/games/holders/ZodiacTrials";
 
 const queryClient = new QueryClient();
 
@@ -146,6 +151,11 @@ const App = () => (
           <Route path="/games/cardano-raider" element={<CardanoRaider />} />
           <Route path="/games/bull-nexus" element={<BullNexus />} />
           <Route path="/games/ada-oracle" element={<ADAOracle />} />
+          <Route path="/games/bull-cipher" element={<BullCipher />} />
+          <Route path="/games/rune-forge" element={<RuneForge />} />
+          <Route path="/games/council-strategy" element={<CouncilStrategy />} />
+          <Route path="/games/chain-citadel" element={<ChainCitadel />} />
+          <Route path="/games/zodiac-trials" element={<ZodiacTrials />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -83,9 +83,17 @@ export const Leaderboard = () => {
       )
       .subscribe();
 
+    const cosmeticsChannel = supabase
+      .channel('cosmetics-changes-leaderboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_badges' }, () => fetchLeaderboard())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_runes' }, () => fetchLeaderboard())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_colors' }, () => fetchLeaderboard())
+      .subscribe();
+
     return () => {
       supabase.removeChannel(diamondsChannel);
       supabase.removeChannel(gameResultsChannel);
+      supabase.removeChannel(cosmeticsChannel);
     };
   }, []);
 
@@ -274,15 +282,15 @@ export const Leaderboard = () => {
                           </span>
                         </>
                       )}
+                      {userBadge && userRune && <span className="text-muted-foreground">•</span>}
                       {userRune && (
-                        <span className="font-medium text-purple-400">
-                          {userRune.symbol} {userRune.name}
+                        <span className="inline-flex items-center gap-1 font-semibold rune-neon">
+                          <span className="rune-neon-symbol">{userRune.symbol}</span>
+                          <span>{userRune.name}</span>
                         </span>
                       )}
-                      {!userBadge && !userRune ? (
+                      {!userBadge && !userRune && (
                         <span className="text-muted-foreground">{entry.total_wins} wins • {entry.total_games} games</span>
-                      ) : (
-                        <span className="text-muted-foreground">• {entry.total_wins} wins</span>
                       )}
                     </div>
                   </div>

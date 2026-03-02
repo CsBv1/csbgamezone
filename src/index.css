@@ -118,4 +118,28 @@ All colors MUST be HSL.
     box-shadow: 0 0 15px hsl(45 96% 53% / 0.4), inset 0 0 10px hsl(45 96% 53% / 0.1);
     border-color: hsl(45 96% 53% / 0.8) !important;
   }
+
+  @keyframes rune-neon-glow {
+    0%, 100% {
+      text-shadow: 0 0 8px hsl(var(--accent) / 0.45), 0 0 16px hsl(var(--accent) / 0.25);
+    }
+    50% {
+      text-shadow: 0 0 14px hsl(var(--accent) / 0.65), 0 0 24px hsl(var(--primary) / 0.35);
+    }
+  }
+
+  @keyframes rune-symbol-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1px); }
+  }
+
+  .rune-neon {
+    color: hsl(var(--accent));
+    animation: rune-neon-glow 2.2s ease-in-out infinite;
+  }
+
+  .rune-neon-symbol {
+    display: inline-block;
+    animation: rune-symbol-float 1.4s ease-in-out infinite;
+  }
 }
