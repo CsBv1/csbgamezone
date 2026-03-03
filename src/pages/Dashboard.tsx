@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Flame, TrendingUp, Pickaxe, Target, Lock, Gauge, Globe, Users, ExternalLink, Key, Shield, Sparkles, Music, ChevronDown } from "lucide-react";
+import { Trophy, Gem, Coins, Flame, TrendingUp, Pickaxe, Target, Lock, Gauge, Globe, Users, ExternalLink, Key, Shield, Sparkles, Music, ChevronDown, Eye, Building2, Swords, Crown } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelectorDialog } from "@/components/ColorSelectorDialog";
@@ -333,6 +333,12 @@ const Dashboard = () => {
                 { title: "🏛️ Council Strategy", desc: "Rule through 8 rounds!", icon: Users, gradient: "from-amber-700 to-orange-800", route: "council-strategy", btn: "Govern" },
                 { title: "🛡️ Chain Citadel", desc: "Defend 5 sectors!", icon: Shield, gradient: "from-slate-700 to-indigo-800", route: "chain-citadel", btn: "Defend" },
                 { title: "🌌 Zodiac Trials", desc: "Master all 12 signs!", icon: Globe, gradient: "from-blue-700 to-cyan-800", route: "zodiac-trials", btn: "Challenge" },
+                { title: "🕵️ Bull Espionage", desc: "Stealth intel missions!", icon: Eye, gradient: "from-gray-700 to-zinc-800", route: "bull-espionage", btn: "Infiltrate" },
+                { title: "🏗️ ADA Architect", desc: "Build the richest city!", icon: Building2, gradient: "from-teal-700 to-emerald-800", route: "ada-architect", btn: "Build" },
+                { title: "⚔️ Bull Legion", desc: "Recruit & conquer!", icon: Swords, gradient: "from-red-700 to-rose-800", route: "bull-legion", btn: "Command" },
+                { title: "🔓 Crypto Heist", desc: "Crack vault codes!", icon: Lock, gradient: "from-violet-700 to-purple-800", route: "crypto-heist", btn: "Heist" },
+                { title: "🏛️ Bull Senate", desc: "Balance power!", icon: Users, gradient: "from-amber-700 to-yellow-800", route: "bull-senate", btn: "Govern" },
+                { title: "👑 Stake Royale", desc: "Battle for the crown!", icon: Crown, gradient: "from-yellow-700 to-orange-800", route: "stake-royale", btn: "Fight" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}

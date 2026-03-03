@@ -282,7 +282,7 @@ export const Leaderboard = () => {
                           </span>
                         </>
                       )}
-                      {userBadge && userRune && <span className="text-muted-foreground">•</span>}
+                      {userBadge && userRune && <span className="mx-0.5" />}
                       {userRune && (
                         <span className="inline-flex items-center gap-1 font-semibold rune-neon">
                           <span className="rune-neon-symbol">{userRune.symbol}</span>
