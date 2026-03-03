@@ -54,8 +54,8 @@ const BullKingdom = () => {
 
     const collectInterval = setInterval(async () => {
       const current = resourcesRef.current;
-      const creditsEarned = Math.floor(current.food / 10);
-      const gemsEarned = current.gems;
+      const creditsEarned = Math.floor(current.food / 20);
+      const gemsEarned = current.gems * 2;
 
       if (creditsEarned <= 0 && gemsEarned <= 0) return;
 
@@ -80,8 +80,8 @@ const BullKingdom = () => {
   };
 
   const collectRewards = async () => {
-    const creditsEarned = Math.floor(resources.food / 10);
-    const gemsEarned = resources.gems;
+    const creditsEarned = Math.floor(resources.food / 20);
+    const gemsEarned = resources.gems * 2;
 
     if (creditsEarned > 0) await awardCredits(creditsEarned);
     if (gemsEarned > 0) await awardDiamonds(gemsEarned);

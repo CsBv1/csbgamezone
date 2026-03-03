@@ -35,8 +35,8 @@ const BullMining = () => {
         const newProgress = prev + miningSpeed;
 
         if (newProgress >= 100) {
-          const diamondsEarned = Math.floor(Math.random() * bulls * 5) + bulls;
-          const creditsEarned = Math.floor(Math.random() * bulls * 10) + bulls * 5;
+          const diamondsEarned = Math.floor(Math.random() * bulls * 8) + bulls * 3;
+          const creditsEarned = Math.floor(Math.random() * bulls * 3) + bulls;
           setPendingReward({ diamonds: diamondsEarned, credits: creditsEarned });
           return newProgress - 100;
         }

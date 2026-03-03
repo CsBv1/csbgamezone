@@ -40,8 +40,8 @@ const MilkTheBull = () => {
 
   const sellMilk = async () => {
     if (milk > 0) {
-      const diamondsEarned = Math.floor(milk / 10);
-      const creditsEarned = milk * 5;
+      const diamondsEarned = Math.floor(milk / 3);
+      const creditsEarned = milk * 2;
       
       if (diamondsEarned > 0) await awardDiamonds(diamondsEarned);
       if (creditsEarned > 0) await awardCredits(creditsEarned);
@@ -123,12 +123,12 @@ const MilkTheBull = () => {
             <h3 className="text-lg font-bold mb-3">Rewards</h3>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-accent">💎 {Math.floor(milk / 10)}</div>
-                <div className="text-sm text-muted-foreground">Diamonds (10 milk = 1 💎)</div>
+                <div className="text-2xl font-bold text-accent">💎 {Math.floor(milk / 3)}</div>
+                <div className="text-sm text-muted-foreground">Diamonds (3 milk = 1 💎)</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-primary">💰 {milk * 5}</div>
-                <div className="text-sm text-muted-foreground">Credits (1 milk = 5 💰)</div>
+                <div className="text-2xl font-bold text-primary">💰 {milk * 2}</div>
+                <div className="text-sm text-muted-foreground">Credits (1 milk = 2 💰)</div>
               </div>
             </div>
           </Card>

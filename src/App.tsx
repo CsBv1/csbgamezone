@@ -75,7 +75,12 @@ import RuneForge from "./pages/games/holders/RuneForge";
 import CouncilStrategy from "./pages/games/holders/CouncilStrategy";
 import ChainCitadel from "./pages/games/holders/ChainCitadel";
 import ZodiacTrials from "./pages/games/holders/ZodiacTrials";
-
+import BullEspionage from "./pages/games/holders/BullEspionage";
+import ADAArchitect from "./pages/games/holders/ADAArchitect";
+import BullLegion from "./pages/games/holders/BullLegion";
+import CryptoHeist from "./pages/games/holders/CryptoHeist";
+import BullSenate from "./pages/games/holders/BullSenate";
+import StakeRoyale from "./pages/games/holders/StakeRoyale";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -156,6 +161,12 @@ const App = () => (
           <Route path="/games/council-strategy" element={<CouncilStrategy />} />
           <Route path="/games/chain-citadel" element={<ChainCitadel />} />
           <Route path="/games/zodiac-trials" element={<ZodiacTrials />} />
+          <Route path="/games/bull-espionage" element={<BullEspionage />} />
+          <Route path="/games/ada-architect" element={<ADAArchitect />} />
+          <Route path="/games/bull-legion" element={<BullLegion />} />
+          <Route path="/games/crypto-heist" element={<CryptoHeist />} />
+          <Route path="/games/bull-senate" element={<BullSenate />} />
+          <Route path="/games/stake-royale" element={<StakeRoyale />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
