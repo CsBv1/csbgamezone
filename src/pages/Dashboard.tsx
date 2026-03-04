@@ -339,6 +339,12 @@ const Dashboard = () => {
                 { title: "🔓 Crypto Heist", desc: "Crack vault codes!", icon: Lock, gradient: "from-violet-700 to-purple-800", route: "crypto-heist", btn: "Heist" },
                 { title: "🏛️ Bull Senate", desc: "Balance power!", icon: Users, gradient: "from-amber-700 to-yellow-800", route: "bull-senate", btn: "Govern" },
                 { title: "👑 Stake Royale", desc: "Battle for the crown!", icon: Crown, gradient: "from-yellow-700 to-orange-800", route: "stake-royale", btn: "Fight" },
+                { title: "⛵ Bull Odyssey", desc: "Sail 7 islands!", icon: Globe, gradient: "from-sky-700 to-blue-800", route: "bull-odyssey", btn: "Sail" },
+                { title: "🔨 Bull Auction", desc: "Outbid the AI!", icon: Crown, gradient: "from-amber-600 to-orange-700", route: "bull-auction", btn: "Bid" },
+                { title: "🧙 Bull Arcanist", desc: "Elemental boss fights!", icon: Swords, gradient: "from-purple-700 to-indigo-800", route: "bull-arcanist", btn: "Cast" },
+                { title: "🎯 Bounty Hunt", desc: "Track & capture!", icon: Eye, gradient: "from-stone-700 to-zinc-800", route: "bull-bounty-hunt", btn: "Hunt" },
+                { title: "⚗️ ADA Alchemy", desc: "Brew magic potions!", icon: Building2, gradient: "from-emerald-700 to-green-800", route: "ada-alchemy", btn: "Brew" },
+                { title: "⚔️ Bull Gladiator", desc: "6 arena tiers!", icon: Swords, gradient: "from-rose-700 to-red-800", route: "bull-gladiator", btn: "Fight" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}

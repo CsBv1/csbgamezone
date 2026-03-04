@@ -54,15 +54,15 @@ const BullKingdom = () => {
 
     const collectInterval = setInterval(async () => {
       const current = resourcesRef.current;
-      const creditsEarned = Math.floor(current.food / 20);
-      const gemsEarned = current.gems * 2;
+      const creditsEarned = Math.floor(current.food / 50);
+      const gemsEarned = current.gems * 5;
 
       if (creditsEarned <= 0 && gemsEarned <= 0) return;
 
-      if (creditsEarned > 0) await awardCredits(creditsEarned);
       if (gemsEarned > 0) await awardDiamonds(gemsEarned);
+      if (creditsEarned > 0) await awardCredits(creditsEarned);
 
-      setResources(prev => ({ food: prev.food % 10, gems: 0 }));
+      setResources(prev => ({ food: prev.food % 50, gems: 0 }));
     }, 10000);
 
     return () => clearInterval(collectInterval);
@@ -80,13 +80,13 @@ const BullKingdom = () => {
   };
 
   const collectRewards = async () => {
-    const creditsEarned = Math.floor(resources.food / 20);
-    const gemsEarned = resources.gems * 2;
+    const creditsEarned = Math.floor(resources.food / 50);
+    const gemsEarned = resources.gems * 5;
 
-    if (creditsEarned > 0) await awardCredits(creditsEarned);
     if (gemsEarned > 0) await awardDiamonds(gemsEarned);
+    if (creditsEarned > 0) await awardCredits(creditsEarned);
 
-    setResources({ food: resources.food % 10, gems: 0 });
+    setResources({ food: resources.food % 50, gems: 0 });
   };
 
   const totalPower = kingdom.bulls + kingdom.farms * 2 + kingdom.mines * 5 + kingdom.castles * 10;
@@ -131,11 +131,11 @@ const BullKingdom = () => {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-2"><span>🌾 Food:</span><span className="font-bold">{resources.food}</span></div>
-                <div className="text-xs text-muted-foreground">= {Math.floor(resources.food / 10)} credits (remainder stays)</div>
+                <div className="text-xs text-muted-foreground">= {Math.floor(resources.food / 50)} credits (remainder stays)</div>
               </div>
               <div>
                 <div className="flex justify-between mb-2"><span>💎 Gems:</span><span className="font-bold">{resources.gems}</span></div>
-                <div className="text-xs text-muted-foreground">= {resources.gems} diamonds (bulls + mines produce gems)</div>
+                <div className="text-xs text-muted-foreground">= {resources.gems * 5} diamonds (bulls + mines produce gems)</div>
               </div>
               <Button onClick={collectRewards} className="w-full" disabled={(resources.food === 0 && resources.gems === 0) || loading}>Collect Rewards</Button>
             </div>

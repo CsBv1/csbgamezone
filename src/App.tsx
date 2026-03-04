@@ -81,6 +81,12 @@ import BullLegion from "./pages/games/holders/BullLegion";
 import CryptoHeist from "./pages/games/holders/CryptoHeist";
 import BullSenate from "./pages/games/holders/BullSenate";
 import StakeRoyale from "./pages/games/holders/StakeRoyale";
+import BullOdyssey from "./pages/games/holders/BullOdyssey";
+import BullAuction from "./pages/games/holders/BullAuction";
+import BullArcanist from "./pages/games/holders/BullArcanist";
+import BullBountyHunt from "./pages/games/holders/BullBountyHunt";
+import ADAAlchemy from "./pages/games/holders/ADAAlchemy";
+import BullGladiator from "./pages/games/holders/BullGladiator";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -167,7 +173,12 @@ const App = () => (
           <Route path="/games/crypto-heist" element={<CryptoHeist />} />
           <Route path="/games/bull-senate" element={<BullSenate />} />
           <Route path="/games/stake-royale" element={<StakeRoyale />} />
-          
+          <Route path="/games/bull-odyssey" element={<BullOdyssey />} />
+          <Route path="/games/bull-auction" element={<BullAuction />} />
+          <Route path="/games/bull-arcanist" element={<BullArcanist />} />
+          <Route path="/games/bull-bounty-hunt" element={<BullBountyHunt />} />
+          <Route path="/games/ada-alchemy" element={<ADAAlchemy />} />
+          <Route path="/games/bull-gladiator" element={<BullGladiator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
