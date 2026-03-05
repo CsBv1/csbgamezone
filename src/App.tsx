@@ -87,6 +87,9 @@ import BullArcanist from "./pages/games/holders/BullArcanist";
 import BullBountyHunt from "./pages/games/holders/BullBountyHunt";
 import ADAAlchemy from "./pages/games/holders/ADAAlchemy";
 import BullGladiator from "./pages/games/holders/BullGladiator";
+import BullChronicle from "./pages/games/holders/BullChronicle";
+import StakeDynasty from "./pages/games/holders/StakeDynasty";
+import RuneConclave from "./pages/games/holders/RuneConclave";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -179,6 +182,9 @@ const App = () => (
           <Route path="/games/bull-bounty-hunt" element={<BullBountyHunt />} />
           <Route path="/games/ada-alchemy" element={<ADAAlchemy />} />
           <Route path="/games/bull-gladiator" element={<BullGladiator />} />
+          <Route path="/games/bull-chronicle" element={<BullChronicle />} />
+          <Route path="/games/stake-dynasty" element={<StakeDynasty />} />
+          <Route path="/games/rune-conclave" element={<RuneConclave />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

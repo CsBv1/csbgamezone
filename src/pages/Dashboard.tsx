@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { GameCard } from "@/components/GameCard";
+import { HoldersSeasonPanel } from "@/components/HoldersSeasonPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Dashboard = () => {
@@ -288,8 +289,9 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Subscription Box */}
-          <div className="max-w-2xl mx-auto">
+          {/* Season + Subscription */}
+          <div className="max-w-2xl mx-auto space-y-4">
+            <HoldersSeasonPanel />
             <SubscriptionBox bullsOwned={bullsOwned} />
           </div>
 
@@ -340,11 +342,14 @@ const Dashboard = () => {
                 { title: "🏛️ Bull Senate", desc: "Balance power!", icon: Users, gradient: "from-amber-700 to-yellow-800", route: "bull-senate", btn: "Govern" },
                 { title: "👑 Stake Royale", desc: "Battle for the crown!", icon: Crown, gradient: "from-yellow-700 to-orange-800", route: "stake-royale", btn: "Fight" },
                 { title: "⛵ Bull Odyssey", desc: "Sail 7 islands!", icon: Globe, gradient: "from-sky-700 to-blue-800", route: "bull-odyssey", btn: "Sail" },
-                { title: "🔨 Bull Auction", desc: "Outbid the AI!", icon: Crown, gradient: "from-amber-600 to-orange-700", route: "bull-auction", btn: "Bid" },
-                { title: "🧙 Bull Arcanist", desc: "Elemental boss fights!", icon: Swords, gradient: "from-purple-700 to-indigo-800", route: "bull-arcanist", btn: "Cast" },
-                { title: "🎯 Bounty Hunt", desc: "Track & capture!", icon: Eye, gradient: "from-stone-700 to-zinc-800", route: "bull-bounty-hunt", btn: "Hunt" },
-                { title: "⚗️ ADA Alchemy", desc: "Brew magic potions!", icon: Building2, gradient: "from-emerald-700 to-green-800", route: "ada-alchemy", btn: "Brew" },
-                { title: "⚔️ Bull Gladiator", desc: "6 arena tiers!", icon: Swords, gradient: "from-rose-700 to-red-800", route: "bull-gladiator", btn: "Fight" },
+                { title: "🔨 Bull Auction", desc: "Outbid the AI!", icon: Crown, gradient: "from-primary to-accent", route: "bull-auction", btn: "Bid" },
+                { title: "🧙 Bull Arcanist", desc: "Elemental boss fights!", icon: Swords, gradient: "from-accent to-primary", route: "bull-arcanist", btn: "Cast" },
+                { title: "🎯 Bounty Hunt", desc: "Track & capture!", icon: Eye, gradient: "from-secondary to-muted", route: "bull-bounty-hunt", btn: "Hunt" },
+                { title: "⚗️ ADA Alchemy", desc: "Brew magic potions!", icon: Building2, gradient: "from-primary to-secondary", route: "ada-alchemy", btn: "Brew" },
+                { title: "⚔️ Bull Gladiator", desc: "6 arena tiers!", icon: Swords, gradient: "from-destructive to-accent", route: "bull-gladiator", btn: "Fight" },
+                { title: "📜 Bull Chronicle", desc: "Branching campaign strategy!", icon: Crown, gradient: "from-primary to-secondary", route: "bull-chronicle", btn: "Campaign" },
+                { title: "🏛️ Stake Dynasty", desc: "Rule territory economics!", icon: Building2, gradient: "from-secondary to-accent", route: "stake-dynasty", btn: "Rule" },
+                { title: "🔮 Rune Conclave", desc: "Master elite rune chains!", icon: Sparkles, gradient: "from-accent to-primary", route: "rune-conclave", btn: "Conclave" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
