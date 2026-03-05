@@ -124,6 +124,80 @@ export type Database = {
         }
         Relationships: []
       }
+      holder_season_points: {
+        Row: {
+          created_at: string
+          diamonds_earned: number
+          games_played: number
+          id: string
+          points: number
+          season_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diamonds_earned?: number
+          games_played?: number
+          id?: string
+          points?: number
+          season_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diamonds_earned?: number
+          games_played?: number
+          id?: string
+          points?: number
+          season_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holder_season_points_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "holder_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holder_seasons: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          is_active: boolean
+          name: string
+          starts_at: string
+          updated_at: string
+          weekly_summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          name: string
+          starts_at?: string
+          updated_at?: string
+          weekly_summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          starts_at?: string
+          updated_at?: string
+          weekly_summary?: string | null
+        }
+        Relationships: []
+      }
       maze_leaderboard: {
         Row: {
           completion_time_ms: number
