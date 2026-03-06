@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.check-subscription]
 verify_jwt = false
+
+[functions.weekly-holder-maintenance]
+verify_jwt = false
+
+[functions.game-master]
+verify_jwt = false
+
+[functions.scan-wallet-nfts]
+verify_jwt = false

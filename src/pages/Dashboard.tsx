@@ -350,6 +350,9 @@ const Dashboard = () => {
                 { title: "📜 Bull Chronicle", desc: "Branching campaign strategy!", icon: Crown, gradient: "from-primary to-secondary", route: "bull-chronicle", btn: "Campaign" },
                 { title: "🏛️ Stake Dynasty", desc: "Rule territory economics!", icon: Building2, gradient: "from-secondary to-accent", route: "stake-dynasty", btn: "Rule" },
                 { title: "🔮 Rune Conclave", desc: "Master elite rune chains!", icon: Sparkles, gradient: "from-accent to-primary", route: "rune-conclave", btn: "Conclave" },
+                { title: "👑 Bull Sovereign", desc: "Rule for 12 turns!", icon: Crown, gradient: "from-yellow-600 to-amber-800", route: "bull-sovereign", btn: "Rule" },
+                { title: "🌍 ADA Empire", desc: "5-sector economy sim!", icon: Globe, gradient: "from-emerald-700 to-teal-800", route: "ada-empire", btn: "Build" },
+                { title: "🔍 Bull Inquisitor", desc: "Solve 5 mystery cases!", icon: Eye, gradient: "from-slate-700 to-gray-800", route: "bull-inquisitor", btn: "Investigate" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
@@ -370,6 +373,22 @@ const Dashboard = () => {
                 </div>
               </div>
               <CSBGameMaster bullsOwned={bullsOwned} rarityBonus={rarityBonus} context="Dashboard - browsing games" embedded={true} />
+            </Card>
+          </div>
+
+          {/* Video Tutorial */}
+          <div className="mt-8 max-w-2xl mx-auto">
+            <Card className="p-6 bg-card/90 backdrop-blur-sm border-2 border-primary/30">
+              <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-2 text-center">🎮 How to Play — Video Tutorial</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">Watch the full gameplay walkthrough from top to bottom</p>
+              <div className="aspect-video rounded-lg overflow-hidden bg-muted/50 flex items-center justify-center border border-border">
+                <div className="text-center p-8">
+                  <div className="text-6xl mb-4">🎬</div>
+                  <h4 className="text-lg font-bold text-foreground mb-2">Gameplay Tutorial Coming Soon</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Full walkthrough: connecting wallet, earning diamonds, holder games, seasons & more</p>
+                  <p className="text-xs text-muted-foreground">Upload your video to add it here — supports YouTube embed or direct MP4</p>
+                </div>
+              </div>
             </Card>
           </div>
 
