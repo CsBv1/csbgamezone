@@ -201,6 +201,16 @@ const App = () => (
           <Route path="/games/bull-sovereign" element={<BullSovereign />} />
           <Route path="/games/ada-empire" element={<ADAEmpire />} />
           <Route path="/games/bull-inquisitor" element={<BullInquisitor />} />
+          <Route path="/games/bull-vanguard" element={<BullVanguard />} />
+          <Route path="/games/ada-vault" element={<ADAVault />} />
+          <Route path="/games/bull-cartel" element={<BullCartel />} />
+          <Route path="/games/stake-oracle" element={<StakeOracle />} />
+          <Route path="/games/bull-mystic" element={<BullMystic />} />
+          <Route path="/games/chain-alchemist" element={<ChainAlchemist />} />
+          <Route path="/games/bull-prophet" element={<BullProphet />} />
+          <Route path="/games/crypto-siege" element={<CryptoSiege />} />
+          <Route path="/games/bull-explorer" element={<BullExplorer />} />
+          <Route path="/games/ada-warden" element={<ADAWarden />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
