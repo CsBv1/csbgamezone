@@ -353,6 +353,16 @@ const Dashboard = () => {
                 { title: "👑 Bull Sovereign", desc: "Rule for 12 turns!", icon: Crown, gradient: "from-yellow-600 to-amber-800", route: "bull-sovereign", btn: "Rule" },
                 { title: "🌍 ADA Empire", desc: "5-sector economy sim!", icon: Globe, gradient: "from-emerald-700 to-teal-800", route: "ada-empire", btn: "Build" },
                 { title: "🔍 Bull Inquisitor", desc: "Solve 5 mystery cases!", icon: Eye, gradient: "from-slate-700 to-gray-800", route: "bull-inquisitor", btn: "Investigate" },
+                { title: "⚔️ Bull Vanguard", desc: "Build army, defend waves!", icon: Shield, gradient: "from-red-700 to-orange-800", route: "bull-vanguard", btn: "Fight" },
+                { title: "🏦 ADA Vault", desc: "Crack the vault layers!", icon: Lock, gradient: "from-cyan-700 to-blue-800", route: "ada-vault", btn: "Break In" },
+                { title: "🎩 Bull Cartel", desc: "Territory empire builder!", icon: Building2, gradient: "from-gray-700 to-zinc-800", route: "bull-cartel", btn: "Expand" },
+                { title: "🔮 Stake Oracle", desc: "Predict prophecies!", icon: Sparkles, gradient: "from-purple-700 to-indigo-800", route: "stake-oracle", btn: "Predict" },
+                { title: "🧙 Bull Mystic", desc: "Dungeon spell combat!", icon: Flame, gradient: "from-violet-700 to-purple-800", route: "bull-mystic", btn: "Cast" },
+                { title: "🧪 Chain Alchemist", desc: "Discover element combos!", icon: Sparkles, gradient: "from-lime-700 to-green-800", route: "chain-alchemist", btn: "Combine" },
+                { title: "📊 Bull Prophet", desc: "Trade market positions!", icon: TrendingUp, gradient: "from-teal-700 to-emerald-800", route: "bull-prophet", btn: "Trade" },
+                { title: "🏰 Crypto Siege", desc: "Fortress wave defense!", icon: Shield, gradient: "from-amber-700 to-orange-800", route: "crypto-siege", btn: "Defend" },
+                { title: "🗺️ Bull Explorer", desc: "Risk-reward expeditions!", icon: Globe, gradient: "from-sky-700 to-blue-800", route: "bull-explorer", btn: "Explore" },
+                { title: "👑 ADA Warden", desc: "Realm crisis management!", icon: Crown, gradient: "from-rose-700 to-red-800", route: "ada-warden", btn: "Rule" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
