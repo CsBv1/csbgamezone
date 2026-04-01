@@ -93,6 +93,16 @@ import RuneConclave from "./pages/games/holders/RuneConclave";
 import BullSovereign from "./pages/games/holders/BullSovereign";
 import ADAEmpire from "./pages/games/holders/ADAEmpire";
 import BullInquisitor from "./pages/games/holders/BullInquisitor";
+import BullVanguard from "./pages/games/holders/BullVanguard";
+import ADAVault from "./pages/games/holders/ADAVault";
+import BullCartel from "./pages/games/holders/BullCartel";
+import StakeOracle from "./pages/games/holders/StakeOracle";
+import BullMystic from "./pages/games/holders/BullMystic";
+import ChainAlchemist from "./pages/games/holders/ChainAlchemist";
+import BullProphet from "./pages/games/holders/BullProphet";
+import CryptoSiege from "./pages/games/holders/CryptoSiege";
+import BullExplorer from "./pages/games/holders/BullExplorer";
+import ADAWarden from "./pages/games/holders/ADAWarden";
 const queryClient = new QueryClient();
 
 const App = () => (
