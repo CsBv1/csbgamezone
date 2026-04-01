@@ -19,7 +19,7 @@ const PerfectTiming = () => {
   const [barPosition, setBarPosition] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isActive, setIsActive] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
  
   useEffect(() => {
     const fetchUserData = async () => {

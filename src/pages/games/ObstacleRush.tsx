@@ -41,7 +41,7 @@ export default function ObstacleRush() {
   const [highScore, setHighScore] = useState(0);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
-  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const gameLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const obstacleIdRef = useRef(0);
   const laneRef = useRef(1); // Track lane with ref to avoid stale closures
 

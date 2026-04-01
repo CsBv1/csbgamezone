@@ -24,8 +24,8 @@ export default function RhythmRush() {
   const [round, setRound] = useState(1);
   const [gameFinished, setGameFinished] = useState(false);
   const nextBeatId = useRef(0);
-  const beatInterval = useRef<NodeJS.Timeout | null>(null);
-  const moveInterval = useRef<NodeJS.Timeout | null>(null);
+  const beatInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const moveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const init = async () => {

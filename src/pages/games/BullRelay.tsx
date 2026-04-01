@@ -43,7 +43,7 @@ export default function BullRelay() {
 
   const raceStartTime = useRef<number>(0);
   const legStartTime = useRef<number>(0);
-  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const gameLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isSprintingRef = useRef(false);
   const currentRunnerRef = useRef(0);
   const staminaRef = useRef(100);
