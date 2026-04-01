@@ -25,8 +25,8 @@ export default function SpeedRun() {
   const [totalDiamonds, setTotalDiamonds] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const nextTargetId = useRef(0);
-  const spawnInterval = useRef<NodeJS.Timeout | null>(null);
-  const timerInterval = useRef<NodeJS.Timeout | null>(null);
+  const spawnInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const init = async () => {

@@ -35,7 +35,7 @@ const MultiplayerCrash = () => {
   const [hasCashedOut, setHasCashedOut] = useState(false);
   const [betInput, setBetInput] = useState(50);
   const [countdown, setCountdown] = useState(0);
-  const gameInterval = useRef<NodeJS.Timeout | null>(null);
+  const gameInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const crashPoint = useRef(1);
 
   useEffect(() => {
