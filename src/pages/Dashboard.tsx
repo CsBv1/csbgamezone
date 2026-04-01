@@ -391,13 +391,16 @@ const Dashboard = () => {
             <Card className="p-6 bg-card/90 backdrop-blur-sm border-2 border-primary/30">
               <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-2 text-center">🎮 How to Play — Video Tutorial</h3>
               <p className="text-sm text-muted-foreground text-center mb-4">Watch the full gameplay walkthrough from top to bottom</p>
-              <div className="aspect-video rounded-lg overflow-hidden bg-muted/50 flex items-center justify-center border border-border">
-                <div className="text-center p-8">
-                  <div className="text-6xl mb-4">🎬</div>
-                  <h4 className="text-lg font-bold text-foreground mb-2">Gameplay Tutorial Coming Soon</h4>
-                  <p className="text-sm text-muted-foreground mb-4">Full walkthrough: connecting wallet, earning diamonds, holder games, seasons & more</p>
-                  <p className="text-xs text-muted-foreground">Upload your video to add it here — supports YouTube embed or direct MP4</p>
-                </div>
+              <div className="aspect-video rounded-lg overflow-hidden bg-muted/50 border border-border">
+                <video
+                  className="w-full h-full object-cover"
+                  controls
+                  poster=""
+                  preload="metadata"
+                >
+                  <source src="/csb-gameplay-tutorial.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </Card>
           </div>
