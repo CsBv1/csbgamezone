@@ -103,6 +103,14 @@ import BullProphet from "./pages/games/holders/BullProphet";
 import CryptoSiege from "./pages/games/holders/CryptoSiege";
 import BullExplorer from "./pages/games/holders/BullExplorer";
 import ADAWarden from "./pages/games/holders/ADAWarden";
+
+// New batch 5 holder games
+import BullConqueror from "./pages/games/holders/BullWarlord2";
+import StakeFoundry from "./pages/games/holders/StakeArchitect2";
+import ADABrewer from "./pages/games/holders/ADAAlchemy2";
+import BullFortress from "./pages/games/holders/ChainDefender2";
+import CryptoTrader from "./pages/games/holders/MarketMaster2";
+
 const queryClient = new QueryClient();
 
 const App = () => (
