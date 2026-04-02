@@ -53,11 +53,13 @@ const Dashboard = () => {
         toast({ title: "Not Enough Credits! 💰", description: `You need ${creditsCost} credits`, variant: "destructive" });
         setIsSwapping(false); return;
       }
-      await Promise.all([
+      const [creditUpdate, diamondUpdate] = await Promise.all([
         supabase.from('user_credits' as any).update({ balance: (creditsResult.data as any).balance - creditsCost }).eq('user_id', user.id),
         supabase.from('user_diamonds' as any).update({ balance: ((diamondsResult.data as any)?.balance || 0) + diamondsAmount, total_earned: ((diamondsResult.data as any)?.total_earned || 0) + diamondsAmount }).eq('user_id', user.id)
       ]);
+      if (creditUpdate.error || diamondUpdate.error) throw new Error('Update failed');
       toast({ title: "Swap Successful! 🎉", description: `Traded ${creditsCost} credits for ${diamondsAmount} 💎` });
+      setTimeout(() => window.location.reload(), 800);
     } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
     finally { setIsSwapping(false); }
   };
