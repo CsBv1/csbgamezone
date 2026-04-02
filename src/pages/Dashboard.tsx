@@ -365,6 +365,11 @@ const Dashboard = () => {
                 { title: "🏰 Crypto Siege", desc: "Fortress wave defense!", icon: Shield, gradient: "from-amber-700 to-orange-800", route: "crypto-siege", btn: "Defend" },
                 { title: "🗺️ Bull Explorer", desc: "Risk-reward expeditions!", icon: Globe, gradient: "from-sky-700 to-blue-800", route: "bull-explorer", btn: "Explore" },
                 { title: "👑 ADA Warden", desc: "Realm crisis management!", icon: Crown, gradient: "from-rose-700 to-red-800", route: "ada-warden", btn: "Rule" },
+                { title: "🏴 Bull Conqueror", desc: "Conquer 6 territories!", icon: Globe, gradient: "from-red-800 to-orange-900", route: "bull-conqueror", btn: "Conquer" },
+                { title: "🏗️ Stake Foundry", desc: "Build a city in 12 turns!", icon: Building2, gradient: "from-amber-800 to-yellow-900", route: "stake-foundry", btn: "Build" },
+                { title: "⚗️ ADA Brewer", desc: "Gather & brew potions!", icon: Sparkles, gradient: "from-emerald-800 to-teal-900", route: "ada-brewer", btn: "Brew" },
+                { title: "🏰 Bull Fortress", desc: "Tower defense waves!", icon: Shield, gradient: "from-slate-800 to-gray-900", route: "bull-fortress", btn: "Defend" },
+                { title: "📊 Crypto Trader", desc: "Buy low, sell high!", icon: TrendingUp, gradient: "from-cyan-800 to-blue-900", route: "crypto-trader", btn: "Trade" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
