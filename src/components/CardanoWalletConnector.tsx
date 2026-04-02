@@ -17,6 +17,7 @@ interface CardanoWalletConnectorProps {
 }
 
 const SUPPORTED_WALLETS = [
+  { id: 'vespr', name: 'VESPR', aliases: ['vespr', 'vesprwallet', 'vespr-wallet'] },
   { id: 'nami', name: 'Nami', aliases: ['nami'] },
   { id: 'eternl', name: 'Eternl', aliases: ['eternl', 'ccvault'] },
   { id: 'lace', name: 'Lace', aliases: ['lace'] },
@@ -25,7 +26,6 @@ const SUPPORTED_WALLETS = [
   { id: 'gerowallet', name: 'Gero', aliases: ['gerowallet'] },
   { id: 'nufi', name: 'NuFi', aliases: ['nufi'] },
   { id: 'begin', name: 'Begin', aliases: ['begin'] },
-  { id: 'vespr', name: 'Vespr', aliases: ['vespr'] },
   { id: 'yoroi', name: 'Yoroi', aliases: ['yoroi'] },
 ];
 
