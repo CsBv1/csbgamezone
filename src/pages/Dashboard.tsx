@@ -53,11 +53,13 @@ const Dashboard = () => {
         toast({ title: "Not Enough Credits! 💰", description: `You need ${creditsCost} credits`, variant: "destructive" });
         setIsSwapping(false); return;
       }
-      await Promise.all([
+      const [creditUpdate, diamondUpdate] = await Promise.all([
         supabase.from('user_credits' as any).update({ balance: (creditsResult.data as any).balance - creditsCost }).eq('user_id', user.id),
         supabase.from('user_diamonds' as any).update({ balance: ((diamondsResult.data as any)?.balance || 0) + diamondsAmount, total_earned: ((diamondsResult.data as any)?.total_earned || 0) + diamondsAmount }).eq('user_id', user.id)
       ]);
+      if (creditUpdate.error || diamondUpdate.error) throw new Error('Update failed');
       toast({ title: "Swap Successful! 🎉", description: `Traded ${creditsCost} credits for ${diamondsAmount} 💎` });
+      setTimeout(() => window.location.reload(), 800);
     } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
     finally { setIsSwapping(false); }
   };
@@ -363,6 +365,11 @@ const Dashboard = () => {
                 { title: "🏰 Crypto Siege", desc: "Fortress wave defense!", icon: Shield, gradient: "from-amber-700 to-orange-800", route: "crypto-siege", btn: "Defend" },
                 { title: "🗺️ Bull Explorer", desc: "Risk-reward expeditions!", icon: Globe, gradient: "from-sky-700 to-blue-800", route: "bull-explorer", btn: "Explore" },
                 { title: "👑 ADA Warden", desc: "Realm crisis management!", icon: Crown, gradient: "from-rose-700 to-red-800", route: "ada-warden", btn: "Rule" },
+                { title: "🏴 Bull Conqueror", desc: "Conquer 6 territories!", icon: Globe, gradient: "from-red-800 to-orange-900", route: "bull-conqueror", btn: "Conquer" },
+                { title: "🏗️ Stake Foundry", desc: "Build a city in 12 turns!", icon: Building2, gradient: "from-amber-800 to-yellow-900", route: "stake-foundry", btn: "Build" },
+                { title: "⚗️ ADA Brewer", desc: "Gather & brew potions!", icon: Sparkles, gradient: "from-emerald-800 to-teal-900", route: "ada-brewer", btn: "Brew" },
+                { title: "🏰 Bull Fortress", desc: "Tower defense waves!", icon: Shield, gradient: "from-slate-800 to-gray-900", route: "bull-fortress", btn: "Defend" },
+                { title: "📊 Crypto Trader", desc: "Buy low, sell high!", icon: TrendingUp, gradient: "from-cyan-800 to-blue-900", route: "crypto-trader", btn: "Trade" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
@@ -392,17 +399,38 @@ const Dashboard = () => {
               <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-2 text-center">🎮 How to Play — Video Tutorial</h3>
               <p className="text-sm text-muted-foreground text-center mb-4">Watch the full gameplay walkthrough from top to bottom</p>
               <div className="aspect-video rounded-lg overflow-hidden bg-muted/50 border border-border">
-                <video
-                  className="w-full h-full object-cover"
-                  controls
-                  poster=""
-                  preload="metadata"
-                >
+                <video className="w-full h-full object-cover" controls preload="metadata">
                   <source src="/csb-gameplay-tutorial.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
               </div>
             </Card>
+          </div>
+
+          {/* Per-Game Tutorial Guides */}
+          <div className="mt-8 max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-6 text-center">📖 Game Guides</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { title: "🐂 Bull Mining", steps: ["Click 'Start Mining' to begin", "Bulls auto-mine diamonds over time", "Upgrade miners to boost output", "Collect diamonds before they cap out"] },
+                { title: "🥛 Milk The Bull", steps: ["Click the bull rapidly to milk", "Build streaks for combo bonuses", "Higher streaks = more diamonds", "Don't miss — streaks reset!"] },
+                { title: "🏰 Bull Kingdom", steps: ["Build refineries to process ore", "Ore auto-converts to diamonds", "Upgrade for faster production", "Collect diamonds from the refinery"] },
+                { title: "🎯 Wheel of Fortune", steps: ["Costs 50 credits per spin", "Land on colors to unlock them", "Equip colors from 'My Colors'", "Neon colors glow on leaderboard!"] },
+                { title: "🔑 Key Games", steps: ["Requires 1 Key to enter", "Higher risk, bigger diamond rewards", "Win keys from Holder games", "Swap 1M diamonds for 1 key"] },
+                { title: "👑 Holder Games", steps: ["Need CSB Bull NFT or subscription", "Win to earn Keys 🔑", "Strategy-based, skill rewarded", "NFT holders get bonus multipliers"] },
+                { title: "💎 Diamond Swap", steps: ["Trade 100 credits → 5 diamonds", "Diamonds show on leaderboard", "Climb ranks by earning more", "NFT bonuses boost all rewards"] },
+                { title: "🏆 Bukals & Seasons", steps: ["Swap 1M credits → 1 Bukal trophy", "Season points auto-track diamond wins", "Top 10 shown on Season Panel", "Weekly seasons rotate automatically"] },
+              ].map(guide => (
+                <Card key={guide.title} className="p-4 bg-card/80 border border-primary/20">
+                  <h4 className="font-bold text-foreground mb-2">{guide.title}</h4>
+                  <ol className="text-sm text-muted-foreground space-y-1">
+                    {guide.steps.map((step, i) => (
+                      <li key={i} className="flex gap-2"><span className="text-primary font-bold">{i + 1}.</span>{step}</li>
+                    ))}
+                  </ol>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {/* Community Links */}

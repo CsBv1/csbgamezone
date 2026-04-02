@@ -138,8 +138,12 @@ export const useCardanoWallet = () => {
       }
 
       const wallets = Object.keys(window.cardano).filter(key => {
-        const wallet = window.cardano![key];
-        return wallet && typeof wallet.enable === 'function';
+        try {
+          const wallet = window.cardano![key];
+          return wallet && typeof wallet === 'object' && typeof wallet.enable === 'function';
+        } catch {
+          return false;
+        }
       });
 
       setAvailableWallets(wallets);
