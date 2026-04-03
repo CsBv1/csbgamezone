@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import BullMining from "./pages/games/BullMining";
 import MilkTheBull from "./pages/games/MilkTheBull";
 import BullKingdom from "./pages/games/BullKingdom";
+import DiamondMines from "./pages/games/DiamondMines";
 
 // Key-only games
 import BullGauntlet from "./pages/games/BullGauntlet";
