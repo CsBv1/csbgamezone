@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_claims: {
+        Row: {
+          claim_date: string
+          created_at: string
+          id: string
+          reward_amount: number
+          reward_type: string
+          user_id: string
+        }
+        Insert: {
+          claim_date?: string
+          created_at?: string
+          id?: string
+          reward_amount?: number
+          reward_type?: string
+          user_id: string
+        }
+        Update: {
+          claim_date?: string
+          created_at?: string
+          id?: string
+          reward_amount?: number
+          reward_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_results: {
         Row: {
           created_at: string | null

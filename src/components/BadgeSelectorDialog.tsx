@@ -17,18 +17,18 @@ interface UserBadge {
 
 // 12 CSB Ambassador Badges with different colors and diamond costs
 const AMBASSADOR_BADGES = [
-  { id: 'csb_legendary_gold', name: 'Legendary Gold', color: '#FFD700', cost: 100000000000 }, // 100B
-  { id: 'csb_legendary_platinum', name: 'Legendary Platinum', color: '#E5E4E2', cost: 75000000000 }, // 75B
-  { id: 'csb_legendary_diamond', name: 'Legendary Diamond', color: '#B9F2FF', cost: 50000000000 }, // 50B
-  { id: 'csb_epic_ruby', name: 'Epic Ruby', color: '#E0115F', cost: 25000000000 }, // 25B
-  { id: 'csb_epic_emerald', name: 'Epic Emerald', color: '#50C878', cost: 10000000000 }, // 10B
-  { id: 'csb_epic_sapphire', name: 'Epic Sapphire', color: '#0F52BA', cost: 5000000000 }, // 5B
-  { id: 'csb_rare_amethyst', name: 'Rare Amethyst', color: '#9966CC', cost: 1000000000 }, // 1B
-  { id: 'csb_rare_topaz', name: 'Rare Topaz', color: '#FFC87C', cost: 500000000 }, // 500M
-  { id: 'csb_rare_jade', name: 'Rare Jade', color: '#00A86B', cost: 100000000 }, // 100M
-  { id: 'csb_uncommon_bronze', name: 'Uncommon Bronze', color: '#CD7F32', cost: 50000000 }, // 50M
-  { id: 'csb_uncommon_silver', name: 'Uncommon Silver', color: '#C0C0C0', cost: 10000000 }, // 10M
-  { id: 'csb_common_copper', name: 'Common Copper', color: '#B87333', cost: 1000000 }, // 1M
+  { id: 'csb_legendary_gold', name: 'Legendary Gold', color: '#FFD700', cost: 2000000000 }, // 2B
+  { id: 'csb_legendary_platinum', name: 'Legendary Platinum', color: '#E5E4E2', cost: 1500000000 }, // 1.5B
+  { id: 'csb_legendary_diamond', name: 'Legendary Diamond', color: '#B9F2FF', cost: 1000000000 }, // 1B
+  { id: 'csb_epic_ruby', name: 'Epic Ruby', color: '#E0115F', cost: 500000000 }, // 500M
+  { id: 'csb_epic_emerald', name: 'Epic Emerald', color: '#50C878', cost: 250000000 }, // 250M
+  { id: 'csb_epic_sapphire', name: 'Epic Sapphire', color: '#0F52BA', cost: 100000000 }, // 100M
+  { id: 'csb_rare_amethyst', name: 'Rare Amethyst', color: '#9966CC', cost: 50000000 }, // 50M
+  { id: 'csb_rare_topaz', name: 'Rare Topaz', color: '#FFC87C', cost: 25000000 }, // 25M
+  { id: 'csb_rare_jade', name: 'Rare Jade', color: '#00A86B', cost: 10000000 }, // 10M
+  { id: 'csb_uncommon_bronze', name: 'Uncommon Bronze', color: '#CD7F32', cost: 5000000 }, // 5M
+  { id: 'csb_uncommon_silver', name: 'Uncommon Silver', color: '#C0C0C0', cost: 1000000 }, // 1M
+  { id: 'csb_common_copper', name: 'Common Copper', color: '#B87333', cost: 100000 }, // 100K
 ];
 
 const formatDiamondCost = (cost: number): string => {

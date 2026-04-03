@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import BullMining from "./pages/games/BullMining";
 import MilkTheBull from "./pages/games/MilkTheBull";
 import BullKingdom from "./pages/games/BullKingdom";
+import DiamondMines from "./pages/games/DiamondMines";
 
 // Key-only games
 import BullGauntlet from "./pages/games/BullGauntlet";
@@ -127,6 +128,7 @@ const App = () => (
           <Route path="/games/bull-mining" element={<ProtectedGameRoute><BullMining /></ProtectedGameRoute>} />
           <Route path="/games/milk-the-bull" element={<ProtectedGameRoute><MilkTheBull /></ProtectedGameRoute>} />
           <Route path="/games/bull-kingdom" element={<ProtectedGameRoute><BullKingdom /></ProtectedGameRoute>} />
+          <Route path="/games/diamond-mines" element={<ProtectedGameRoute><DiamondMines /></ProtectedGameRoute>} />
           
           {/* Key-only games */}
           <Route path="/games/bull-gauntlet" element={<ProtectedGameRoute><BullGauntlet /></ProtectedGameRoute>} />
