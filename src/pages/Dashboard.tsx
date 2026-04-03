@@ -7,6 +7,7 @@ import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelectorDialog } from "@/components/ColorSelectorDialog";
 import { BadgeSelectorDialog } from "@/components/BadgeSelectorDialog";
 import { RuneSelectorDialog } from "@/components/RuneSelectorDialog";
+import { DailyCalendar } from "@/components/DailyCalendar";
 import { CSBGameMaster } from "@/components/CSBGameMaster";
 import { NFTBonusDisplay } from "@/components/NFTBonusDisplay";
 import { SubscriptionBox } from "@/components/SubscriptionBox";
