@@ -228,7 +228,8 @@ const Dashboard = () => {
               {[
                 { id: 'bull-mining', name: '🐂 Bull Mining Idle', desc: 'Bulls work together mining diamonds & credits!', gradient: 'from-emerald-600 to-green-700', icon: Pickaxe, btn: 'Start Mining' },
                 { id: 'milk-the-bull', name: '🥛 Milk The Bull', desc: 'Click to milk! Build streaks for bonuses!', gradient: 'from-blue-600 to-cyan-700', icon: Gem, btn: 'Start Milking' },
-                { id: 'bull-kingdom', name: '🏰 Bull Kingdom', desc: 'Build your empire & earn passive rewards!', gradient: 'from-purple-600 to-pink-700', icon: Trophy, btn: 'Build Kingdom' },
+                { id: 'bull-kingdom', name: '🏰 Bull Kingdom', desc: 'Build your empire & earn passive diamonds!', gradient: 'from-purple-600 to-pink-700', icon: Trophy, btn: 'Build Kingdom' },
+                { id: 'diamond-mines', name: '⛏️ Diamond Mines', desc: 'Dig deep, unlock mines & auto-farm diamonds!', gradient: 'from-cyan-600 to-purple-700', icon: Pickaxe, btn: 'Start Mining' },
               ].map(game => (
                 <Card key={game.id} className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${bullsOwned > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-primary hover:border-accent'}`}
                   onClick={() => navigate(`/games/${game.id}`)}>
