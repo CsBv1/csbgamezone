@@ -165,6 +165,7 @@ const Dashboard = () => {
                     <ColorSelectorDialog />
                     <BadgeSelectorDialog />
                     <RuneSelectorDialog />
+                    <DailyCalendar />
                   </div>
                 </div>
               </Card>
