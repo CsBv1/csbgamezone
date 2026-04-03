@@ -128,6 +128,7 @@ const App = () => (
           <Route path="/games/bull-mining" element={<ProtectedGameRoute><BullMining /></ProtectedGameRoute>} />
           <Route path="/games/milk-the-bull" element={<ProtectedGameRoute><MilkTheBull /></ProtectedGameRoute>} />
           <Route path="/games/bull-kingdom" element={<ProtectedGameRoute><BullKingdom /></ProtectedGameRoute>} />
+          <Route path="/games/diamond-mines" element={<ProtectedGameRoute><DiamondMines /></ProtectedGameRoute>} />
           
           {/* Key-only games */}
           <Route path="/games/bull-gauntlet" element={<ProtectedGameRoute><BullGauntlet /></ProtectedGameRoute>} />
