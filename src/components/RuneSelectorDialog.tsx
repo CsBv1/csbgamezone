@@ -6,18 +6,18 @@ import { toast } from "sonner";
 import { Star } from "lucide-react";
 
 const STARSIGN_RUNES = [
-  { id: 'aries', name: 'Aries Rune', symbol: '♈', cost: 100000 },
-  { id: 'taurus', name: 'Taurus Rune', symbol: '♉', cost: 100000 },
-  { id: 'gemini', name: 'Gemini Rune', symbol: '♊', cost: 100000 },
-  { id: 'cancer', name: 'Cancer Rune', symbol: '♋', cost: 100000 },
-  { id: 'leo', name: 'Leo Rune', symbol: '♌', cost: 100000 },
-  { id: 'virgo', name: 'Virgo Rune', symbol: '♍', cost: 100000 },
-  { id: 'libra', name: 'Libra Rune', symbol: '♎', cost: 100000 },
-  { id: 'scorpio', name: 'Scorpio Rune', symbol: '♏', cost: 100000 },
-  { id: 'sagittarius', name: 'Sagittarius Rune', symbol: '♐', cost: 100000 },
-  { id: 'capricorn', name: 'Capricorn Rune', symbol: '♑', cost: 100000 },
-  { id: 'aquarius', name: 'Aquarius Rune', symbol: '♒', cost: 100000 },
-  { id: 'pisces', name: 'Pisces Rune', symbol: '♓', cost: 100000 },
+  { id: 'aries', name: 'Aries Rune', symbol: '♈', cost: 5000 },
+  { id: 'taurus', name: 'Taurus Rune', symbol: '♉', cost: 5000 },
+  { id: 'gemini', name: 'Gemini Rune', symbol: '♊', cost: 5000 },
+  { id: 'cancer', name: 'Cancer Rune', symbol: '♋', cost: 5000 },
+  { id: 'leo', name: 'Leo Rune', symbol: '♌', cost: 5000 },
+  { id: 'virgo', name: 'Virgo Rune', symbol: '♍', cost: 5000 },
+  { id: 'libra', name: 'Libra Rune', symbol: '♎', cost: 5000 },
+  { id: 'scorpio', name: 'Scorpio Rune', symbol: '♏', cost: 5000 },
+  { id: 'sagittarius', name: 'Sagittarius Rune', symbol: '♐', cost: 5000 },
+  { id: 'capricorn', name: 'Capricorn Rune', symbol: '♑', cost: 5000 },
+  { id: 'aquarius', name: 'Aquarius Rune', symbol: '♒', cost: 5000 },
+  { id: 'pisces', name: 'Pisces Rune', symbol: '♓', cost: 5000 },
 ];
 
 export const RuneSelectorDialog = () => {
