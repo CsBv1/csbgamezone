@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Swords, Shield, Heart, Zap, Star, Trophy, RotateCcw } from "lucide-react";
+import { ArrowLeft, Swords, Shield, Heart, Zap, Star, Trophy, RotateCcw, Users, Bot, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBullWorldNavigation } from "@/hooks/useBullWorldNavigation";
 
@@ -61,22 +61,19 @@ const BADGE_BONUSES: Record<string, { hp: number; shield: number }> = {
 const AI_NAMES = ['Shadow Bull', 'Iron Horn', 'Crimson Charger', 'Frost Hoof', 'Thunder Stomp', 'Dark Taurus', 'Steel Fury', 'Blaze Runner'];
 
 function buildStats(badge: string | null, rune: string | null, name: string): FighterStats {
-  let stats: FighterStats = {
+  const stats: FighterStats = {
     maxHp: 200, hp: 200, attack: 25, defense: 15, speed: 10, special: 20, critChance: 5,
     name, badge, rune, runeElement: 'None',
   };
-
   if (badge && BADGE_BONUSES[badge]) {
     stats.maxHp += BADGE_BONUSES[badge].hp;
     stats.defense += BADGE_BONUSES[badge].shield;
   }
-
   if (rune && RUNE_BONUSES[rune]) {
     const b = RUNE_BONUSES[rune];
     stats.runeElement = b.element;
     (stats as any)[b.stat] += b.bonus;
   }
-
   stats.hp = stats.maxHp;
   return stats;
 }
@@ -88,13 +85,15 @@ function buildAI(level: number): FighterStats {
   const rune = level > 1 ? runes[Math.floor(Math.random() * runes.length)] : null;
   const badge = level > 2 ? badges[Math.floor(Math.random() * badges.length)] : null;
   const ai = buildStats(badge, rune, name);
-  // Scale by level
   ai.maxHp += level * 20;
   ai.hp = ai.maxHp;
   ai.attack += level * 3;
   ai.defense += level * 2;
   return ai;
 }
+
+type GameMode = 'lobby' | 'fighting' | 'victory' | 'defeat';
+type ArenaMode = 'menu' | 'ai' | 'pvp-queue' | 'pvp';
 
 export default function BullArena() {
   const navigate = useNavigate();
@@ -106,7 +105,8 @@ export default function BullArena() {
   const [playerBadge, setPlayerBadge] = useState<string | null>(null);
   const [playerRune, setPlayerRune] = useState<string | null>(null);
   const [username, setUsername] = useState('Fighter');
-  const [gameState, setGameState] = useState<'lobby' | 'fighting' | 'victory' | 'defeat'>('lobby');
+  const [gameState, setGameState] = useState<GameMode>('lobby');
+  const [arenaMode, setArenaMode] = useState<ArenaMode>('menu');
   const [player, setPlayer] = useState<FighterStats | null>(null);
   const [enemy, setEnemy] = useState<FighterStats | null>(null);
   const [battleLog, setBattleLog] = useState<BattleLog[]>([]);
@@ -116,20 +116,27 @@ export default function BullArena() {
   const [wins, setWins] = useState(0);
   const [playerShake, setPlayerShake] = useState(false);
   const [enemyShake, setEnemyShake] = useState(false);
-  const [specialReady, setSpecialReady] = useState(0); // 0-100 charge
+  const [specialReady, setSpecialReady] = useState(0);
+
+  // PvP state
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [opponentId, setOpponentId] = useState<string | null>(null);
+  const [opponentName, setOpponentName] = useState('');
+  const [isHost, setIsHost] = useState(false);
+  const [queueTime, setQueueTime] = useState(0);
+  const channelRef = useRef<any>(null);
+  const queueTimerRef = useRef<any>(null);
 
   useEffect(() => {
     const loadUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-
       const [profileRes, badgeRes, runeRes] = await Promise.all([
         supabase.from('profiles').select('username').eq('id', user.id).single(),
         supabase.from('user_badges').select('badge_name').eq('user_id', user.id).eq('active', true).maybeSingle(),
         supabase.from('user_runes').select('rune_symbol').eq('user_id', user.id).eq('active', true).maybeSingle(),
       ]);
-
       if (profileRes.data?.username) setUsername(profileRes.data.username);
       if (badgeRes.data?.badge_name) setPlayerBadge(badgeRes.data.badge_name);
       if (runeRes.data?.rune_symbol) setPlayerRune(runeRes.data.rune_symbol);
@@ -141,7 +148,167 @@ export default function BullArena() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [battleLog]);
 
-  const startFight = () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+      if (roomId && userId) {
+        supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
+      }
+    };
+  }, [roomId, userId]);
+
+  // ========== PvP MATCHMAKING ==========
+  const joinPvPQueue = async () => {
+    if (!userId) return;
+    setArenaMode('pvp-queue');
+    setQueueTime(0);
+    queueTimerRef.current = setInterval(() => setQueueTime(t => t + 1), 1000);
+
+    // Look for an open room
+    const { data: openRooms } = await supabase
+      .from('game_rooms')
+      .select('id')
+      .eq('game_type', 'bull-arena')
+      .eq('status', 'waiting')
+      .limit(1);
+
+    if (openRooms && openRooms.length > 0) {
+      // Join existing room
+      const room = openRooms[0];
+      setRoomId(room.id);
+      setIsHost(false);
+
+      await supabase.from('game_room_players').insert({
+        room_id: room.id, user_id: userId, username, is_active: true,
+      });
+
+      // Mark room as started
+      await supabase.from('game_rooms').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', room.id);
+
+      subscribeToPvPRoom(room.id);
+    } else {
+      // Create new room and wait
+      const { data: newRoom } = await supabase.from('game_rooms').insert({
+        game_type: 'bull-arena', status: 'waiting', max_players: 2,
+      }).select('id').single();
+
+      if (newRoom) {
+        setRoomId(newRoom.id);
+        setIsHost(true);
+
+        await supabase.from('game_room_players').insert({
+          room_id: newRoom.id, user_id: userId, username, is_active: true,
+        });
+
+        subscribeToPvPRoom(newRoom.id);
+      }
+    }
+  };
+
+  const subscribeToPvPRoom = (rId: string) => {
+    const channel = supabase
+      .channel(`arena-${rId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'game_room_players', filter: `room_id=eq.${rId}`,
+      }, async (payload) => {
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const p = payload.new as any;
+          if (p.user_id !== userId && p.is_active) {
+            // Opponent found!
+            setOpponentId(p.user_id);
+            setOpponentName(p.username || 'Opponent');
+            if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+            
+            // Load opponent's badge/rune
+            const [badgeRes, runeRes] = await Promise.all([
+              supabase.from('user_badges').select('badge_name').eq('user_id', p.user_id).eq('active', true).maybeSingle(),
+              supabase.from('user_runes').select('rune_symbol').eq('user_id', p.user_id).eq('active', true).maybeSingle(),
+            ]);
+
+            const oppStats = buildStats(
+              badgeRes.data?.badge_name || null,
+              runeRes.data?.rune_symbol || null,
+              p.username || 'Opponent'
+            );
+            setEnemy(oppStats);
+
+            const myStats = buildStats(playerBadge, playerRune, username);
+            setPlayer(myStats);
+
+            setBattleLog([{ text: `⚔️ PvP MATCH! ${username} VS ${p.username || 'Opponent'}!`, type: 'info' }]);
+            setTurn('player');
+            setCombo(0);
+            setSpecialReady(0);
+            setArenaMode('pvp');
+            setGameState('fighting');
+          }
+        }
+      })
+      .on('broadcast', { event: 'arena-action' }, (payload) => {
+        handlePvPAction(payload.payload);
+      })
+      .subscribe();
+
+    channelRef.current = channel;
+  };
+
+  const handlePvPAction = (data: any) => {
+    if (data.from === userId) return;
+
+    if (data.action === 'attack' || data.action === 'special') {
+      const dmg = data.damage || 0;
+      setPlayer(prev => {
+        if (!prev) return prev;
+        const newHp = Math.max(0, prev.hp - dmg);
+        if (newHp <= 0) {
+          setTimeout(() => handleDefeat(), 500);
+        }
+        return { ...prev, hp: newHp };
+      });
+      setPlayerShake(true);
+      setTimeout(() => setPlayerShake(false), 300);
+
+      const logType = data.action === 'special' ? 'special' : (data.isCrit ? 'crit' : 'attack');
+      setBattleLog(prev => [...prev, { text: data.logText || `👊 Opponent attacks for ${dmg}!`, type: logType }]);
+      setTurn('player');
+    } else if (data.action === 'defend') {
+      setEnemy(prev => {
+        if (!prev) return prev;
+        return { ...prev, hp: Math.min(prev.maxHp, prev.hp + (data.heal || 0)) };
+      });
+      setBattleLog(prev => [...prev, { text: data.logText || `🛡️ Opponent defends!`, type: 'defend' }]);
+      setTurn('player');
+    }
+  };
+
+  const broadcastAction = (action: string, data: any) => {
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'arena-action',
+        payload: { from: userId, action, ...data },
+      });
+    }
+  };
+
+  const cancelQueue = async () => {
+    if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    if (channelRef.current) supabase.removeChannel(channelRef.current);
+    if (roomId && userId) {
+      await supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
+      if (isHost) {
+        await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+      }
+    }
+    setRoomId(null);
+    setArenaMode('menu');
+  };
+
+  // ========== AI FIGHT ==========
+  const startAIFight = () => {
+    setArenaMode('ai');
     const p = buildStats(playerBadge, playerRune, username);
     const e = buildAI(wins + 1);
     setPlayer(p);
@@ -153,6 +320,7 @@ export default function BullArena() {
     setGameState('fighting');
   };
 
+  // ========== COMBAT ==========
   const doAttack = useCallback(() => {
     if (!player || !enemy || turn !== 'player' || isAnimating) return;
     setIsAnimating(true);
@@ -168,18 +336,24 @@ export default function BullArena() {
     setCombo(c => c + 1);
     setSpecialReady(s => Math.min(100, s + 20));
 
-    const log: BattleLog = isCrit
-      ? { text: `💥 CRITICAL! ${player.name} deals ${dmg} damage!`, type: 'crit' }
-      : { text: `⚔️ ${player.name} attacks for ${dmg} damage!`, type: 'attack' };
+    const logText = isCrit
+      ? `💥 CRITICAL! ${player.name} deals ${dmg} damage!`
+      : `⚔️ ${player.name} attacks for ${dmg} damage!`;
+    const log: BattleLog = { text: logText, type: isCrit ? 'crit' : 'attack' };
     setBattleLog(prev => [...prev, log]);
+
+    if (arenaMode === 'pvp') {
+      broadcastAction('attack', { damage: dmg, isCrit, logText });
+      setTurn('enemy'); // Wait for opponent
+    }
 
     if (newEnemy.hp <= 0) {
       setTimeout(() => handleVictory(), 500);
-    } else {
+    } else if (arenaMode === 'ai') {
       setTimeout(() => { setTurn('enemy'); doEnemyTurn(newEnemy, player); }, 800);
     }
     setTimeout(() => setIsAnimating(false), 600);
-  }, [player, enemy, turn, isAnimating]);
+  }, [player, enemy, turn, isAnimating, arenaMode]);
 
   const doSpecial = useCallback(() => {
     if (!player || !enemy || turn !== 'player' || isAnimating || specialReady < 100) return;
@@ -193,15 +367,21 @@ export default function BullArena() {
     setSpecialReady(0);
     setCombo(c => c + 1);
 
-    setBattleLog(prev => [...prev, { text: `🌟 ${player.runeElement} SPECIAL! ${dmg} damage!`, type: 'special' }]);
+    const logText = `🌟 ${player.runeElement} SPECIAL! ${dmg} damage!`;
+    setBattleLog(prev => [...prev, { text: logText, type: 'special' }]);
+
+    if (arenaMode === 'pvp') {
+      broadcastAction('special', { damage: dmg, logText });
+      setTurn('enemy');
+    }
 
     if (newEnemy.hp <= 0) {
       setTimeout(() => handleVictory(), 500);
-    } else {
+    } else if (arenaMode === 'ai') {
       setTimeout(() => { setTurn('enemy'); doEnemyTurn(newEnemy, player); }, 800);
     }
     setTimeout(() => setIsAnimating(false), 600);
-  }, [player, enemy, turn, isAnimating, specialReady]);
+  }, [player, enemy, turn, isAnimating, specialReady, arenaMode]);
 
   const doDefend = useCallback(() => {
     if (!player || !enemy || turn !== 'player' || isAnimating) return;
@@ -213,15 +393,22 @@ export default function BullArena() {
     setSpecialReady(s => Math.min(100, s + 10));
     setCombo(0);
 
-    setBattleLog(prev => [...prev, { text: `🛡️ ${player.name} defends and heals ${heal} HP!`, type: 'defend' }]);
-    setTimeout(() => { setTurn('enemy'); doEnemyTurn(enemy, newPlayer); }, 800);
+    const logText = `🛡️ ${player.name} defends and heals ${heal} HP!`;
+    setBattleLog(prev => [...prev, { text: logText, type: 'defend' }]);
+
+    if (arenaMode === 'pvp') {
+      broadcastAction('defend', { heal, logText });
+      setTurn('enemy');
+    } else {
+      setTimeout(() => { setTurn('enemy'); doEnemyTurn(enemy, newPlayer); }, 800);
+    }
     setTimeout(() => setIsAnimating(false), 600);
-  }, [player, enemy, turn, isAnimating]);
+  }, [player, enemy, turn, isAnimating, arenaMode]);
 
   const doEnemyTurn = (currentEnemy: FighterStats, currentPlayer: FighterStats) => {
     const action = Math.random();
     let log: BattleLog;
-    let newPlayer = { ...currentPlayer };
+    const newPlayer = { ...currentPlayer };
 
     if (action < 0.7) {
       const isCrit = Math.random() * 100 < currentEnemy.critChance;
@@ -253,11 +440,9 @@ export default function BullArena() {
   const handleVictory = async () => {
     setGameState('victory');
     setWins(w => w + 1);
-    const reward = 50 + wins * 25;
+    const reward = arenaMode === 'pvp' ? 150 + wins * 50 : 50 + wins * 25;
 
     if (userId) {
-      await supabase.rpc('handle_wallet_auth', { _wallet_address: '', _wallet_name: '' }).then(() => {});
-      // Award diamonds
       const { data: existing } = await supabase.from('user_diamonds').select('balance, total_earned').eq('user_id', userId).maybeSingle();
       if (existing) {
         await supabase.from('user_diamonds').update({
@@ -270,7 +455,11 @@ export default function BullArena() {
       });
     }
 
-    setBattleLog(prev => [...prev, { text: `🏆 VICTORY! +${reward} 💎 Diamonds!`, type: 'info' }]);
+    if (roomId) {
+      await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+    }
+
+    setBattleLog(prev => [...prev, { text: `🏆 VICTORY! +${reward} 💎 Diamonds!${arenaMode === 'pvp' ? ' (PvP Bonus!)' : ''}`, type: 'info' }]);
     toast({ title: "Victory! 🏆", description: `You won ${reward} 💎 Diamonds!` });
   };
 
@@ -281,7 +470,21 @@ export default function BullArena() {
         user_id: userId, game_name: 'Bull Arena', result: 'loss', diamonds_won: 0,
       });
     }
+    if (roomId) {
+      await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+    }
     setBattleLog(prev => [...prev, { text: `💀 DEFEATED! Better luck next time...`, type: 'info' }]);
+  };
+
+  const backToMenu = () => {
+    if (channelRef.current) supabase.removeChannel(channelRef.current);
+    setRoomId(null);
+    setOpponentId(null);
+    setArenaMode('menu');
+    setGameState('lobby');
+    setPlayer(null);
+    setEnemy(null);
+    setBattleLog([]);
   };
 
   const logColor = (type: string) => {
@@ -306,14 +509,16 @@ export default function BullArena() {
           <Swords className="w-5 h-5 text-red-400" /> Bull Arena
         </h1>
         {wins > 0 && <Badge className="bg-yellow-600 text-xs ml-auto">{wins} Win{wins > 1 ? 's' : ''}</Badge>}
+        {arenaMode === 'pvp' && <Badge className="bg-purple-600 text-xs animate-pulse">LIVE PvP</Badge>}
       </div>
 
-      {gameState === 'lobby' && (
-        <div className="max-w-md mx-auto space-y-4 mt-8">
+      {/* Mode Selection Menu */}
+      {arenaMode === 'menu' && gameState === 'lobby' && (
+        <div className="max-w-md mx-auto space-y-4 mt-6">
           <Card className="bg-gray-900/80 border-red-800/50 p-6 text-center space-y-4">
             <div className="text-6xl animate-pulse">⚔️</div>
-            <h2 className="text-2xl font-bold text-white">Arcade Fighter</h2>
-            <p className="text-gray-400 text-sm">1v1 battle with stats from your Badge & Rune!</p>
+            <h2 className="text-2xl font-bold text-white">Bull Arena</h2>
+            <p className="text-gray-400 text-sm">1v1 combat powered by your Badge & Rune stats!</p>
 
             <div className="bg-gray-800/60 rounded-lg p-3 text-left space-y-1 text-sm">
               <p className="text-cyan-400 font-semibold">{username}'s Loadout:</p>
@@ -325,22 +530,50 @@ export default function BullArena() {
               </p>
             </div>
 
-            <Button onClick={startFight} className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-lg h-12">
-              <Swords className="w-5 h-5 mr-2" /> Enter the Arena
-            </Button>
+            <div className="grid grid-cols-1 gap-3">
+              <Button onClick={joinPvPQueue}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-lg h-14">
+                <Users className="w-5 h-5 mr-2" /> PvP Match (1v1)
+                <span className="text-xs ml-2 opacity-80">3x Rewards</span>
+              </Button>
+              <Button onClick={startAIFight}
+                className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-lg h-12">
+                <Bot className="w-5 h-5 mr-2" /> Train vs AI
+              </Button>
+            </div>
             <p className="text-xs text-gray-500">Equip a Badge & Rune from Dashboard for bonus stats!</p>
           </Card>
         </div>
       )}
 
+      {/* PvP Queue */}
+      {arenaMode === 'pvp-queue' && (
+        <div className="max-w-md mx-auto space-y-4 mt-8">
+          <Card className="bg-gray-900/80 border-purple-800/50 p-6 text-center space-y-4">
+            <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto" />
+            <h2 className="text-xl font-bold text-white">Searching for Opponent...</h2>
+            <p className="text-purple-400 text-2xl font-mono">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
+            <div className="bg-gray-800/60 rounded-lg p-3 text-sm text-gray-400 space-y-1">
+              <p>🎮 Mode: <span className="text-purple-400">1v1 PvP</span></p>
+              <p>💎 Reward: <span className="text-yellow-400">3x Diamond Bonus</span></p>
+              <p>📡 Status: <span className="text-green-400">{isHost ? 'Waiting for challenger...' : 'Joining match...'}</span></p>
+            </div>
+            <Button onClick={cancelQueue} variant="outline" className="border-red-600 text-red-400 hover:bg-red-950">
+              Cancel Search
+            </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* Battle UI */}
       {(gameState === 'fighting' || gameState === 'victory' || gameState === 'defeat') && player && enemy && (
         <div className="max-w-lg mx-auto space-y-2">
           {/* Enemy Stats */}
-          <Card className={`bg-gray-900/80 border-red-800/40 p-3 transition-transform ${enemyShake ? 'translate-x-2 -translate-x-2' : ''}`}
+          <Card className={`bg-gray-900/80 border-red-800/40 p-3`}
                 style={enemyShake ? { animation: 'shake 0.3s ease-in-out' } : {}}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-red-400 font-bold text-sm flex items-center gap-1">
-                👹 {enemy.name}
+                {arenaMode === 'pvp' ? '🎮' : '👹'} {enemy.name}
                 {enemy.badge && <span className="text-yellow-400 text-xs">🏅</span>}
                 {enemy.rune && <span className="text-purple-400">{enemy.rune}</span>}
               </span>
@@ -356,22 +589,15 @@ export default function BullArena() {
           {/* Battle Visual */}
           <div className="relative h-40 bg-gradient-to-r from-red-950/40 via-gray-900 to-blue-950/40 rounded-xl border border-gray-800 flex items-center justify-around overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255,100,0,0.3) 0%, transparent 70%)' }} />
-            
-            {/* Player Fighter */}
             <div className={`text-center transition-all duration-200 ${playerShake ? 'animate-bounce' : ''}`}>
-              <div className="text-5xl" style={{ filter: playerRune ? 'drop-shadow(0 0 10px rgba(147,51,234,0.8))' : undefined }}>
-                🐂
-              </div>
+              <div className="text-5xl" style={{ filter: playerRune ? 'drop-shadow(0 0 10px rgba(147,51,234,0.8))' : undefined }}>🐂</div>
               <p className="text-cyan-400 text-xs font-bold mt-1">{player.name}</p>
               {player.rune && <span className="text-purple-400 text-lg">{player.rune}</span>}
             </div>
-
             <div className="text-3xl text-yellow-400 font-black animate-pulse">VS</div>
-
-            {/* Enemy Fighter */}
             <div className={`text-center transition-all duration-200 ${enemyShake ? 'animate-bounce' : ''}`}>
               <div className="text-5xl" style={{ filter: enemy.rune ? 'drop-shadow(0 0 10px rgba(239,68,68,0.8))' : undefined }}>
-                👹
+                {arenaMode === 'pvp' ? '🐂' : '👹'}
               </div>
               <p className="text-red-400 text-xs font-bold mt-1">{enemy.name}</p>
               {enemy.rune && <span className="text-red-400 text-lg">{enemy.rune}</span>}
@@ -379,7 +605,7 @@ export default function BullArena() {
           </div>
 
           {/* Player Stats */}
-          <Card className={`bg-gray-900/80 border-cyan-800/40 p-3 ${playerShake ? '' : ''}`}
+          <Card className="bg-gray-900/80 border-cyan-800/40 p-3"
                 style={playerShake ? { animation: 'shake 0.3s ease-in-out' } : {}}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-cyan-400 font-bold text-sm flex items-center gap-1">
@@ -394,7 +620,6 @@ export default function BullArena() {
               <span><Heart className="w-3 h-3 inline text-red-400" /> {player.hp}/{player.maxHp}</span>
               <span><Swords className="w-3 h-3 inline text-orange-400" /> {player.attack} <Shield className="w-3 h-3 inline text-blue-400" /> {player.defense} <Zap className="w-3 h-3 inline text-purple-400" /> {player.special}</span>
             </div>
-            {/* Special charge */}
             <div className="mt-1">
               <div className="flex items-center gap-1 text-xs text-purple-400">
                 <Star className="w-3 h-3" /> Special: {specialReady}%
@@ -423,11 +648,17 @@ export default function BullArena() {
 
           {(gameState === 'victory' || gameState === 'defeat') && (
             <div className="flex gap-2">
-              <Button onClick={startFight} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
-                <RotateCcw className="w-4 h-4 mr-1" /> {gameState === 'victory' ? 'Next Fight' : 'Rematch'}
-              </Button>
-              <Button onClick={goBack} variant="outline" className="h-12 border-gray-600 text-gray-300">
-                Exit
+              {arenaMode === 'ai' ? (
+                <Button onClick={startAIFight} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
+                  <RotateCcw className="w-4 h-4 mr-1" /> {gameState === 'victory' ? 'Next Fight' : 'Rematch'}
+                </Button>
+              ) : (
+                <Button onClick={backToMenu} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 h-12">
+                  <Users className="w-4 h-4 mr-1" /> Find New Match
+                </Button>
+              )}
+              <Button onClick={backToMenu} variant="outline" className="h-12 border-gray-600 text-gray-300">
+                Menu
               </Button>
             </div>
           )}
@@ -436,7 +667,7 @@ export default function BullArena() {
           <div className="flex justify-between text-xs">
             {combo > 1 && <Badge className="bg-orange-600 animate-pulse">🔥 {combo}x Combo!</Badge>}
             <Badge className={turn === 'player' ? 'bg-cyan-700' : 'bg-red-700'}>
-              {turn === 'player' ? '🎮 Your Turn' : '👹 Enemy Turn'}
+              {turn === 'player' ? '🎮 Your Turn' : (arenaMode === 'pvp' ? '⏳ Opponent\'s Turn' : '👹 Enemy Turn')}
             </Badge>
           </div>
 
