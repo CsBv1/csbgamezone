@@ -65,6 +65,7 @@ const GAME_PORTALS: GamePortal[] = [
   { id: 'mp-sprint', name: 'Bull Sprint', x: 700, y: 250, route: '/games/bull-sprint', color: '#9933FF', emoji: '⚡' },
   { id: 'mp-relay', name: 'Bull Relay', x: 500, y: 550, route: '/games/bull-relay', color: '#44FF44', emoji: '🔄' },
   { id: 'mp-obstacle', name: 'Obstacle Rush', x: 900, y: 450, route: '/games/obstacle-rush', color: '#FF4444', emoji: '🚧' },
+  { id: 'mp-arena', name: 'Bull Arena', x: 200, y: 550, route: '/games/bull-arena', color: '#FF2222', emoji: '⚔️' },
   { id: 'mp-holders-arena', name: 'Holders Arena', x: 1100, y: 300, route: '/games/holders-arena', color: '#FFD700', emoji: '👑', holdersOnly: true },
 ];
 
