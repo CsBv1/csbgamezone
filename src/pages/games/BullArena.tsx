@@ -115,7 +115,7 @@ export default function BullArena() {
   const [combo, setCombo] = useState(0);
   const [wins, setWins] = useState(0);
   const [playerShake, setPlayerShake] = useState(false);
-  const [enemyShake, setEnemy Shake] = useState(false);
+  const [enemyShake, setEnemyShake] = useState(false);
   const [specialReady, setSpecialReady] = useState(0); // 0-100 charge
 
   useEffect(() => {
