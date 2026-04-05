@@ -45,6 +45,7 @@ import TargetShoot from "./pages/games/TargetShoot";
 import RaceDay from "./pages/games/RaceDay";
 import PrizePath from "./pages/games/PrizePath";
 import BonanzaSpin from "./pages/games/BonanzaSpin";
+import BullArena from "./pages/games/BullArena";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
