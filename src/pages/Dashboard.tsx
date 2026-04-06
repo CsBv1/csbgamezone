@@ -294,9 +294,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Season + Subscription */}
+          {/* Subscription */}
           <div className="max-w-2xl mx-auto space-y-4">
-            <HoldersSeasonPanel />
             <SubscriptionBox bullsOwned={bullsOwned} />
           </div>
 
