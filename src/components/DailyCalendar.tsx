@@ -4,17 +4,33 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Calendar, Gift, Gem, Key, Trophy, Loader2, Check } from 'lucide-react';
+import { Calendar, Gift, Loader2, Check, Swords, Trophy, Gem } from 'lucide-react';
 
-const getDayReward = (dayOfYear: number): { type: string; amount: number; icon: string; label: string } => {
+// Special event days - recurring monthly pattern
+const SPECIAL_EVENTS: Record<number, { name: string; emoji: string; bonus: string; rewardMultiplier: number }> = {
+  1:  { name: 'New Month Kickoff', emoji: '🎉', bonus: '2x Diamonds', rewardMultiplier: 2 },
+  5:  { name: 'Bull Arena Day', emoji: '⚔️', bonus: '3x Arena Rewards', rewardMultiplier: 2 },
+  7:  { name: 'Key Bonanza', emoji: '🔑', bonus: 'Bonus Keys', rewardMultiplier: 2 },
+  10: { name: 'Diamond Rush', emoji: '💎', bonus: '2x All Diamonds', rewardMultiplier: 3 },
+  14: { name: 'Valentine Bulls', emoji: '❤️', bonus: 'Love Bonus', rewardMultiplier: 2 },
+  15: { name: 'Mid-Month Madness', emoji: '🔥', bonus: '2x Everything', rewardMultiplier: 2 },
+  20: { name: 'Holders Festival', emoji: '👑', bonus: '3x Holder Rewards', rewardMultiplier: 3 },
+  25: { name: 'Rune Power Day', emoji: '✨', bonus: 'Bonus Rune XP', rewardMultiplier: 2 },
+  28: { name: 'Arena Tournament', emoji: '🏆', bonus: '5x Arena Diamonds', rewardMultiplier: 3 },
+};
+
+const getDayReward = (dayOfYear: number, dayOfMonth: number): { type: string; amount: number; icon: string; label: string } => {
+  const event = SPECIAL_EVENTS[dayOfMonth];
+  const multiplier = event?.rewardMultiplier || 1;
+  
   const cycle = dayOfYear % 7;
   switch (cycle) {
-    case 0: return { type: 'diamonds', amount: 500, icon: '💎', label: '500 Diamonds' };
-    case 1: return { type: 'diamonds', amount: 200, icon: '💎', label: '200 Diamonds' };
-    case 2: return { type: 'diamonds', amount: 1000, icon: '💎', label: '1K Diamonds' };
-    case 3: return { type: 'diamonds', amount: 300, icon: '💎', label: '300 Diamonds' };
-    case 4: return { type: 'keys', amount: 1, icon: '🔑', label: '1 Key' };
-    case 5: return { type: 'diamonds', amount: 2000, icon: '💎', label: '2K Diamonds' };
+    case 0: return { type: 'diamonds', amount: 500 * multiplier, icon: '💎', label: `${(500 * multiplier).toLocaleString()} Diamonds` };
+    case 1: return { type: 'diamonds', amount: 200 * multiplier, icon: '💎', label: `${(200 * multiplier).toLocaleString()} Diamonds` };
+    case 2: return { type: 'diamonds', amount: 1000 * multiplier, icon: '💎', label: `${(1000 * multiplier).toLocaleString()} Diamonds` };
+    case 3: return { type: 'diamonds', amount: 300 * multiplier, icon: '💎', label: `${(300 * multiplier).toLocaleString()} Diamonds` };
+    case 4: return { type: 'keys', amount: 1 * multiplier, icon: '🔑', label: `${1 * multiplier} Key${multiplier > 1 ? 's' : ''}` };
+    case 5: return { type: 'diamonds', amount: 2000 * multiplier, icon: '💎', label: `${(2000 * multiplier).toLocaleString()} Diamonds` };
     case 6: return { type: 'bukals', amount: 1, icon: '🏆', label: '1 Bukal' };
     default: return { type: 'diamonds', amount: 100, icon: '💎', label: '100 Diamonds' };
   }
@@ -61,9 +77,8 @@ export const DailyCalendar = () => {
       if (!user) throw new Error('Not logged in');
 
       const dayOfYear = getDayOfYear(today);
-      const reward = getDayReward(dayOfYear);
+      const reward = getDayReward(dayOfYear, today.getDate());
 
-      // Insert claim
       const { error: claimErr } = await supabase.from('daily_claims').insert({
         user_id: user.id,
         claim_date: todayStr,
@@ -75,7 +90,6 @@ export const DailyCalendar = () => {
         throw claimErr;
       }
 
-      // Award reward
       if (reward.type === 'diamonds') {
         const { data: d } = await supabase.from('user_diamonds').select('balance, total_earned').eq('user_id', user.id).single();
         await supabase.from('user_diamonds').update({
@@ -94,7 +108,9 @@ export const DailyCalendar = () => {
         }
       }
 
-      toast.success(`${reward.icon} Claimed ${reward.label}!`);
+      const event = SPECIAL_EVENTS[today.getDate()];
+      const eventText = event ? ` 🎪 ${event.name} Bonus!` : '';
+      toast.success(`${reward.icon} Claimed ${reward.label}!${eventText}`);
       setClaimedDates(prev => new Set([...prev, todayStr]));
     } catch (e) {
       console.error(e);
@@ -104,9 +120,9 @@ export const DailyCalendar = () => {
 
   const hasClaimed = claimedDates.has(todayStr);
   const dayOfYear = getDayOfYear(today);
-  const todayReward = getDayReward(dayOfYear);
+  const todayReward = getDayReward(dayOfYear, today.getDate());
+  const todayEvent = SPECIAL_EVENTS[today.getDate()];
 
-  // Build calendar grid for current month
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
   const calendarDays: (number | null)[] = [];
@@ -139,7 +155,14 @@ export const DailyCalendar = () => {
             <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border-2 border-yellow-500/50">
               <p className="text-sm text-muted-foreground mb-1">Today's Reward:</p>
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-yellow-400">{todayReward.icon} {todayReward.label}</span>
+                <div>
+                  <span className="text-2xl font-bold text-yellow-400">{todayReward.icon} {todayReward.label}</span>
+                  {todayEvent && (
+                    <p className="text-xs text-orange-400 animate-pulse mt-1">
+                      {todayEvent.emoji} {todayEvent.name} — {todayEvent.bonus}!
+                    </p>
+                  )}
+                </div>
                 <Button
                   onClick={claimToday}
                   disabled={hasClaimed || claiming}
@@ -147,6 +170,28 @@ export const DailyCalendar = () => {
                 >
                   {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : hasClaimed ? <><Check className="w-4 h-4 mr-1" /> Claimed</> : 'Claim!'}
                 </Button>
+              </div>
+            </Card>
+
+            {/* Upcoming events this month */}
+            <Card className="p-3 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
+                <Trophy className="w-3 h-3" /> Upcoming Events
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(SPECIAL_EVENTS)
+                  .filter(([day]) => Number(day) >= today.getDate() && currentMonth === today.getMonth())
+                  .slice(0, 4)
+                  .map(([day, event]) => (
+                    <span key={day} className="text-[10px] bg-muted/50 rounded px-2 py-0.5">
+                      {event.emoji} {MONTH_NAMES[currentMonth]} {day} — {event.name}
+                    </span>
+                  ))}
+                {Object.entries(SPECIAL_EVENTS)
+                  .filter(([day]) => Number(day) >= today.getDate() && currentMonth === today.getMonth())
+                  .length === 0 && (
+                  <span className="text-[10px] text-muted-foreground">No more events this month!</span>
+                )}
               </div>
             </Card>
 
@@ -169,21 +214,25 @@ export const DailyCalendar = () => {
                 const isToday = dateStr === todayStr;
                 const date = new Date(currentYear, currentMonth, day);
                 const doy = getDayOfYear(date);
-                const reward = getDayReward(doy);
+                const reward = getDayReward(doy, day);
                 const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const event = SPECIAL_EVENTS[day];
 
                 return (
                   <div
                     key={dateStr}
-                    className={`p-1 rounded text-xs transition-all ${
+                    className={`p-1 rounded text-xs transition-all relative ${
                       isToday ? 'ring-2 ring-yellow-400 bg-yellow-500/20 font-bold' :
                       claimed ? 'bg-green-500/20 text-green-400' :
+                      event ? 'bg-purple-500/15 border border-purple-500/30' :
                       isPast ? 'opacity-30' : 'bg-muted/30'
                     }`}
-                    title={`${reward.label}`}
+                    title={`${reward.label}${event ? ` — ${event.name}` : ''}`}
                   >
                     <div className="text-[10px]">{day}</div>
-                    <div className="text-[10px]">{claimed ? '✅' : reward.icon}</div>
+                    <div className="text-[10px]">
+                      {claimed ? '✅' : event ? event.emoji : reward.icon}
+                    </div>
                   </div>
                 );
               })}
@@ -197,6 +246,14 @@ export const DailyCalendar = () => {
                   <div key={i} className="p-1 rounded bg-muted/30 text-[9px]">{['Su','Mo','Tu','We','Th','Fr','Sa'][i]}<br/>{r}</div>
                 ))}
               </div>
+            </div>
+
+            {/* Event legend */}
+            <div className="text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground mb-1 flex items-center gap-1">
+                <Swords className="w-3 h-3" /> Event Days = Multiplied Rewards!
+              </p>
+              <p className="text-[10px]">⚔️ Arena Days • 💎 Diamond Rush • 👑 Holders Festival • 🏆 Tournaments</p>
             </div>
           </div>
         )}
