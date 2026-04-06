@@ -970,6 +970,11 @@ export default function BullWorld() {
           ))}
         </div>
 
+        {/* Holders Season */}
+        <div className="mt-6">
+          <HoldersSeasonPanel />
+        </div>
+
         {/* Badge Marketplace */}
         <div className="mt-6">
           <BadgeMarketplace />
