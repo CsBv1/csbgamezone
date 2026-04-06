@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { GameCard } from "@/components/GameCard";
-import { HoldersSeasonPanel } from "@/components/HoldersSeasonPanel";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Dashboard = () => {
@@ -294,9 +294,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Season + Subscription */}
+          {/* Subscription */}
           <div className="max-w-2xl mx-auto space-y-4">
-            <HoldersSeasonPanel />
             <SubscriptionBox bullsOwned={bullsOwned} />
           </div>
 

@@ -12,6 +12,7 @@ import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useSubscription } from "@/hooks/useSubscription";
 import { BadgeMarketplace } from "@/components/BadgeMarketplace";
 import { RuneMarketplace } from "@/components/RuneMarketplace";
+import { HoldersSeasonPanel } from "@/components/HoldersSeasonPanel";
 import { audioManager } from "@/hooks/useAudioManager";
 
 interface Player {
@@ -967,6 +968,11 @@ export default function BullWorld() {
               {portal.emoji} {portal.name}
             </Button>
           ))}
+        </div>
+
+        {/* Holders Season */}
+        <div className="mt-6">
+          <HoldersSeasonPanel />
         </div>
 
         {/* Badge Marketplace */}
