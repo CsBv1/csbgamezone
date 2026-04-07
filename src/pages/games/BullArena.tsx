@@ -148,16 +148,20 @@ export default function BullArena() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [battleLog]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount only
+  const roomIdRef = useRef<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
+  useEffect(() => { userIdRef.current = userId; }, [userId]);
   useEffect(() => {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
       if (queueTimerRef.current) clearInterval(queueTimerRef.current);
-      if (roomId && userId) {
-        supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
+      if (roomIdRef.current && userIdRef.current) {
+        supabase.from('game_room_players').delete().eq('room_id', roomIdRef.current).eq('user_id', userIdRef.current);
       }
     };
-  }, [roomId, userId]);
+  }, []);
 
   // ========== PvP MATCHMAKING ==========
   const joinPvPQueue = async () => {
