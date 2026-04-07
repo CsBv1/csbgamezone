@@ -543,11 +543,52 @@ export default function BullWorld() {
         ctx.fill();
       }
 
-      // Draw game portals with 3D effect
+      // Draw game portals with enhanced glowing floors
       GAME_PORTALS.forEach(portal => {
         const isNear = nearPortal?.id === portal.id;
         const pulseScale = isNear ? 1 + Math.sin(time * 4) * 0.1 : 1;
         
+        // === ENHANCED FLOOR GLOW ===
+        // Outer radial floor glow (large, soft)
+        const floorGlow = ctx.createRadialGradient(portal.x, portal.y + 30, 10, portal.x, portal.y + 30, 130);
+        floorGlow.addColorStop(0, portal.color + '35');
+        floorGlow.addColorStop(0.4, portal.color + '18');
+        floorGlow.addColorStop(0.7, portal.color + '08');
+        floorGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = floorGlow;
+        ctx.beginPath();
+        ctx.ellipse(portal.x, portal.y + 30, 130, 60, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated concentric floor rings
+        for (let ring = 0; ring < 3; ring++) {
+          const ringRadius = 65 + ring * 25;
+          const ringAlpha = Math.max(0, 0.15 - ring * 0.04 + Math.sin(time * 2 + ring) * 0.05);
+          ctx.strokeStyle = portal.color + Math.round(ringAlpha * 255).toString(16).padStart(2, '0');
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(portal.x, portal.y + 35, ringRadius * pulseScale, ringRadius * 0.4 * pulseScale, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Floor light rays (rotating)
+        ctx.save();
+        ctx.translate(portal.x, portal.y + 30);
+        for (let ray = 0; ray < 6; ray++) {
+          const angle = (ray / 6) * Math.PI * 2 + time * 0.5;
+          const rayLen = 80 + Math.sin(time * 3 + ray) * 15;
+          const rayGrad = ctx.createLinearGradient(0, 0, Math.cos(angle) * rayLen, Math.sin(angle) * rayLen * 0.4);
+          rayGrad.addColorStop(0, portal.color + '30');
+          rayGrad.addColorStop(1, 'transparent');
+          ctx.strokeStyle = rayGrad;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * rayLen, Math.sin(angle) * rayLen * 0.4);
+          ctx.stroke();
+        }
+        ctx.restore();
+
         // Portal outer glow
         const glowGradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, 80 * pulseScale);
         glowGradient.addColorStop(0, portal.color + '60');
@@ -562,8 +603,12 @@ export default function BullWorld() {
         ctx.ellipse(portal.x + 5, portal.y + 50, 55 * pulseScale, 20 * pulseScale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Portal 3D platform
-        ctx.fillStyle = '#1a3a4a';
+        // Portal 3D platform with color tint
+        const platGrad = ctx.createRadialGradient(portal.x, portal.y + 40, 5, portal.x, portal.y + 40, 55);
+        platGrad.addColorStop(0, portal.color + '40');
+        platGrad.addColorStop(0.6, '#1a3a4a');
+        platGrad.addColorStop(1, '#0d1f2d');
+        ctx.fillStyle = platGrad;
         ctx.beginPath();
         ctx.ellipse(portal.x, portal.y + 40, 55 * pulseScale, 20 * pulseScale, 0, 0, Math.PI * 2);
         ctx.fill();
