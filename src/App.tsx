@@ -46,6 +46,7 @@ import RaceDay from "./pages/games/RaceDay";
 import PrizePath from "./pages/games/PrizePath";
 import BonanzaSpin from "./pages/games/BonanzaSpin";
 import BullArena from "./pages/games/BullArena";
+import BullCity from "./pages/games/BullCity";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
@@ -164,6 +165,7 @@ const App = () => (
           <Route path="/games/prize-path" element={<ProtectedGameRoute><PrizePath /></ProtectedGameRoute>} />
           <Route path="/games/bonanza-spin" element={<ProtectedGameRoute><BonanzaSpin /></ProtectedGameRoute>} />
           <Route path="/games/bull-arena" element={<ProtectedGameRoute><BullArena /></ProtectedGameRoute>} />
+          <Route path="/games/bull-city" element={<BullCity />} />
           
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
