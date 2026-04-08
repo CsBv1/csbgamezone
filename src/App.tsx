@@ -165,6 +165,7 @@ const App = () => (
           <Route path="/games/prize-path" element={<ProtectedGameRoute><PrizePath /></ProtectedGameRoute>} />
           <Route path="/games/bonanza-spin" element={<ProtectedGameRoute><BonanzaSpin /></ProtectedGameRoute>} />
           <Route path="/games/bull-arena" element={<ProtectedGameRoute><BullArena /></ProtectedGameRoute>} />
+          <Route path="/games/bull-city" element={<BullCity />} />
           
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
