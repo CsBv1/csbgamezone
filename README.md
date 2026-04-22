@@ -62,7 +62,7 @@ Built for speed, scalability, and flexibility:
 
 Run Locally
 
-git clone <YOUR_GIT_URL>
+git clone https://github.com/CsBv1/csbgamezone
 cd <Cardano Stake Bulls>
 npm install
 npm run dev
@@ -98,7 +98,7 @@ This project connects directly to the Cardano Stake Bulls roadmap:
 
 Built for the Bulls Crew 🐂
 
-You’re not just a user — you’re:
+You’re not just a user you’re:
 	•	A tester
 	•	A contributor
 	•	A future early adopter
