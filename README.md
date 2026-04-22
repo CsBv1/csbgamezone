@@ -20,7 +20,7 @@ Think of it as:
 
 🚀 Why This Matters
 
-This project is not just about games — it’s about building utility.
+This project is not just about games it’s about building utility.
 
 For Players 🎮
 	•	Fun, simple, and evolving games
