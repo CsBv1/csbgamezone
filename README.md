@@ -1,6 +1,6 @@
 🐂 Cardano Stake Bulls Game Zone & Library
 
-🌐 Play Now: Game Zone Live App￼
+🌐 Play Now: Game Zone Live App￼https://csbgamezone.lovable.app
 🛠️ Builder Tool: Open in Lovable￼
 
 
@@ -116,7 +116,7 @@ This isn’t just a game hub…
 It’s the starting point of a full blockchain gaming ecosystem.
 
 🐂 Build. Play. Earn. Grow.
-
+https://discord.gg/C9jzyKrsTH
 
 If you want next step, I can:
 	•	Add a “token utility section” (very powerful for investors)
