@@ -117,8 +117,3 @@ It’s the starting point of a full blockchain gaming ecosystem.
 
 🐂 Build. Play. Earn. Grow.
 https://discord.gg/C9jzyKrsTH
-
-If you want next step, I can:
-	•	Add a “token utility section” (very powerful for investors)
-	•	Create a landing page version of this
-	•	Or write a GitHub repo description + tags for SEO
