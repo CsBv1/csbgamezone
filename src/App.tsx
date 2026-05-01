@@ -48,6 +48,12 @@ import BonanzaSpin from "./pages/games/BonanzaSpin";
 import BullArena from "./pages/games/BullArena";
 import BullCity from "./pages/games/BullCity";
 
+// CSB Game Zone ($CsBv1)
+import CsbDashboard from "./pages/csb/CsbDashboard";
+import CsbMissions from "./pages/csb/CsbMissions";
+import CsbUpgrades from "./pages/csb/CsbUpgrades";
+import CsbNftPower from "./pages/csb/CsbNftPower";
+
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
 import KingdomSiege from "./pages/games/holders/KingdomSiege";
@@ -166,6 +172,12 @@ const App = () => (
           <Route path="/games/bonanza-spin" element={<ProtectedGameRoute><BonanzaSpin /></ProtectedGameRoute>} />
           <Route path="/games/bull-arena" element={<ProtectedGameRoute><BullArena /></ProtectedGameRoute>} />
           <Route path="/games/bull-city" element={<BullCity />} />
+
+          {/* CSB Game Zone ($CsBv1 token system) */}
+          <Route path="/csb" element={<CsbDashboard />} />
+          <Route path="/csb/missions" element={<CsbMissions />} />
+          <Route path="/csb/upgrades" element={<CsbUpgrades />} />
+          <Route path="/csb/nft-power" element={<CsbNftPower />} />
           
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
