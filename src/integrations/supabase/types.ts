@@ -14,6 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
+      csbv1_missions: {
+        Row: {
+          claimed: boolean
+          completed: boolean
+          id: string
+          mission_id: string
+          progress: number
+          reset_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claimed?: boolean
+          completed?: boolean
+          id?: string
+          mission_id: string
+          progress?: number
+          reset_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claimed?: boolean
+          completed?: boolean
+          id?: string
+          mission_id?: string
+          progress?: number
+          reset_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      csbv1_nft_power: {
+        Row: {
+          id: string
+          level: number
+          nft_id: string
+          nft_name: string
+          rarity: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          level?: number
+          nft_id: string
+          nft_name: string
+          rarity?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          level?: number
+          nft_id?: string
+          nft_name?: string
+          rarity?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      csbv1_players: {
+        Row: {
+          balance: number
+          created_at: string
+          energy: number
+          energy_updated_at: string
+          id: string
+          last_claim_at: string | null
+          last_streak_date: string | null
+          max_energy: number
+          streak_days: number
+          total_earned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          energy?: number
+          energy_updated_at?: string
+          id?: string
+          last_claim_at?: string | null
+          last_streak_date?: string | null
+          max_energy?: number
+          streak_days?: number
+          total_earned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          energy?: number
+          energy_updated_at?: string
+          id?: string
+          last_claim_at?: string | null
+          last_streak_date?: string | null
+          max_energy?: number
+          streak_days?: number
+          total_earned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      csbv1_upgrades: {
+        Row: {
+          id: string
+          level: number
+          updated_at: string
+          upgrade_type: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          level?: number
+          updated_at?: string
+          upgrade_type: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          level?: number
+          updated_at?: string
+          upgrade_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_claims: {
         Row: {
           claim_date: string
