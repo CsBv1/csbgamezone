@@ -8,6 +8,7 @@ export const CreditBar = () => {
   const [diamonds, setDiamonds] = useState(0);
   const [keys, setKeys] = useState(0);
   const [bukals, setBukals] = useState(0);
+  const [csbv1, setCsbv1] = useState(0);
   const [bullsOwned, setBullsOwned] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,6 +28,7 @@ export const CreditBar = () => {
         setDiamonds(0);
         setKeys(0);
         setBukals(0);
+        setCsbv1(0);
         setBullsOwned(0);
         setLoading(false);
       }
@@ -85,11 +87,21 @@ export const CreditBar = () => {
       )
       .subscribe();
 
+    const csbv1Channel = supabase
+      .channel('csbv1-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'csbv1_players' },
+        () => fetchBalances()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(creditsChannel);
       supabase.removeChannel(diamondsChannel);
       supabase.removeChannel(nftChannel);
       supabase.removeChannel(bukalsChannel);
+      supabase.removeChannel(csbv1Channel);
     };
   }, [isAuthenticated]);
 
@@ -98,12 +110,13 @@ export const CreditBar = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [creditsResult, diamondsResult, keysResult, bukalsResult, nftResult] = await Promise.all([
+      const [creditsResult, diamondsResult, keysResult, bukalsResult, nftResult, csbResult] = await Promise.all([
         supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_bukals' as any).select('balance').eq('user_id', user.id).maybeSingle(),
-        supabase.from('user_nft_bonuses' as any).select('bulls_owned').eq('user_id', user.id).maybeSingle()
+        supabase.from('user_nft_bonuses' as any).select('bulls_owned').eq('user_id', user.id).maybeSingle(),
+        supabase.from('csbv1_players' as any).select('balance').eq('user_id', user.id).maybeSingle()
       ]);
 
       if ((creditsResult as any).data) setCredits((creditsResult as any).data.balance);
@@ -111,6 +124,7 @@ export const CreditBar = () => {
       if ((keysResult as any).data) setKeys((keysResult as any).data.balance);
       if ((bukalsResult as any).data) setBukals((bukalsResult as any).data.balance);
       if ((nftResult as any).data) setBullsOwned((nftResult as any).data.bulls_owned);
+      if ((csbResult as any).data) setCsbv1(Number((csbResult as any).data.balance) || 0);
     } catch (error: any) {
       console.error('Error fetching balances:', error);
     } finally {
@@ -194,6 +208,12 @@ export const CreditBar = () => {
         <div className="flex items-center gap-1">
           <Gem className="w-3 h-3 text-cyan-400" />
           <span className="font-bold">{diamonds}</span>
+        </div>
+        <div className="h-3 w-px bg-border/50"></div>
+        <div className="flex items-center gap-1" title="$CsBv1 balance">
+          <span className="text-xs">🪙</span>
+          <span className="font-bold text-amber-300">{csbv1.toLocaleString()}</span>
+          <span className="text-[9px] text-amber-300/70 font-bold">CsBv1</span>
         </div>
       </div>
       {/* Bottom row: Bukals, Keys, Bulls */}
