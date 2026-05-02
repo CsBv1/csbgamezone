@@ -110,12 +110,13 @@ export const CreditBar = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [creditsResult, diamondsResult, keysResult, bukalsResult, nftResult] = await Promise.all([
+      const [creditsResult, diamondsResult, keysResult, bukalsResult, nftResult, csbResult] = await Promise.all([
         supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).single(),
         supabase.from('user_bukals' as any).select('balance').eq('user_id', user.id).maybeSingle(),
-        supabase.from('user_nft_bonuses' as any).select('bulls_owned').eq('user_id', user.id).maybeSingle()
+        supabase.from('user_nft_bonuses' as any).select('bulls_owned').eq('user_id', user.id).maybeSingle(),
+        supabase.from('csbv1_players' as any).select('balance').eq('user_id', user.id).maybeSingle()
       ]);
 
       if ((creditsResult as any).data) setCredits((creditsResult as any).data.balance);
@@ -123,6 +124,7 @@ export const CreditBar = () => {
       if ((keysResult as any).data) setKeys((keysResult as any).data.balance);
       if ((bukalsResult as any).data) setBukals((bukalsResult as any).data.balance);
       if ((nftResult as any).data) setBullsOwned((nftResult as any).data.bulls_owned);
+      if ((csbResult as any).data) setCsbv1(Number((csbResult as any).data.balance) || 0);
     } catch (error: any) {
       console.error('Error fetching balances:', error);
     } finally {
