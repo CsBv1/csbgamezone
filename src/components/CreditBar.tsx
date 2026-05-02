@@ -28,6 +28,7 @@ export const CreditBar = () => {
         setDiamonds(0);
         setKeys(0);
         setBukals(0);
+        setCsbv1(0);
         setBullsOwned(0);
         setLoading(false);
       }
