@@ -209,6 +209,12 @@ export const CreditBar = () => {
           <Gem className="w-3 h-3 text-cyan-400" />
           <span className="font-bold">{diamonds}</span>
         </div>
+        <div className="h-3 w-px bg-border/50"></div>
+        <div className="flex items-center gap-1" title="$CsBv1 balance">
+          <span className="text-xs">🪙</span>
+          <span className="font-bold text-amber-300">{csbv1.toLocaleString()}</span>
+          <span className="text-[9px] text-amber-300/70 font-bold">CsBv1</span>
+        </div>
       </div>
       {/* Bottom row: Bukals, Keys, Bulls */}
       <div className="flex items-center gap-2">
