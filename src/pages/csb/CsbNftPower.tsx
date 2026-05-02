@@ -17,44 +17,64 @@ const RARITY_COLOR: Record<string, string> = {
   legendary: "from-amber-500 to-rose-700 border-amber-400/60 shadow-[0_0_25px_rgba(245,158,11,0.35)]",
 };
 
-interface NftRow { nft_id: string; nft_name: string; rarity: string; level: number; }
+interface NftRow { nft_id: string; nft_name: string; rarity: string; level: number; image?: string; }
 
 const CsbNftPower = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { connectedWallet } = useCardanoWallet();
-  const { bullsOwned, highestRarity } = useNFTBonuses(connectedWallet?.address || null);
+  const { bullsOwned, highestRarity, nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
   const { player, userId, spendBalance } = useCsbv1();
   const [nfts, setNfts] = useState<NftRow[]>([]);
 
   const load = async () => {
     if (!userId) return;
     const { data } = await supabase.from("csbv1_nft_power" as any).select("*").eq("user_id", userId).order("nft_id");
-
-    // Auto-seed rows for owned bulls if missing
     const existing = (data || []) as any[];
     const existingIds = new Set(existing.map((r) => r.nft_id));
+
+    // Prefer seeding from real wallet NFTs (with images); fall back to bull count
     const toInsert: any[] = [];
-    for (let i = 0; i < bullsOwned; i++) {
-      const id = `bull_${i + 1}`;
-      if (!existingIds.has(id)) {
-        toInsert.push({
-          user_id: userId, nft_id: id,
-          nft_name: `CSB Bull #${i + 1}`,
-          rarity: i === 0 ? (highestRarity === "none" ? "common" : highestRarity) : "common",
-          level: 1,
-        });
+    if (walletNfts && walletNfts.length > 0) {
+      walletNfts.forEach((wn, i) => {
+        const id = wn.assetNameHex ? `csb_${wn.assetNameHex}` : `bull_${i + 1}`;
+        if (!existingIds.has(id)) {
+          toInsert.push({
+            user_id: userId, nft_id: id,
+            nft_name: wn.name || `CSB Bull #${i + 1}`,
+            rarity: i === 0 ? (highestRarity === "none" ? "common" : highestRarity) : "common",
+            level: 1,
+          });
+        }
+      });
+    } else {
+      for (let i = 0; i < bullsOwned; i++) {
+        const id = `bull_${i + 1}`;
+        if (!existingIds.has(id)) {
+          toInsert.push({
+            user_id: userId, nft_id: id,
+            nft_name: `CSB Bull #${i + 1}`,
+            rarity: i === 0 ? (highestRarity === "none" ? "common" : highestRarity) : "common",
+            level: 1,
+          });
+        }
       }
     }
     if (toInsert.length) {
       await supabase.from("csbv1_nft_power" as any).insert(toInsert);
-      const refetch = await supabase.from("csbv1_nft_power" as any).select("*").eq("user_id", userId).order("nft_id");
-      setNfts((refetch.data || []) as any);
-    } else {
-      setNfts(existing as any);
     }
+    const refetch = await supabase.from("csbv1_nft_power" as any).select("*").eq("user_id", userId).order("nft_id");
+    const rows = (refetch.data || []) as any[];
+    // Attach images from wallet scan by matching nft_id (csb_<hex>) or by name
+    const merged = rows.map((r) => {
+      const match = walletNfts?.find((w) =>
+        (w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`) || w.name === r.nft_name
+      );
+      return { ...r, image: match?.image } as NftRow;
+    });
+    setNfts(merged);
   };
-  useEffect(() => { load(); }, [userId, bullsOwned]);
+  useEffect(() => { load(); }, [userId, bullsOwned, walletNfts.length]);
 
   const upgradeNft = async (nft: NftRow) => {
     if (!userId || !player) return;
@@ -98,8 +118,19 @@ const CsbNftPower = () => {
               const can = (player?.balance || 0) >= cost;
               return (
                 <Card key={n.nft_id} className={`p-4 bg-gradient-to-br ${RARITY_COLOR[n.rarity] || RARITY_COLOR.common} border-2`}>
-                  <div className="aspect-square rounded-lg bg-black/30 flex items-center justify-center mb-3">
-                    {n.rarity === "legendary" ? <Crown className="w-12 h-12 text-amber-300" /> : <Sparkles className="w-12 h-12 opacity-80" />}
+                  <div className="aspect-square rounded-lg bg-black/40 flex items-center justify-center mb-3 overflow-hidden ring-1 ring-white/10">
+                    {n.image ? (
+                      <img
+                        src={n.image}
+                        alt={n.nft_name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : n.rarity === "legendary" ? (
+                      <Crown className="w-12 h-12 text-amber-300" />
+                    ) : (
+                      <Sparkles className="w-12 h-12 opacity-80" />
+                    )}
                   </div>
                   <div className="text-xs uppercase tracking-wider opacity-80">{n.rarity}</div>
                   <h3 className="font-bold text-sm truncate">{n.nft_name}</h3>

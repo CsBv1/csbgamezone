@@ -279,8 +279,9 @@ serve(async (req) => {
     console.log("Total asset groups found:", allAssets.length);
 
     // Process found assets
-    const csbNfts: Array<{ name: string; rarity: string; quantity: number }> = [];
+    const csbNfts: Array<{ name: string; rarity: string; quantity: number; assetNameHex: string; image?: string }> = [];
     let totalBulls = 0;
+    const seenAssetHex = new Set<string>();
 
     for (const addressData of allAssets) {
       const assetList = addressData.asset_list || [];
@@ -289,12 +290,15 @@ serve(async (req) => {
         const policyId = asset.policy_id || "";
         
         if (policyId === CSB_POLICY_ID) {
+          const assetNameHex = asset.asset_name || "";
+          if (seenAssetHex.has(assetNameHex)) continue;
+          seenAssetHex.add(assetNameHex);
+
           const quantity = parseInt(asset.quantity || "1", 10);
           totalBulls += quantity;
 
           let assetName = "CSB Bull";
           try {
-            const assetNameHex = asset.asset_name || "";
             if (assetNameHex) {
               assetName = new TextDecoder().decode(
                 new Uint8Array(assetNameHex.match(/.{1,2}/g)?.map((byte: string) => parseInt(byte, 16)) || [])
@@ -305,9 +309,42 @@ serve(async (req) => {
           }
 
           console.log("*** FOUND CSB BULL ***:", assetName, "qty:", quantity);
-
-          csbNfts.push({ name: assetName, rarity: "holder", quantity });
+          csbNfts.push({ name: assetName, rarity: "holder", quantity, assetNameHex });
         }
+      }
+    }
+
+    // Fetch metadata (image) for each unique NFT via Koios asset_info
+    if (csbNfts.length > 0) {
+      try {
+        const assetList = csbNfts.map((n) => [CSB_POLICY_ID, n.assetNameHex]);
+        const metaRes = await fetch("https://api.koios.rest/api/v1/asset_info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ _asset_list: assetList }),
+        });
+        if (metaRes.ok) {
+          const metaData = await metaRes.json();
+          if (Array.isArray(metaData)) {
+            for (const m of metaData) {
+              const nft = csbNfts.find((n) => n.assetNameHex === m.asset_name);
+              if (!nft) continue;
+              // Try CIP-25 metadata: minting_tx_metadata.721.<policy>.<assetname>.image
+              let img: any = m?.minting_tx_metadata?.["721"]?.[CSB_POLICY_ID]?.[nft.name]?.image;
+              if (!img) {
+                // Some assets store under hex name
+                img = m?.minting_tx_metadata?.["721"]?.[CSB_POLICY_ID]?.[nft.assetNameHex]?.image;
+              }
+              if (Array.isArray(img)) img = img.join("");
+              if (typeof img === "string") {
+                if (img.startsWith("ipfs://")) img = `https://ipfs.io/ipfs/${img.slice(7)}`;
+                nft.image = img;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.log("asset_info metadata error:", e);
       }
     }
 
@@ -318,7 +355,7 @@ serve(async (req) => {
       bullsOwned: totalBulls,
       rarityBonus: finalBonus,
       highestRarity: totalBulls > 0 ? "holder" : "none",
-      nfts: csbNfts.slice(0, 10),
+      nfts: csbNfts.slice(0, 50).map((n) => ({ name: n.name, rarity: n.rarity, quantity: n.quantity, image: n.image, assetNameHex: n.assetNameHex })),
     };
 
     console.log("=== FINAL RESULT ===", JSON.stringify(result));
