@@ -308,41 +308,6 @@ const Dashboard = () => {
                   onClick={() => navigate(`/games/${g.route}`)} badge="🔑 KEY REQUIRED" badgeColor="bg-yellow-500 text-black"
                   buttonText={g.btn} buttonVariant="key" isHolder={bullsOwned > 0} />
               ))}
-
-              {/* CSB Game Zone — $CsBv1 Web3 Portal */}
-              <Card className="group overflow-hidden bg-card border-4 border-fuchsia-500 hover:border-fuchsia-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3"
-                onClick={() => navigate('/csb')}>
-                <div className="h-40 bg-gradient-to-br from-fuchsia-700 via-purple-700 to-cyan-700 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute top-2 right-2 bg-fuchsia-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚡ $CsBv1 WEB3</div>
-                  <div className="flex items-center gap-6">
-                    <Sparkles className="w-20 h-20 text-white group-hover:scale-110 transition-transform animate-pulse" />
-                    <Coins className="w-16 h-16 text-amber-300 group-hover:scale-110 transition-transform" />
-                  </div>
-                </div>
-                <div className="p-6 text-center">
-                  <h3 className="text-2xl font-bold mb-2 text-foreground">⚡ CSB Game Zone</h3>
-                  <p className="text-sm text-muted-foreground mb-4">New Web3 token economy: missions, upgrades, NFT power & passive $CsBv1 claims!</p>
-                  <Button variant="outline" size="lg" className="w-full border-fuchsia-400 text-fuchsia-400 hover:bg-fuchsia-400 hover:text-black">Enter CSB Zone</Button>
-                </div>
-              </Card>
-
-              {/* Bull World */}
-              <Card className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl col-span-1 md:col-span-2 lg:col-span-3 ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-cyan-400 hover:border-cyan-300'}`}
-                onClick={() => navigate('/games/bull-world')}>
-                <div className="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌍 MULTIPLAYER WORLD</div>
-                  <div className="absolute top-10 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">🔑 KEY REQUIRED</div>
-                  <div className="flex items-center gap-6">
-                    <Globe className="w-24 h-24 text-white group-hover:scale-110 transition-transform animate-pulse" />
-                    <Users className="w-16 h-16 text-cyan-300 group-hover:scale-110 transition-transform" />
-                  </div>
-                </div>
-                <div className="p-6 text-center">
-                  <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 Bull World 🌍</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Enter a virtual world! See other players, collect diamonds, explore & play mini-games together!</p>
-                  <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Bull World</Button>
-                </div>
-              </Card>
             </div>
           </div>
 
