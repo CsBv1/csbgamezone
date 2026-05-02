@@ -6,7 +6,7 @@ interface NFTBonus {
   bullsOwned: number;
   rarityBonus: number;
   highestRarity: string;
-  nfts: Array<{ name: string; rarity: string }>;
+  nfts: Array<{ name: string; rarity: string; image?: string; assetNameHex?: string }>;
 }
 
 export function useNFTBonuses(walletAddress: string | null) {
