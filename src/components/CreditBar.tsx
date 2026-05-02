@@ -8,6 +8,7 @@ export const CreditBar = () => {
   const [diamonds, setDiamonds] = useState(0);
   const [keys, setKeys] = useState(0);
   const [bukals, setBukals] = useState(0);
+  const [csbv1, setCsbv1] = useState(0);
   const [bullsOwned, setBullsOwned] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
