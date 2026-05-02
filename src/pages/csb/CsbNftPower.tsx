@@ -118,8 +118,19 @@ const CsbNftPower = () => {
               const can = (player?.balance || 0) >= cost;
               return (
                 <Card key={n.nft_id} className={`p-4 bg-gradient-to-br ${RARITY_COLOR[n.rarity] || RARITY_COLOR.common} border-2`}>
-                  <div className="aspect-square rounded-lg bg-black/30 flex items-center justify-center mb-3">
-                    {n.rarity === "legendary" ? <Crown className="w-12 h-12 text-amber-300" /> : <Sparkles className="w-12 h-12 opacity-80" />}
+                  <div className="aspect-square rounded-lg bg-black/40 flex items-center justify-center mb-3 overflow-hidden ring-1 ring-white/10">
+                    {n.image ? (
+                      <img
+                        src={n.image}
+                        alt={n.nft_name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : n.rarity === "legendary" ? (
+                      <Crown className="w-12 h-12 text-amber-300" />
+                    ) : (
+                      <Sparkles className="w-12 h-12 opacity-80" />
+                    )}
                   </div>
                   <div className="text-xs uppercase tracking-wider opacity-80">{n.rarity}</div>
                   <h3 className="font-bold text-sm truncate">{n.nft_name}</h3>
