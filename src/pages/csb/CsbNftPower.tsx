@@ -33,40 +33,31 @@ const CsbNftPower = () => {
     const existing = (data || []) as any[];
     const existingIds = new Set(existing.map((r) => r.nft_id));
 
-    // Prefer seeding from real wallet NFTs (with images); fall back to bull count
+    // Only seed from real wallet NFTs (those with on-chain identity). Skip placeholders entirely.
     const toInsert: any[] = [];
     if (walletNfts && walletNfts.length > 0) {
       walletNfts.forEach((wn, i) => {
-        const id = wn.assetNameHex ? `csb_${wn.assetNameHex}` : `bull_${i + 1}`;
+        if (!wn.assetNameHex) return; // require real on-chain id
+        const id = `csb_${wn.assetNameHex}`;
         if (!existingIds.has(id)) {
           toInsert.push({
             user_id: userId, nft_id: id,
-            nft_name: wn.name || `CSB Bull #${i + 1}`,
+            nft_name: wn.name || `CSB Bull`,
             rarity: i === 0 ? (highestRarity === "none" ? "common" : highestRarity) : "common",
             level: 1,
           });
         }
       });
-    } else {
-      for (let i = 0; i < bullsOwned; i++) {
-        const id = `bull_${i + 1}`;
-        if (!existingIds.has(id)) {
-          toInsert.push({
-            user_id: userId, nft_id: id,
-            nft_name: `CSB Bull #${i + 1}`,
-            rarity: i === 0 ? (highestRarity === "none" ? "common" : highestRarity) : "common",
-            level: 1,
-          });
-        }
-      }
     }
     if (toInsert.length) {
       await supabase.from("csbv1_nft_power" as any).insert(toInsert);
     }
     const refetch = await supabase.from("csbv1_nft_power" as any).select("*").eq("user_id", userId).order("nft_id");
     const rows = (refetch.data || []) as any[];
-    // Attach images from wallet scan by matching nft_id (csb_<hex>) or by name
-    const merged = rows.map((r) => {
+    // Filter out legacy placeholder rows (bull_1..N with no wallet match) so UI only shows real held NFTs
+    const filtered = rows.filter((r) => r.nft_id?.startsWith("csb_"));
+    // Attach images from wallet scan
+    const merged = filtered.map((r) => {
       const match = walletNfts?.find((w) =>
         (w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`) || w.name === r.nft_name
       );
