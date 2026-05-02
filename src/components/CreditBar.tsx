@@ -87,11 +87,21 @@ export const CreditBar = () => {
       )
       .subscribe();
 
+    const csbv1Channel = supabase
+      .channel('csbv1-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'csbv1_players' },
+        () => fetchBalances()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(creditsChannel);
       supabase.removeChannel(diamondsChannel);
       supabase.removeChannel(nftChannel);
       supabase.removeChannel(bukalsChannel);
+      supabase.removeChannel(csbv1Channel);
     };
   }, [isAuthenticated]);
 
