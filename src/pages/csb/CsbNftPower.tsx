@@ -56,12 +56,15 @@ const CsbNftPower = () => {
     const rows = (refetch.data || []) as any[];
     // Filter out legacy placeholder rows (bull_1..N with no wallet match) so UI only shows real held NFTs
     const filtered = rows.filter((r) => r.nft_id?.startsWith("csb_"));
-    // Attach images from wallet scan
-    const merged = filtered.map((r) => {
+    // Attach images from wallet scan and rename to "Bull #N"
+    const merged = filtered.map((r, idx) => {
       const match = walletNfts?.find((w) =>
         (w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`) || w.name === r.nft_name
       );
-      return { ...r, image: match?.image } as NftRow;
+      // Extract trailing number from original name, fallback to index+1
+      const numMatch = (r.nft_name || "").match(/(\d+)\s*$/);
+      const num = numMatch ? numMatch[1] : String(idx + 1);
+      return { ...r, image: match?.image, nft_name: `Bull #${num}` } as NftRow;
     });
     setNfts(merged);
   };
@@ -123,7 +126,7 @@ const CsbNftPower = () => {
                       <Sparkles className="w-12 h-12 opacity-80" />
                     )}
                   </div>
-                  <div className="text-xs uppercase tracking-wider opacity-80">{n.rarity}</div>
+                  <div className="text-xs uppercase tracking-widest font-extrabold text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.9)] animate-pulse">Legendary</div>
                   <h3 className="font-bold text-sm truncate">{n.nft_name}</h3>
                   <div className="text-xs opacity-90 my-1">Lv {n.level} · x{mult.toFixed(2)}</div>
                   <Button size="sm" className="w-full mt-2" disabled={!can} onClick={() => upgradeNft(n)}>
