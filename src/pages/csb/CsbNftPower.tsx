@@ -56,12 +56,15 @@ const CsbNftPower = () => {
     const rows = (refetch.data || []) as any[];
     // Filter out legacy placeholder rows (bull_1..N with no wallet match) so UI only shows real held NFTs
     const filtered = rows.filter((r) => r.nft_id?.startsWith("csb_"));
-    // Attach images from wallet scan
-    const merged = filtered.map((r) => {
+    // Attach images from wallet scan and rename to "Bull #N"
+    const merged = filtered.map((r, idx) => {
       const match = walletNfts?.find((w) =>
         (w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`) || w.name === r.nft_name
       );
-      return { ...r, image: match?.image } as NftRow;
+      // Extract trailing number from original name, fallback to index+1
+      const numMatch = (r.nft_name || "").match(/(\d+)\s*$/);
+      const num = numMatch ? numMatch[1] : String(idx + 1);
+      return { ...r, image: match?.image, nft_name: `Bull #${num}` } as NftRow;
     });
     setNfts(merged);
   };
