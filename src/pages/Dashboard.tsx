@@ -329,6 +329,8 @@ const Dashboard = () => {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
+                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-fuchsia-600 to-rose-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
+                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-purple-700 to-cyan-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
                 { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
                 { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
                 { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },
@@ -391,8 +393,8 @@ const Dashboard = () => {
                 { title: "📊 Crypto Trader", desc: "Buy low, sell high!", icon: TrendingUp, gradient: "from-cyan-800 to-blue-900", route: "crypto-trader", btn: "Trade" },
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
-                  onClick={() => totalBulls > 0 ? navigate(`/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
-                  badge={totalBulls > 0 ? "🔑 KEYS" : "🔒 LOCKED"} badgeColor={totalBulls > 0 ? "bg-yellow-500 text-black" : "bg-gray-600 text-gray-300"}
+                  onClick={() => totalBulls > 0 ? navigate((g as any).external ? `/${g.route}` : `/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
+                  badge={totalBulls > 0 ? ((g as any).external ? "🪙 $CsBv1" : "🔑 KEYS") : "🔒 LOCKED"} badgeColor={totalBulls > 0 ? ((g as any).external ? "bg-amber-500 text-black" : "bg-yellow-500 text-black") : "bg-gray-600 text-gray-300"}
                   buttonText={totalBulls > 0 ? g.btn : "🔒 Locked"} buttonVariant="key" isHolder={totalBulls > 0} />
               ))}
             </div>

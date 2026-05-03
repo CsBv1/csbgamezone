@@ -53,6 +53,7 @@ import CsbDashboard from "./pages/csb/CsbDashboard";
 import CsbMissions from "./pages/csb/CsbMissions";
 import CsbUpgrades from "./pages/csb/CsbUpgrades";
 import CsbNftPower from "./pages/csb/CsbNftPower";
+import CsbBattleArena from "./pages/csb/CsbBattleArena";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
@@ -178,6 +179,7 @@ const App = () => (
           <Route path="/csb/missions" element={<CsbMissions />} />
           <Route path="/csb/upgrades" element={<CsbUpgrades />} />
           <Route path="/csb/nft-power" element={<CsbNftPower />} />
+          <Route path="/csb/battle-arena" element={<CsbBattleArena />} />
           
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
