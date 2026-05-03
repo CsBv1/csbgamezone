@@ -126,7 +126,7 @@ const CsbNftPower = () => {
                       <Sparkles className="w-12 h-12 opacity-80" />
                     )}
                   </div>
-                  <div className="text-xs uppercase tracking-wider opacity-80">{n.rarity}</div>
+                  <div className="text-xs uppercase tracking-widest font-extrabold text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.9)] animate-pulse">Legendary</div>
                   <h3 className="font-bold text-sm truncate">{n.nft_name}</h3>
                   <div className="text-xs opacity-90 my-1">Lv {n.level} · x{mult.toFixed(2)}</div>
                   <Button size="sm" className="w-full mt-2" disabled={!can} onClick={() => upgradeNft(n)}>
