@@ -150,12 +150,33 @@ export default function CsbBattleArena() {
   };
 
   // ================== PvP ==================
+  const PVP_TIMEOUT_SECONDS = 45;
   const startPvP = async (bull: CsbBull) => {
     if (!userId) return;
     setSelected(bull);
     setSearching(true);
     setQueueTime(0);
-    queueTimerRef.current = setInterval(() => setQueueTime((t) => t + 1), 1000);
+    queueTimerRef.current = setInterval(() => {
+      setQueueTime((t) => {
+        const nt = t + 1;
+        if (nt >= PVP_TIMEOUT_SECONDS) {
+          // Auto-fallback to AI
+          clearInterval(queueTimerRef.current);
+          (async () => {
+            if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
+            if (roomId && userId) {
+              await supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
+              await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+            }
+            setRoomId(null); setSearching(false);
+            toast({ title: 'No opponent found', description: 'Starting AI match instead.' });
+            setMode('ai');
+            startAI(bull);
+          })();
+        }
+        return nt;
+      });
+    }, 1000);
 
     const { data: openRooms } = await supabase
       .from('game_rooms').select('id')
