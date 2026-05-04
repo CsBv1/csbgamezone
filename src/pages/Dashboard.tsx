@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Gem, Coins, Flame, TrendingUp, Pickaxe, Target, Lock, Gauge, Globe, Users, ExternalLink, Key, Shield, Sparkles, Music, ChevronDown, Eye, Building2, Swords, Crown } from "lucide-react";
+import { Trophy, Gem, Coins, Flame, TrendingUp, Pickaxe, Target, Lock, Gauge, Globe, Users, ExternalLink, Key, Shield, Sparkles, Music, ChevronDown, Eye, Building2, Swords, Crown, Flag } from "lucide-react";
 import { CreditBar } from "@/components/CreditBar";
 import { CardanoWalletConnector } from "@/components/CardanoWalletConnector";
 import { ColorSelectorDialog } from "@/components/ColorSelectorDialog";
@@ -225,20 +225,20 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* CSB Game Zone — $CsBv1 Web3 Portal — moved up */}
-          <Card className="group overflow-hidden bg-card border-4 border-fuchsia-500 hover:border-fuchsia-400 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+          {/* CSB Game Zone — light blue badge style */}
+          <Card className="group overflow-hidden bg-card border-4 border-sky-300 hover:border-sky-200 hover:scale-105 transition-all duration-300 cursor-pointer shadow-[0_0_30px_rgba(125,211,252,0.4)] hover:shadow-[0_0_50px_rgba(125,211,252,0.7)]"
             onClick={() => navigate('/csb')}>
-            <div className="h-48 bg-gradient-to-br from-fuchsia-700 via-purple-700 to-cyan-700 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-fuchsia-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚡ $CsBv1 WEB3</div>
+            <div className="h-48 bg-gradient-to-br from-sky-400 via-cyan-300 to-blue-400 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-white/90 text-sky-700 px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚡ $CsBv1 WEB3</div>
               <div className="flex items-center gap-6">
-                <Sparkles className="w-20 h-20 text-white group-hover:scale-110 transition-transform animate-pulse" />
-                <Coins className="w-16 h-16 text-amber-300 group-hover:scale-110 transition-transform" />
+                <Sparkles className="w-20 h-20 text-white group-hover:scale-110 transition-transform animate-pulse drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                <Coins className="w-16 h-16 text-amber-200 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]" />
               </div>
             </div>
             <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">⚡ CSB Game Zone</h3>
-              <p className="text-sm text-muted-foreground mb-4">New Web3 token economy: missions, upgrades, NFT power & passive $CsBv1 claims. Earn real $CsBv1 — your bull NFTs boost every reward.</p>
-              <Button variant="outline" size="lg" className="w-full border-fuchsia-400 text-fuchsia-400 hover:bg-fuchsia-400 hover:text-black">Enter CSB Zone</Button>
+              <h3 className="text-2xl font-bold mb-2 text-sky-300 drop-shadow-[0_0_10px_rgba(125,211,252,0.6)]">⚡ CSB Game Zone</h3>
+              <p className="text-sm text-muted-foreground mb-4">Web3 token economy: missions, upgrades, NFT power, bull battles, races & passive $CsBv1 claims. Your bull NFTs boost every reward.</p>
+              <Button variant="outline" size="lg" className="w-full border-sky-300 text-sky-300 hover:bg-sky-300 hover:text-black">Enter CSB Zone</Button>
             </div>
           </Card>
 
@@ -329,8 +329,9 @@ const Dashboard = () => {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-fuchsia-600 to-rose-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
-                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-purple-700 to-cyan-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
+                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-sky-500 to-cyan-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
+                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-sky-600 to-blue-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
+                { title: "🏁 CSB Bull Race", desc: "Tap-race your bull, earn $CsBv1!", icon: Flag, gradient: "from-cyan-500 to-sky-700", route: "csb/bull-race", btn: "Race", external: true },
                 { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
                 { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
                 { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },

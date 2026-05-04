@@ -150,12 +150,33 @@ export default function CsbBattleArena() {
   };
 
   // ================== PvP ==================
+  const PVP_TIMEOUT_SECONDS = 45;
   const startPvP = async (bull: CsbBull) => {
     if (!userId) return;
     setSelected(bull);
     setSearching(true);
     setQueueTime(0);
-    queueTimerRef.current = setInterval(() => setQueueTime((t) => t + 1), 1000);
+    queueTimerRef.current = setInterval(() => {
+      setQueueTime((t) => {
+        const nt = t + 1;
+        if (nt >= PVP_TIMEOUT_SECONDS) {
+          // Auto-fallback to AI
+          clearInterval(queueTimerRef.current);
+          (async () => {
+            if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
+            if (roomId && userId) {
+              await supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
+              await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+            }
+            setRoomId(null); setSearching(false);
+            toast({ title: 'No opponent found', description: 'Starting AI match instead.' });
+            setMode('ai');
+            startAI(bull);
+          })();
+        }
+        return nt;
+      });
+    }, 1000);
 
     const { data: openRooms } = await supabase
       .from('game_rooms').select('id')
@@ -397,7 +418,9 @@ export default function CsbBattleArena() {
           <Card className="bg-slate-900/80 border-purple-700 p-6 text-center max-w-md mx-auto space-y-3">
             <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
             <h3 className="text-lg font-bold">Searching for opponent...</h3>
-            <p className="font-mono text-purple-300">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
+            <p className="font-mono text-purple-300 text-2xl">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
+            <p className="text-xs text-muted-foreground">Auto-switches to AI after {PVP_TIMEOUT_SECONDS}s if no opponent found</p>
+            <Progress value={(queueTime / PVP_TIMEOUT_SECONDS) * 100} className="h-2" />
             <Button variant="outline" onClick={cancelQueue}>Cancel</Button>
           </Card>
         )}
