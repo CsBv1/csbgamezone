@@ -184,7 +184,9 @@ const App = () => (
           <Route path="/csb/nft-power" element={<CsbNftPower />} />
           <Route path="/csb/battle-arena" element={<CsbBattleArena />} />
           <Route path="/csb/bull-race" element={<CsbBullRace />} />
-          
+          <Route path="/csb/bull-hunt" element={<CsbBullHunt />} />
+          <Route path="/csb/bull-mine" element={<CsbBullMine />} />
+
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
           <Route path="/games/kingdom-siege" element={<KingdomSiege />} />
