@@ -55,6 +55,8 @@ import CsbUpgrades from "./pages/csb/CsbUpgrades";
 import CsbNftPower from "./pages/csb/CsbNftPower";
 import CsbBattleArena from "./pages/csb/CsbBattleArena";
 import CsbBullRace from "./pages/csb/CsbBullRace";
+import CsbBullHunt from "./pages/csb/CsbBullHunt";
+import CsbBullMine from "./pages/csb/CsbBullMine";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
