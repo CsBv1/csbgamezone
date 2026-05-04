@@ -167,6 +167,13 @@ const Dashboard = () => {
                     <BadgeSelectorDialog />
                     <RuneSelectorDialog />
                     <DailyCalendar />
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/csb')}
+                      className="bg-gradient-to-r from-sky-400 to-cyan-500 hover:from-sky-300 hover:to-cyan-400 text-black font-bold border-2 border-sky-200 shadow-[0_0_15px_rgba(125,211,252,0.6)] hover:shadow-[0_0_25px_rgba(125,211,252,0.9)] animate-pulse"
+                    >
+                      ⚡ CSB Zone
+                    </Button>
                   </div>
                 </div>
               </Card>
