@@ -167,6 +167,13 @@ const Dashboard = () => {
                     <BadgeSelectorDialog />
                     <RuneSelectorDialog />
                     <DailyCalendar />
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/csb')}
+                      className="bg-gradient-to-r from-sky-400 to-cyan-500 hover:from-sky-300 hover:to-cyan-400 text-black font-bold border-2 border-sky-200 shadow-[0_0_15px_rgba(125,211,252,0.6)] hover:shadow-[0_0_25px_rgba(125,211,252,0.9)] animate-pulse"
+                    >
+                      ⚡ CSB Zone
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -222,23 +229,6 @@ const Dashboard = () => {
               <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 Bull World 🌍</h3>
               <p className="text-sm text-muted-foreground mb-4">Enter a virtual world! See other players, collect diamonds, explore & play mini-games together!</p>
               <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Bull World</Button>
-            </div>
-          </Card>
-
-          {/* CSB Game Zone — light blue badge style */}
-          <Card className="group overflow-hidden bg-card border-4 border-sky-300 hover:border-sky-200 hover:scale-105 transition-all duration-300 cursor-pointer shadow-[0_0_30px_rgba(125,211,252,0.4)] hover:shadow-[0_0_50px_rgba(125,211,252,0.7)]"
-            onClick={() => navigate('/csb')}>
-            <div className="h-48 bg-gradient-to-br from-sky-400 via-cyan-300 to-blue-400 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-white/90 text-sky-700 px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚡ $CsBv1 WEB3</div>
-              <div className="flex items-center gap-6">
-                <Sparkles className="w-20 h-20 text-white group-hover:scale-110 transition-transform animate-pulse drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                <Coins className="w-16 h-16 text-amber-200 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]" />
-              </div>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-sky-300 drop-shadow-[0_0_10px_rgba(125,211,252,0.6)]">⚡ CSB Game Zone</h3>
-              <p className="text-sm text-muted-foreground mb-4">Web3 token economy: missions, upgrades, NFT power, bull battles, races & passive $CsBv1 claims. Your bull NFTs boost every reward.</p>
-              <Button variant="outline" size="lg" className="w-full border-sky-300 text-sky-300 hover:bg-sky-300 hover:text-black">Enter CSB Zone</Button>
             </div>
           </Card>
 
@@ -332,6 +322,8 @@ const Dashboard = () => {
                 { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-sky-500 to-cyan-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
                 { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-sky-600 to-blue-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
                 { title: "🏁 CSB Bull Race", desc: "Tap-race your bull, earn $CsBv1!", icon: Flag, gradient: "from-cyan-500 to-sky-700", route: "csb/bull-race", btn: "Race", external: true },
+                { title: "🎯 CSB Bull Hunt", desc: "Tap targets fast, earn $CsBv1!", icon: Target, gradient: "from-sky-500 to-blue-700", route: "csb/bull-hunt", btn: "Hunt", external: true },
+                { title: "⛏️ CSB Bull Mine", desc: "Send bulls mining, earn $CsBv1!", icon: Pickaxe, gradient: "from-cyan-600 to-blue-800", route: "csb/bull-mine", btn: "Mine", external: true },
                 { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
                 { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
                 { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },

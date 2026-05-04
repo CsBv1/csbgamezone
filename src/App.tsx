@@ -55,6 +55,8 @@ import CsbUpgrades from "./pages/csb/CsbUpgrades";
 import CsbNftPower from "./pages/csb/CsbNftPower";
 import CsbBattleArena from "./pages/csb/CsbBattleArena";
 import CsbBullRace from "./pages/csb/CsbBullRace";
+import CsbBullHunt from "./pages/csb/CsbBullHunt";
+import CsbBullMine from "./pages/csb/CsbBullMine";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
@@ -182,7 +184,9 @@ const App = () => (
           <Route path="/csb/nft-power" element={<CsbNftPower />} />
           <Route path="/csb/battle-arena" element={<CsbBattleArena />} />
           <Route path="/csb/bull-race" element={<CsbBullRace />} />
-          
+          <Route path="/csb/bull-hunt" element={<CsbBullHunt />} />
+          <Route path="/csb/bull-mine" element={<CsbBullMine />} />
+
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
           <Route path="/games/kingdom-siege" element={<KingdomSiege />} />
