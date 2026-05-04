@@ -329,8 +329,9 @@ const Dashboard = () => {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-fuchsia-600 to-rose-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
-                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-purple-700 to-cyan-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
+                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-sky-500 to-cyan-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
+                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-sky-600 to-blue-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
+                { title: "🏁 CSB Bull Race", desc: "Tap-race your bull, earn $CsBv1!", icon: Flag, gradient: "from-cyan-500 to-sky-700", route: "csb/bull-race", btn: "Race", external: true },
                 { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
                 { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
                 { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },
