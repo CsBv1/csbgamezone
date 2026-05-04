@@ -418,7 +418,9 @@ export default function CsbBattleArena() {
           <Card className="bg-slate-900/80 border-purple-700 p-6 text-center max-w-md mx-auto space-y-3">
             <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
             <h3 className="text-lg font-bold">Searching for opponent...</h3>
-            <p className="font-mono text-purple-300">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
+            <p className="font-mono text-purple-300 text-2xl">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
+            <p className="text-xs text-muted-foreground">Auto-switches to AI after {PVP_TIMEOUT_SECONDS}s if no opponent found</p>
+            <Progress value={(queueTime / PVP_TIMEOUT_SECONDS) * 100} className="h-2" />
             <Button variant="outline" onClick={cancelQueue}>Cancel</Button>
           </Card>
         )}
