@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { GameCard } from "@/components/GameCard";
+import { HowToPlayDialog } from "@/components/HowToPlayDialog";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -167,6 +168,7 @@ const Dashboard = () => {
                     <BadgeSelectorDialog />
                     <RuneSelectorDialog />
                     <DailyCalendar />
+                    <HowToPlayDialog />
                     <Button
                       size="sm"
                       onClick={() => navigate('/csb')}
@@ -324,6 +326,9 @@ const Dashboard = () => {
                 { title: "🏁 CSB Bull Race", desc: "Tap-race your bull, earn $CsBv1!", icon: Flag, gradient: "from-cyan-500 to-sky-700", route: "csb/bull-race", btn: "Race", external: true },
                 { title: "🎯 CSB Bull Hunt", desc: "Tap targets fast, earn $CsBv1!", icon: Target, gradient: "from-sky-500 to-blue-700", route: "csb/bull-hunt", btn: "Hunt", external: true },
                 { title: "⛏️ CSB Bull Mine", desc: "Send bulls mining, earn $CsBv1!", icon: Pickaxe, gradient: "from-cyan-600 to-blue-800", route: "csb/bull-mine", btn: "Mine", external: true },
+                { title: "⚔️ CSB Boss Raid", desc: "Combo-attack mega bosses!", icon: Swords, gradient: "from-rose-600 to-orange-800", route: "csb/boss-raid", btn: "Raid", external: true },
+                { title: "🎲 CSB Dice Duel", desc: "Best of 5 dice vs AI!", icon: Sparkles, gradient: "from-emerald-600 to-teal-800", route: "csb/dice-duel", btn: "Duel", external: true },
+                { title: "🛡️ CSB Bull Defense", desc: "Tower defense, 8 waves!", icon: Shield, gradient: "from-indigo-600 to-violet-800", route: "csb/bull-defense", btn: "Defend", external: true },
                 { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
                 { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
                 { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },
@@ -453,7 +458,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
               {[
                 { href: "https://arena2.cardanostakebulls.space/", icon: TrendingUp, title: "Stake Platform", desc: "Stake your ADA!", color: "primary" },
-                { href: "https://www.jpg.store/collection/cardanostakebulls?tab=items", icon: Key, title: "Mint Bull Key 🔑", desc: "Get CSB Bulls!", color: "amber" },
+                { href: "https://csb-mint.netlify.app", icon: Key, title: "Mint Bull 🔑", desc: "Mint on the new launch pad!", color: "amber" },
                 { href: "https://discord.gg/FCyYYwryYW", icon: Users, title: "Discord", desc: "Join our Discord!", color: "indigo" },
                 { href: "https://x.com/worldofgaia5art?s=21&t=mSdrl7vSEhr5s0minUvc-w", icon: Globe, title: "Twitter / X", desc: "Follow us!", color: "blue" },
                 { href: "https://csbpubliclibrary.lovable.app/", icon: ExternalLink, title: "Library", desc: "Read the public library", color: "cyan" },
@@ -472,6 +477,14 @@ const Dashboard = () => {
                 </a>
               ))}
             </div>
+          </div>
+
+          {/* Founder credit */}
+          <div className="mt-8 pt-6 border-t border-border/50 text-center">
+            <p className="text-sm text-muted-foreground">
+              Made by Cardano Stake Bull founder{" "}
+              <span className="font-bold gradient-gold bg-clip-text text-transparent">Nick G</span> 🐂
+            </p>
           </div>
         </div>
       </main>
