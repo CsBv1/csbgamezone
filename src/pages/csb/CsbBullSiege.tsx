@@ -83,17 +83,18 @@ export default function CsbBullSiege() {
   useEffect(() => {
     if (state !== "playing") return;
     if (castleHp <= 0) { finish(false); return; }
-    if (enemies.length === 0 && spawnedRef.current >= 6 + wave * 2 && spawnRef.current) {
-      clearInterval(tickRef.current); clearInterval(spawnRef.current);
+    const target = 6 + wave * 2;
+    if (enemies.length === 0 && spawnedRef.current >= target && !spawnRef.current) {
+      clearInterval(tickRef.current);
       if (wave >= TOTAL_WAVES) finish(true);
-      else { setWave((w) => w + 1); }
+      else setWave((w) => w + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enemies, castleHp, state]);
+  }, [enemies, castleHp, state, wave]);
 
   useEffect(() => {
     if (state !== "playing" || !selected) return;
-    if (wave > 1 && spawnedRef.current === 0) startWave(wave, selected);
+    if (wave > 1) startWave(wave, selected);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wave]);
 
