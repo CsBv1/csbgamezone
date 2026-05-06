@@ -200,6 +200,8 @@ const App = () => (
           <Route path="/csb/bull-expedition" element={<CsbBullExpedition />} />
           <Route path="/csb/bull-siege" element={<CsbBullSiege />} />
           <Route path="/csb/bull-vault" element={<CsbBullVault />} />
+          <Route path="/csb/bull-arena" element={<CsbBullArena />} />
+          <Route path="/csb/bull-summit" element={<CsbBullSummit />} />
 
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
