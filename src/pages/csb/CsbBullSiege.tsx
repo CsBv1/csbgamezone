@@ -42,7 +42,7 @@ export default function CsbBullSiege() {
     if (!userId) return;
     (async () => {
       const { data } = await supabase.from("csbv1_nft_power" as any).select("*").eq("user_id", userId).order("nft_id");
-      const rows = ((data || []) as any[]).filter((r) => r.nft_id?.startsWith("csb_"));
+      const rows = ((data || []) as any[]).filter((r) => r.nft_id?.startsWith("csb_") && (walletNfts.length === 0 || walletNfts.some((w) => w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`)));
       setBulls(rows.map((r, idx) => {
         const match = walletNfts?.find((w) => w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`);
         const num = (r.nft_name || "").match(/(\d+)\s*$/)?.[1] || String(idx + 1);
@@ -54,11 +54,12 @@ export default function CsbBullSiege() {
   useEffect(() => () => { clearInterval(tickRef.current); clearInterval(spawnRef.current); }, []);
 
   const startWave = (w: number, bull: CsbBull) => {
+    clearInterval(tickRef.current); clearInterval(spawnRef.current);
     spawnedRef.current = 0;
     const enemyCount = 6 + w * 2;
     const speed = 0.4 + w * 0.15;
     spawnRef.current = setInterval(() => {
-      if (spawnedRef.current >= enemyCount) { clearInterval(spawnRef.current); return; }
+      if (spawnedRef.current >= enemyCount) { clearInterval(spawnRef.current); spawnRef.current = null; return; }
       spawnedRef.current++;
       const hp = Math.round(20 + w * 10);
       setEnemies((es) => [...es, { id: ++idRef.current, x: 0, hp, maxHp: hp, speed }]);
@@ -82,17 +83,18 @@ export default function CsbBullSiege() {
   useEffect(() => {
     if (state !== "playing") return;
     if (castleHp <= 0) { finish(false); return; }
-    if (enemies.length === 0 && spawnedRef.current >= 6 + wave * 2 && spawnRef.current) {
-      clearInterval(tickRef.current); clearInterval(spawnRef.current);
+    const target = 6 + wave * 2;
+    if (enemies.length === 0 && spawnedRef.current >= target && !spawnRef.current) {
+      clearInterval(tickRef.current);
       if (wave >= TOTAL_WAVES) finish(true);
-      else { setWave((w) => w + 1); }
+      else setWave((w) => w + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enemies, castleHp, state]);
+  }, [enemies, castleHp, state, wave]);
 
   useEffect(() => {
     if (state !== "playing" || !selected) return;
-    if (wave > 1 && spawnedRef.current === 0) startWave(wave, selected);
+    if (wave > 1) startWave(wave, selected);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wave]);
 

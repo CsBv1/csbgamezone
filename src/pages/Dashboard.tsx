@@ -332,6 +332,8 @@ const Dashboard = () => {
                 { title: "🗺️ CSB Bull Expedition", desc: "8-room dungeon crawl, loot $CsBv1!", icon: Compass, gradient: "from-emerald-600 to-teal-800", route: "csb/bull-expedition", btn: "Explore", external: true },
                 { title: "🏰 CSB Bull Siege", desc: "Defend castle across 5 waves!", icon: Castle, gradient: "from-amber-600 to-rose-800", route: "csb/bull-siege", btn: "Defend", external: true },
                 { title: "🔐 CSB Bull Vault", desc: "Risk-vs-reward bomb dodge!", icon: Vault, gradient: "from-violet-600 to-fuchsia-800", route: "csb/bull-vault", btn: "Crack", external: true },
+                { title: "⚔️ CSB Bull Arena", desc: "Turn-based duels with HP/ATK/DEF!", icon: Swords, gradient: "from-rose-600 to-fuchsia-800", route: "csb/bull-arena", btn: "Fight", external: true },
+                { title: "🏔️ CSB Bull Summit", desc: "Climb 12 tiles, push or retreat!", icon: Crown, gradient: "from-cyan-600 to-emerald-800", route: "csb/bull-summit", btn: "Climb", external: true },
                 { title: "⚔️ Bull Tactician", desc: "Chess-like strategy!", icon: Target, gradient: "from-indigo-600 to-purple-700", route: "bull-tactician", btn: "Play" },
                 { title: "🏰 Kingdom Siege", desc: "Tower defense!", icon: Shield, gradient: "from-slate-600 to-gray-700", route: "kingdom-siege", btn: "Defend" },
                 { title: "📈 Market Master", desc: "Trading sim!", icon: TrendingUp, gradient: "from-green-600 to-emerald-700", route: "market-master", btn: "Trade" },

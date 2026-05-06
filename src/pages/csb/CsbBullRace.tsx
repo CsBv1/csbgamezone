@@ -41,7 +41,7 @@ export default function CsbBullRace() {
       if (!userId) return;
       const { data } = await supabase.from('csbv1_nft_power' as any)
         .select('*').eq('user_id', userId).order('nft_id');
-      const rows = ((data || []) as any[]).filter((r) => r.nft_id?.startsWith('csb_'));
+      const rows = ((data || []) as any[]).filter((r) => r.nft_id?.startsWith('csb_') && (walletNfts.length === 0 || walletNfts.some((w) => w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`)));
       const merged = rows.map((r, idx) => {
         const match = walletNfts?.find((w) => w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`);
         const numMatch = (r.nft_name || '').match(/(\d+)\s*$/);
