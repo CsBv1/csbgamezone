@@ -63,6 +63,8 @@ import CsbBullDefense from "./pages/csb/CsbBullDefense";
 import CsbBullExpedition from "./pages/csb/CsbBullExpedition";
 import CsbBullSiege from "./pages/csb/CsbBullSiege";
 import CsbBullVault from "./pages/csb/CsbBullVault";
+import CsbBullArena from "./pages/csb/CsbBullArena";
+import CsbBullSummit from "./pages/csb/CsbBullSummit";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
