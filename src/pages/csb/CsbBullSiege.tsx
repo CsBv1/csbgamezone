@@ -54,11 +54,12 @@ export default function CsbBullSiege() {
   useEffect(() => () => { clearInterval(tickRef.current); clearInterval(spawnRef.current); }, []);
 
   const startWave = (w: number, bull: CsbBull) => {
+    clearInterval(tickRef.current); clearInterval(spawnRef.current);
     spawnedRef.current = 0;
     const enemyCount = 6 + w * 2;
     const speed = 0.4 + w * 0.15;
     spawnRef.current = setInterval(() => {
-      if (spawnedRef.current >= enemyCount) { clearInterval(spawnRef.current); return; }
+      if (spawnedRef.current >= enemyCount) { clearInterval(spawnRef.current); spawnRef.current = null; return; }
       spawnedRef.current++;
       const hp = Math.round(20 + w * 10);
       setEnemies((es) => [...es, { id: ++idRef.current, x: 0, hp, maxHp: hp, speed }]);
