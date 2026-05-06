@@ -54,14 +54,14 @@ const CsbNftPower = () => {
     }
     const refetch = await supabase.from("csbv1_nft_power" as any).select("*").eq("user_id", userId).order("nft_id");
     const rows = (refetch.data || []) as any[];
-    // Filter out legacy placeholder rows (bull_1..N with no wallet match) so UI only shows real held NFTs
-    const filtered = rows.filter((r) => r.nft_id?.startsWith("csb_"));
-    // Attach images from wallet scan and rename to "Bull #N"
+    // Build set of currently-held wallet asset ids
+    const heldIds = new Set((walletNfts || []).filter((w) => w.assetNameHex).map((w) => `csb_${w.assetNameHex}`));
+    // Only show rows that match a currently-held NFT
+    const filtered = rows.filter((r) => r.nft_id?.startsWith("csb_") && (heldIds.size === 0 || heldIds.has(r.nft_id)));
     const merged = filtered.map((r, idx) => {
       const match = walletNfts?.find((w) =>
         (w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`) || w.name === r.nft_name
       );
-      // Extract trailing number from original name, fallback to index+1
       const numMatch = (r.nft_name || "").match(/(\d+)\s*$/);
       const num = numMatch ? numMatch[1] : String(idx + 1);
       return { ...r, image: match?.image, nft_name: `Bull #${num}` } as NftRow;
