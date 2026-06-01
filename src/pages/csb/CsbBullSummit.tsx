@@ -68,7 +68,7 @@ export default function CsbBullSummit() {
     setReward(earned);
     if (earned > 0) await addBalance(earned);
     if (userId) await supabase.from("game_results").insert({ user_id: userId, game_name: "CSB Bull Summit", result: pos >= ROUTE_LEN ? "win" : "loss", diamonds_won: 0 });
-    toast({ title: pos >= ROUTE_LEN ? "🏔️ Summit Reached!" : "🏕️ Retreated safely", description: `+${earned} $CsBv1` });
+    toast({ title: pos >= ROUTE_LEN ? "🏔️ Summit Reached!" : "🏕️ Retreated safely", description: `+${earned} Rune Power` });
   };
 
   const advance = async () => {
@@ -80,13 +80,13 @@ export default function CsbBullSummit() {
     let nhp = hp, nl = loot;
     if (tile === "loot") {
       const g = Math.round(40 + Math.random() * 60);
-      nl += g; lines.push(`💰 Found ${g} $CsBv1.`);
+      nl += g; lines.push(`💰 Found ${g} Rune Power.`);
     } else if (tile === "monster") {
       const dmg = Math.round((10 + Math.random() * 20) / Math.max(0.7, rare * lvl));
       nhp = Math.max(0, nhp - dmg);
       const reward = Math.round(60 + Math.random() * 40);
       nl += reward;
-      lines.push(`👹 Fought a beast! -${dmg} HP, +${reward} $CsBv1.`);
+      lines.push(`👹 Fought a beast! -${dmg} HP, +${reward} Rune Power.`);
     } else if (tile === "trap") {
       const dmg = Math.round((15 + Math.random() * 15) / Math.max(0.8, rare));
       nhp = Math.max(0, nhp - dmg);
@@ -99,13 +99,13 @@ export default function CsbBullSummit() {
       const heal = Math.round(maxHp * 0.15);
       const g = Math.round(80 + Math.random() * 40);
       nhp = Math.min(maxHp, nhp + heal); nl += g;
-      lines.push(`✨ Shrine blessing! +${heal} HP, +${g} $CsBv1.`);
+      lines.push(`✨ Shrine blessing! +${heal} HP, +${g} Rune Power.`);
     } else if (tile === "boss") {
       const dmg = Math.round(35 / Math.max(0.6, rare * lvl));
       nhp = Math.max(0, nhp - dmg);
       const big = Math.round(400 + Math.random() * 200);
       nl += big;
-      lines.push(`💀 BOSS DEFEATED! -${dmg} HP, +${big} $CsBv1.`);
+      lines.push(`💀 BOSS DEFEATED! -${dmg} HP, +${big} Rune Power.`);
     }
     setHp(nhp); setLoot(nl); setPos(pos + 1); setLog((l) => [...l, ...lines]);
     if (nhp <= 0) {
@@ -116,7 +116,7 @@ export default function CsbBullSummit() {
       setReward(earned); setState("done");
       if (earned > 0) await addBalance(earned);
       if (userId) await supabase.from("game_results").insert({ user_id: userId, game_name: "CSB Bull Summit", result: "loss", diamonds_won: 0 });
-      toast({ title: "💔 Defeated", description: `+${earned} $CsBv1 (50% loot)` });
+      toast({ title: "💔 Defeated", description: `+${earned} Rune Power (50% loot)` });
     } else if (pos + 1 >= ROUTE_LEN) {
       // auto cash out at summit
       setTimeout(() => {
@@ -126,7 +126,7 @@ export default function CsbBullSummit() {
         setReward(earned); setState("done");
         addBalance(earned);
         if (userId) supabase.from("game_results").insert({ user_id: userId, game_name: "CSB Bull Summit", result: "win", diamonds_won: 0 });
-        toast({ title: "🏔️ Summit Conquered!", description: `+${earned} $CsBv1 (1.25x summit bonus)` });
+        toast({ title: "🏔️ Summit Conquered!", description: `+${earned} Rune Power (1.25x summit bonus)` });
       }, 500);
     }
   };
@@ -138,7 +138,7 @@ export default function CsbBullSummit() {
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/")} className="gap-2"><ArrowLeft className="w-4 h-4" /> Dashboard</Button>
-          <div className="flex items-center gap-2 text-amber-300 text-sm"><Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} $CsBv1</div>
+          <div className="flex items-center gap-2 text-amber-300 text-sm"><Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} Rune Power</div>
         </div>
 
         <div className="text-center">
@@ -177,7 +177,7 @@ export default function CsbBullSummit() {
           <Card className="bg-slate-900/80 border-cyan-800/40 p-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2"><Heart className="w-4 h-4 text-rose-400" /> {hp}/{maxHp}</div>
-              <Badge className="bg-emerald-600"><Gem className="w-3 h-3 mr-1" /> {loot} $CsBv1</Badge>
+              <Badge className="bg-emerald-600"><Gem className="w-3 h-3 mr-1" /> {loot} Rune Power</Badge>
             </div>
             <div className="grid grid-cols-12 gap-1">
               {route.map((t, i) => (
@@ -201,7 +201,7 @@ export default function CsbBullSummit() {
         {state === "done" && (
           <Card className="bg-slate-900/80 border-cyan-800/40 p-6 text-center space-y-3">
             <Trophy className="w-16 h-16 mx-auto text-amber-300 animate-pulse" />
-            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} $CsBv1</Badge>
+            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} Rune Power</Badge>
             <div className="flex gap-2">
               <Button onClick={() => selected && start(selected)} className="flex-1 bg-gradient-to-r from-sky-500 to-emerald-500">Climb Again</Button>
               <Button onClick={reset} variant="outline" className="flex-1">Pick Bull</Button>

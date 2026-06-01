@@ -82,7 +82,7 @@ export default function CsbBullVault() {
     setState("done");
     if (earned > 0) await addBalance(earned);
     if (userId) await supabase.from("game_results").insert({ user_id: userId, game_name: "CSB Bull Vault", result: earned > 0 ? "win" : "loss", diamonds_won: 0 });
-    toast({ title: earned > 0 ? "💰 Vault Cleared!" : "💥 Bull Got Bombed!", description: `+${earned} $CsBv1` });
+    toast({ title: earned > 0 ? "💰 Vault Cleared!" : "💥 Bull Got Bombed!", description: `+${earned} Rune Power` });
   };
 
   const reset = () => { setState("select"); setSelected(null); };
@@ -92,12 +92,12 @@ export default function CsbBullVault() {
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/")} className="gap-2"><ArrowLeft className="w-4 h-4" /> Dashboard</Button>
-          <div className="flex items-center gap-2 text-amber-300 text-sm"><Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} $CsBv1</div>
+          <div className="flex items-center gap-2 text-amber-300 text-sm"><Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} Rune Power</div>
         </div>
 
         <div className="text-center">
           <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-violet-300 via-fuchsia-300 to-pink-400 bg-clip-text text-transparent">🔐 CSB BULL VAULT</h1>
-          <p className="text-sm text-muted-foreground mt-1">Open boxes for $CsBv1. Avoid 4 bombs. Cash out anytime!</p>
+          <p className="text-sm text-muted-foreground mt-1">Open boxes for Rune Power. Avoid 4 bombs. Cash out anytime!</p>
         </div>
 
         {state === "select" && (
@@ -130,7 +130,7 @@ export default function CsbBullVault() {
         {state === "playing" && (
           <Card className="bg-slate-900/80 border-violet-800/40 p-4 space-y-3">
             <div className="flex justify-between items-center">
-              <Badge className="bg-violet-700">💰 Pot: {pot} $CsBv1</Badge>
+              <Badge className="bg-violet-700">💰 Pot: {pot} Rune Power</Badge>
               <Button size="sm" onClick={cashOut} disabled={pot === 0} className="bg-gradient-to-r from-emerald-500 to-teal-500">Cash Out</Button>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -153,7 +153,7 @@ export default function CsbBullVault() {
         {state === "done" && (
           <Card className="bg-slate-900/80 border-violet-800/40 p-6 text-center space-y-3">
             {busted ? <ShieldAlert className="w-16 h-16 mx-auto text-rose-400" /> : <Trophy className="w-16 h-16 mx-auto text-amber-300 animate-pulse" />}
-            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} $CsBv1</Badge>
+            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} Rune Power</Badge>
             <div className="flex gap-2">
               <Button onClick={() => selected && start(selected)} className="flex-1 bg-gradient-to-r from-violet-500 to-fuchsia-500">Again</Button>
               <Button onClick={reset} variant="outline" className="flex-1">Pick Bull</Button>

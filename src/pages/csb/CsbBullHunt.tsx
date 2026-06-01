@@ -94,7 +94,7 @@ export default function CsbBullHunt() {
         user_id: userId, game_name: "CSB Bull Hunt", result: earned > 0 ? "win" : "loss", diamonds_won: 0,
       });
     }
-    toast({ title: "🎯 Round Over", description: `Score ${score} → +${earned} $CsBv1` });
+    toast({ title: "🎯 Round Over", description: `Score ${score} → +${earned} Rune Power` });
   };
 
   const hit = () => {
@@ -113,13 +113,13 @@ export default function CsbBullHunt() {
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Button>
           <div className="flex items-center gap-2 text-amber-300 text-sm">
-            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
         <div className="text-center">
           <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-sky-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">🎯 CSB BULL HUNT</h1>
-          <p className="text-sm text-muted-foreground mt-1">Tap targets fast! Smaller = more points. Earn <span className="text-amber-300">$CsBv1</span></p>
+          <p className="text-sm text-muted-foreground mt-1">Tap targets fast! Smaller = more points. Earn <span className="text-amber-300">Rune Power</span></p>
         </div>
 
         {state === "select" && (
@@ -172,7 +172,7 @@ export default function CsbBullHunt() {
           <Card className="bg-slate-900/80 border-sky-800/40 p-6 text-center space-y-3">
             <Trophy className="w-16 h-16 mx-auto text-amber-300 animate-pulse" />
             <div className="text-2xl font-black">Score: {score}</div>
-            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} $CsBv1</Badge>
+            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} Rune Power</Badge>
             <div className="flex gap-2">
               <Button onClick={() => selected && start(selected)} className="flex-1 bg-gradient-to-r from-sky-500 to-cyan-500">Hunt Again</Button>
               <Button onClick={reset} variant="outline" className="flex-1">Pick Bull</Button>

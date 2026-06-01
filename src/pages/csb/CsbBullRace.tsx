@@ -109,11 +109,11 @@ export default function CsbBullRace() {
           user_id: userId, game_name: 'CSB Bull Race', result: 'win', diamonds_won: 0,
         });
       }
-      toast({ title: '🏁 You Won!', description: `+${earned} $CsBv1` });
+      toast({ title: '🏁 You Won!', description: `+${earned} Rune Power` });
     } else {
       earned = Math.floor(8 + bull.level * 2);
       await addBalance(earned);
-      toast({ title: '🏁 Race finished', description: `Consolation: +${earned} $CsBv1` });
+      toast({ title: '🏁 Race finished', description: `Consolation: +${earned} Rune Power` });
     }
     setReward(earned);
   };
@@ -128,7 +128,7 @@ export default function CsbBullRace() {
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Button>
           <div className="flex items-center gap-2 text-amber-300 text-sm">
-            <Coins className="w-4 h-4" /> {csbPlayer?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-4 h-4" /> {csbPlayer?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default function CsbBullRace() {
             🏁 CSB BULL RACE
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Tap to charge your bull. First to the finish wins <span className="text-amber-300">$CsBv1</span>!
+            Tap to charge your bull. First to the finish wins <span className="text-amber-300">Rune Power</span>!
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export default function CsbBullRace() {
               <div className="text-center space-y-3">
                 <Trophy className={`w-16 h-16 mx-auto ${winner.isMe ? 'text-amber-300 animate-pulse' : 'text-slate-500'}`} />
                 <h3 className="text-xl font-bold">{winner.isMe ? '🏆 VICTORY!' : `${winner.name} won`}</h3>
-                <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} $CsBv1</Badge>
+                <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} Rune Power</Badge>
                 <div className="flex gap-2">
                   <Button onClick={() => selected && startRace(selected)} className="flex-1 bg-gradient-to-r from-sky-500 to-cyan-500">Race Again</Button>
                   <Button onClick={reset} variant="outline" className="flex-1">Pick Bull</Button>
