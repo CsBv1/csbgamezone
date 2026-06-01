@@ -97,7 +97,7 @@ export default function CsbBossRaid() {
       setReward(earned);
       await addBalance(earned);
       setState("won");
-      toast({ title: `🏆 Boss Defeated!`, description: `+${earned} $CsBv1` });
+      toast({ title: `🏆 Boss Defeated!`, description: `+${earned} Rune Power` });
     } else {
       setState("lost");
       toast({ title: "💀 Defeated", description: "Try a stronger bull!" });
@@ -117,13 +117,13 @@ export default function CsbBossRaid() {
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/")} className="gap-2"><ArrowLeft className="w-4 h-4" /> Dashboard</Button>
           <div className="flex items-center gap-2 text-amber-300 text-sm">
-            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
         <div className="text-center">
           <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-rose-300 via-orange-300 to-amber-400 bg-clip-text text-transparent">⚔️ CSB BOSS RAID</h1>
-          <p className="text-sm text-muted-foreground mt-1">Tap to attack! Build combos. Bigger boss = more <span className="text-amber-300">$CsBv1</span></p>
+          <p className="text-sm text-muted-foreground mt-1">Tap to attack! Build combos. Bigger boss = more <span className="text-amber-300">Rune Power</span></p>
         </div>
 
         {state === "select" && (
@@ -142,7 +142,7 @@ export default function CsbBossRaid() {
                     onClick={() => setBossIdx(i)}>
                     <div className="text-5xl text-center">{b.emoji}</div>
                     <div className="text-center font-bold mt-1">{b.name}</div>
-                    <div className="text-center text-xs opacity-90">HP {b.hp} · {b.reward}+ $CsBv1</div>
+                    <div className="text-center text-xs opacity-90">HP {b.hp} · {b.reward}+ Rune Power</div>
                     {bossIdx === i && <Badge className="mt-2 w-full justify-center bg-amber-500 text-black">SELECTED</Badge>}
                   </Card>
                 ))}
@@ -189,7 +189,7 @@ export default function CsbBossRaid() {
           <Card className="bg-slate-900/80 border-rose-800/40 p-6 text-center space-y-3">
             {state === "won" ? <Trophy className="w-16 h-16 mx-auto text-amber-300 animate-pulse" /> : <Skull className="w-16 h-16 mx-auto text-rose-400" />}
             <div className="text-2xl font-black">{state === "won" ? "Victory!" : "Defeated"}</div>
-            {state === "won" && <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} $CsBv1</Badge>}
+            {state === "won" && <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} Rune Power</Badge>}
             <div className="flex gap-2">
               <Button onClick={() => selected && start(selected, bossIdx)} className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500">Rematch</Button>
               <Button onClick={reset} variant="outline" className="flex-1">Pick Boss</Button>

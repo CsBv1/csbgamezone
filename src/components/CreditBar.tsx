@@ -217,7 +217,7 @@ export const CreditBar = () => {
       </div>
       {/* Bottom row: CsBv1, Keys, Bulls */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1" title="$CsBv1 balance">
+        <div className="flex items-center gap-1" title="Rune Power balance">
           <span className="text-xs">🪙</span>
           <span className="font-bold text-amber-300">{csbv1.toLocaleString()}</span>
           <span className="text-[9px] text-amber-300/70 font-bold">CsBv1</span>

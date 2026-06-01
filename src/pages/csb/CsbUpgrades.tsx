@@ -58,7 +58,7 @@ const CsbUpgrades = () => {
     if (!userId || !player) return;
     const lvl = levels[u.id] || 0;
     const cost = costFor(u.baseCost, lvl);
-    if (player.balance < cost) { toast({ title: "Not enough $CsBv1", variant: "destructive" }); return; }
+    if (player.balance < cost) { toast({ title: "Not enough Rune Power", variant: "destructive" }); return; }
     const ok = await spendBalance(cost);
     if (!ok) return;
 
@@ -82,7 +82,7 @@ const CsbUpgrades = () => {
         <div className="text-center">
           <h1 className="text-4xl font-black bg-gradient-to-r from-amber-400 to-rose-400 bg-clip-text text-transparent">UPGRADES</h1>
           <div className="flex items-center justify-center gap-2 mt-2 text-amber-300">
-            <Coins className="w-5 h-5" /> {player?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-5 h-5" /> {player?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
@@ -100,9 +100,9 @@ const CsbUpgrades = () => {
                 <div className="text-xs uppercase tracking-wider opacity-70">Level {lvl}</div>
                 <Progress value={Math.min(100, lvl * 10)} className="h-2 my-2" />
                 <div className="text-sm font-semibold mb-1">Next: {u.effect(lvl + 1)}</div>
-                <div className="text-xs opacity-90 mb-3 flex items-center gap-1"><Coins className="w-3 h-3" /> {cost.toLocaleString()} $CsBv1</div>
+                <div className="text-xs opacity-90 mb-3 flex items-center gap-1"><Coins className="w-3 h-3" /> {cost.toLocaleString()} Rune Power</div>
                 <Button size="sm" className="w-full" disabled={!can} onClick={() => buy(u)}>
-                  {can ? "Upgrade" : "Need more $CsBv1"}
+                  {can ? "Upgrade" : "Need more Rune Power"}
                 </Button>
               </Card>
             );

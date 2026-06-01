@@ -48,7 +48,7 @@ import BonanzaSpin from "./pages/games/BonanzaSpin";
 import BullArena from "./pages/games/BullArena";
 import BullCity from "./pages/games/BullCity";
 
-// CSB Game Zone ($CsBv1)
+// CSB Game Zone (Rune Power)
 import CsbDashboard from "./pages/csb/CsbDashboard";
 import CsbMissions from "./pages/csb/CsbMissions";
 import CsbUpgrades from "./pages/csb/CsbUpgrades";
@@ -185,7 +185,7 @@ const App = () => (
           <Route path="/games/bull-arena" element={<ProtectedGameRoute><BullArena /></ProtectedGameRoute>} />
           <Route path="/games/bull-city" element={<BullCity />} />
 
-          {/* CSB Game Zone ($CsBv1 token system) */}
+          {/* CSB Game Zone (Rune Power token system) */}
           <Route path="/csb" element={<CsbDashboard />} />
           <Route path="/csb/missions" element={<CsbMissions />} />
           <Route path="/csb/upgrades" element={<CsbUpgrades />} />

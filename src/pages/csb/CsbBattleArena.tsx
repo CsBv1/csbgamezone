@@ -351,8 +351,8 @@ export default function CsbBattleArena() {
       });
     }
     if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
-    setLog((p) => [...p, { text: `🏆 VICTORY! +${reward} 🪙 $CsBv1!${mode === 'pvp' ? ' (PvP 3x)' : ''}`, type: 'info' }]);
-    toast({ title: 'Victory! 🏆', description: `+${reward} $CsBv1 earned` });
+    setLog((p) => [...p, { text: `🏆 VICTORY! +${reward} 🪙 Rune Power!${mode === 'pvp' ? ' (PvP 3x)' : ''}`, type: 'info' }]);
+    toast({ title: 'Victory! 🏆', description: `+${reward} Rune Power earned` });
   };
 
   const onDefeat = async () => {
@@ -387,7 +387,7 @@ export default function CsbBattleArena() {
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Button>
           <div className="flex items-center gap-2 text-amber-300 text-sm">
-            <Coins className="w-4 h-4" /> {csbPlayer?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-4 h-4" /> {csbPlayer?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
@@ -396,7 +396,7 @@ export default function CsbBattleArena() {
             ⚔️ CSB BULL BATTLE ARENA
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Battle with your leveled bulls. Win <span className="text-amber-300">$CsBv1</span> · {mode === 'pvp' ? '1v1 Multiplayer (3x rewards)' : 'Single-Player vs AI'}
+            Battle with your leveled bulls. Win <span className="text-amber-300">Rune Power</span> · {mode === 'pvp' ? '1v1 Multiplayer (3x rewards)' : 'Single-Player vs AI'}
           </p>
           {wins > 0 && <Badge className="bg-yellow-600 mt-2">{wins} Win Streak 🔥</Badge>}
         </div>

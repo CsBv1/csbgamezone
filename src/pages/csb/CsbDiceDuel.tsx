@@ -102,7 +102,7 @@ export default function CsbDiceDuel() {
       const earned = win ? Math.floor(50 * rarityMult * lvlMult) : Math.floor(8 * rarityMult);
       setReward(earned);
       await addBalance(earned);
-      toast({ title: win ? "🎲 Duel Won!" : "🎲 Duel Lost", description: `+${earned} $CsBv1` });
+      toast({ title: win ? "🎲 Duel Won!" : "🎲 Duel Lost", description: `+${earned} Rune Power` });
     }
     if (userId) {
       await supabase.from("game_results").insert({
@@ -123,13 +123,13 @@ export default function CsbDiceDuel() {
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/")} className="gap-2"><ArrowLeft className="w-4 h-4" /> Dashboard</Button>
           <div className="flex items-center gap-2 text-amber-300 text-sm">
-            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
         <div className="text-center">
           <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-400 bg-clip-text text-transparent">🎲 CSB DICE DUEL</h1>
-          <p className="text-sm text-muted-foreground mt-1">Best of {ROUNDS}. Higher level/rarity = better odds. Earn <span className="text-amber-300">$CsBv1</span></p>
+          <p className="text-sm text-muted-foreground mt-1">Best of {ROUNDS}. Higher level/rarity = better odds. Earn <span className="text-amber-300">Rune Power</span></p>
         </div>
 
         {state === "select" && (
@@ -187,7 +187,7 @@ export default function CsbDiceDuel() {
           <Card className="bg-slate-900/80 border-emerald-800/40 p-6 text-center space-y-3">
             <Trophy className="w-16 h-16 mx-auto text-amber-300 animate-pulse" />
             <div className="text-2xl font-black">You {myScore} – {aiScore} AI</div>
-            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} $CsBv1</Badge>
+            <Badge className="bg-amber-600 text-base px-4 py-1">+{reward} Rune Power</Badge>
             <div className="flex gap-2">
               <Button onClick={() => selected && start(selected)} className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500">Duel Again</Button>
               <Button onClick={reset} variant="outline" className="flex-1">Pick Bull</Button>

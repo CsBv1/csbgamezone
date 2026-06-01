@@ -321,15 +321,15 @@ const Dashboard = () => {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win $CsBv1!", icon: Swords, gradient: "from-sky-500 to-cyan-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
-                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x $CsBv1 rewards!", icon: Users, gradient: "from-sky-600 to-blue-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
-                { title: "🏁 CSB Bull Race", desc: "Tap-race your bull, earn $CsBv1!", icon: Flag, gradient: "from-cyan-500 to-sky-700", route: "csb/bull-race", btn: "Race", external: true },
-                { title: "🎯 CSB Bull Hunt", desc: "Tap targets fast, earn $CsBv1!", icon: Target, gradient: "from-sky-500 to-blue-700", route: "csb/bull-hunt", btn: "Hunt", external: true },
-                { title: "⛏️ CSB Bull Mine", desc: "Send bulls mining, earn $CsBv1!", icon: Pickaxe, gradient: "from-cyan-600 to-blue-800", route: "csb/bull-mine", btn: "Mine", external: true },
+                { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win Rune Power!", icon: Swords, gradient: "from-sky-500 to-cyan-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
+                { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x Rune Power rewards!", icon: Users, gradient: "from-sky-600 to-blue-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
+                { title: "🏁 CSB Bull Race", desc: "Tap-race your bull, earn Rune Power!", icon: Flag, gradient: "from-cyan-500 to-sky-700", route: "csb/bull-race", btn: "Race", external: true },
+                { title: "🎯 CSB Bull Hunt", desc: "Tap targets fast, earn Rune Power!", icon: Target, gradient: "from-sky-500 to-blue-700", route: "csb/bull-hunt", btn: "Hunt", external: true },
+                { title: "⛏️ CSB Bull Mine", desc: "Send bulls mining, earn Rune Power!", icon: Pickaxe, gradient: "from-cyan-600 to-blue-800", route: "csb/bull-mine", btn: "Mine", external: true },
                 { title: "⚔️ CSB Boss Raid", desc: "Combo-attack mega bosses!", icon: Swords, gradient: "from-rose-600 to-orange-800", route: "csb/boss-raid", btn: "Raid", external: true },
                 { title: "🎲 CSB Dice Duel", desc: "Best of 5 dice vs AI!", icon: Sparkles, gradient: "from-emerald-600 to-teal-800", route: "csb/dice-duel", btn: "Duel", external: true },
                 { title: "🛡️ CSB Bull Defense", desc: "Tower defense, 8 waves!", icon: Shield, gradient: "from-indigo-600 to-violet-800", route: "csb/bull-defense", btn: "Defend", external: true },
-                { title: "🗺️ CSB Bull Expedition", desc: "8-room dungeon crawl, loot $CsBv1!", icon: Compass, gradient: "from-emerald-600 to-teal-800", route: "csb/bull-expedition", btn: "Explore", external: true },
+                { title: "🗺️ CSB Bull Expedition", desc: "8-room dungeon crawl, loot Rune Power!", icon: Compass, gradient: "from-emerald-600 to-teal-800", route: "csb/bull-expedition", btn: "Explore", external: true },
                 { title: "🏰 CSB Bull Siege", desc: "Defend castle across 5 waves!", icon: Castle, gradient: "from-amber-600 to-rose-800", route: "csb/bull-siege", btn: "Defend", external: true },
                 { title: "🔐 CSB Bull Vault", desc: "Risk-vs-reward bomb dodge!", icon: Vault, gradient: "from-violet-600 to-fuchsia-800", route: "csb/bull-vault", btn: "Crack", external: true },
                 { title: "⚔️ CSB Bull Arena", desc: "Turn-based duels with HP/ATK/DEF!", icon: Swords, gradient: "from-rose-600 to-fuchsia-800", route: "csb/bull-arena", btn: "Fight", external: true },
@@ -397,7 +397,7 @@ const Dashboard = () => {
               ].map(g => (
                 <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate((g as any).external ? `/${g.route}` : `/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
-                  badge={totalBulls > 0 ? ((g as any).external ? "🪙 $CsBv1" : "🔑 KEYS") : "🔒 LOCKED"} badgeColor={totalBulls > 0 ? ((g as any).external ? "bg-amber-500 text-black" : "bg-yellow-500 text-black") : "bg-gray-600 text-gray-300"}
+                  badge={totalBulls > 0 ? ((g as any).external ? "🪙 Rune Power" : "🔑 KEYS") : "🔒 LOCKED"} badgeColor={totalBulls > 0 ? ((g as any).external ? "bg-amber-500 text-black" : "bg-yellow-500 text-black") : "bg-gray-600 text-gray-300"}
                   buttonText={totalBulls > 0 ? g.btn : "🔒 Locked"} buttonVariant="key" isHolder={totalBulls > 0} />
               ))}
             </div>

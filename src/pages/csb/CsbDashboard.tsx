@@ -75,7 +75,7 @@ const CsbDashboard = () => {
     await addBalance(claimReward);
     await updatePlayer({ last_claim_at: new Date().toISOString() });
     toast({
-      title: `+${claimReward} $CsBv1 Claimed! 🎉`,
+      title: `+${claimReward} Rune Power Claimed! 🎉`,
       description: `NFT x${nftMultiplier.toFixed(2)} · Boost x${boostMultiplier.toFixed(2)}`,
     });
   };
@@ -100,7 +100,7 @@ const CsbDashboard = () => {
           <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-400 bg-clip-text text-transparent">
             CSB GAME ZONE
           </h1>
-          <p className="text-sm text-muted-foreground">Web3 token economy · $CsBv1</p>
+          <p className="text-sm text-muted-foreground">Web3 token economy · Rune Power</p>
         </div>
 
         {/* Balance + Energy + NFT Power */}
@@ -108,7 +108,7 @@ const CsbDashboard = () => {
           <Card className="p-5 bg-gradient-to-br from-amber-950/60 to-slate-950 border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.15)]">
             <div className="flex items-center gap-2 mb-2 text-amber-400"><Coins className="w-5 h-5" /><span className="text-xs uppercase tracking-wider font-bold">Balance</span></div>
             <div className="text-3xl font-black text-amber-300">{player.balance.toLocaleString()}</div>
-            <div className="text-xs text-amber-500/70 mt-1">$CsBv1</div>
+            <div className="text-xs text-amber-500/70 mt-1">Rune Power</div>
           </Card>
 
           <Card className="p-5 bg-gradient-to-br from-cyan-950/60 to-slate-950 border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
@@ -129,7 +129,7 @@ const CsbDashboard = () => {
         <Card className="p-8 bg-gradient-to-br from-emerald-950/60 to-slate-950 border-emerald-500/50 text-center shadow-[0_0_50px_rgba(16,185,129,0.2)]">
           <Gift className="w-12 h-12 mx-auto mb-3 text-emerald-400" />
           <div className="text-xs uppercase tracking-widest text-emerald-400/80 mb-1">Daily Reward</div>
-          <div className="text-5xl font-black mb-2 text-emerald-300">+{claimReward} $CsBv1</div>
+          <div className="text-5xl font-black mb-2 text-emerald-300">+{claimReward} Rune Power</div>
           <div className="text-xs text-emerald-500/70 mb-5">
             {canClaim ? "Ready to claim!" : `Next claim in ${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`}
           </div>

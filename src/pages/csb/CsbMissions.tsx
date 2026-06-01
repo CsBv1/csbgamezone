@@ -105,7 +105,7 @@ const CsbMissions = () => {
       }).eq("user_id", userId);
     }
 
-    toast({ title: `+${reward} $CsBv1 🎉`, description: `Streak x${streakMultiplier.toFixed(2)}` });
+    toast({ title: `+${reward} Rune Power 🎉`, description: `Streak x${streakMultiplier.toFixed(2)}` });
     loadProgress();
   };
 

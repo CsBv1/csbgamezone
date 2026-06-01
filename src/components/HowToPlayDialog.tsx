@@ -34,8 +34,8 @@ export const HowToPlayDialog = () => {
               { title: "🐂 Earn Diamonds", steps: ["Play Mining/Milking/Kingdom games", "Earn credits + diamonds", "Trade 100 credits → 5 💎"] },
               { title: "🔑 Get Keys", steps: ["Swap 1M 💎 → 1 🔑", "Keys unlock advanced games", "Higher risk = bigger rewards"] },
               { title: "👑 Holder Strategy", steps: ["Hold a CSB Bull NFT or Subscribe", "Unlocks 60+ strategy games", "Win Keys & exclusive rewards"] },
-              { title: "⚡ CSB Game Zone", steps: ["Tap ⚡ CSB Zone button", "Earn $CsBv1 token", "Level up bulls in NFT Power"] },
-              { title: "⚔️ Bull Battle", steps: ["Battle AI or PvP (3x reward)", "Stronger bulls = more $CsBv1", "Combo attacks for damage boost"] },
+              { title: "⚡ CSB Game Zone", steps: ["Tap ⚡ CSB Zone button", "Earn Rune Power token", "Level up bulls in NFT Power"] },
+              { title: "⚔️ Bull Battle", steps: ["Battle AI or PvP (3x reward)", "Stronger bulls = more Rune Power", "Combo attacks for damage boost"] },
               { title: "🌍 Bull World", steps: ["Multiplayer hub (1 🔑 to enter)", "Meet players, chat & emote", "Race, stampede & explore"] },
             ].map(g => (
               <Card key={g.title} className="p-3 bg-card/60 border border-primary/20">

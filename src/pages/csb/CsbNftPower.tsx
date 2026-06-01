@@ -73,7 +73,7 @@ const CsbNftPower = () => {
   const upgradeNft = async (nft: NftRow) => {
     if (!userId || !player) return;
     const cost = Math.floor(50 * Math.pow(1.5, nft.level));
-    if (player.balance < cost) { toast({ title: "Not enough $CsBv1", variant: "destructive" }); return; }
+    if (player.balance < cost) { toast({ title: "Not enough Rune Power", variant: "destructive" }); return; }
     const ok = await spendBalance(cost);
     if (!ok) return;
     await supabase.from("csbv1_nft_power" as any)
@@ -94,7 +94,7 @@ const CsbNftPower = () => {
           <h1 className="text-4xl font-black bg-gradient-to-r from-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">NFT POWER</h1>
           <p className="text-sm text-muted-foreground mt-1">Total power: x{totalMultiplier.toFixed(2)} · {nfts.length} NFTs</p>
           <div className="flex items-center justify-center gap-2 mt-2 text-amber-300">
-            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} $CsBv1
+            <Coins className="w-4 h-4" /> {player?.balance.toLocaleString() || 0} Rune Power
           </div>
         </div>
 
