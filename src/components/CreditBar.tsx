@@ -215,12 +215,12 @@ export const CreditBar = () => {
           <span className="font-bold text-yellow-400">{bukals}</span>
         </div>
       </div>
-      {/* Bottom row: CsBv1, Keys, Bulls */}
+      {/* Bottom row: Rune Power, Keys, Bulls */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1" title="Rune Power balance">
           <span className="text-xs">🪙</span>
           <span className="font-bold text-amber-300">{csbv1.toLocaleString()}</span>
-          <span className="text-[9px] text-amber-300/70 font-bold">CsBv1</span>
+          <span className="text-[9px] text-amber-300/70 font-bold">RUNE</span>
         </div>
         <div className="h-3 w-px bg-border/50"></div>
         <div className="flex items-center gap-1">
