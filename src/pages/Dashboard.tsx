@@ -420,15 +420,14 @@ const Dashboard = () => {
           {/* Community Links */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-6 text-center gradient-gold bg-clip-text text-transparent">🐂 Cardano Stake Bulls Community 🐂</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
               {[
-                { href: "https://arena2.cardanostakebulls.space/", icon: TrendingUp, title: "Stake Platform", desc: "Stake your ADA!", color: "primary" },
+                { href: "https://stakecsb.lovable.app", icon: TrendingUp, title: "Stake Platform", desc: "Stake your ADA!", color: "primary" },
                 { href: "https://csb-mint.netlify.app", icon: Key, title: "Mint Bull 🔑", desc: "Mint on the new launch pad!", color: "amber" },
                 { href: "https://discord.gg/FCyYYwryYW", icon: Users, title: "Discord", desc: "Join our Discord!", color: "indigo" },
                 { href: "https://x.com/worldofgaia5art?s=21&t=mSdrl7vSEhr5s0minUvc-w", icon: Globe, title: "Twitter / X", desc: "Follow us!", color: "blue" },
                 { href: "https://csbpubliclibrary.lovable.app/", icon: ExternalLink, title: "Library", desc: "Read the public library", color: "cyan" },
                 { href: "https://csbmerch.lovable.app/", icon: Sparkles, title: "Merchandise", desc: "Shop official merch", color: "primary" },
-                { href: "https://cardanostakebulls.space", icon: ExternalLink, title: "Website", desc: "Learn more!", color: "cyan" },
               ].map(link => (
                 <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className="group">
                   <Card className="p-4 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40 hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer h-full">
