@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.scan-wallet-nfts]
 verify_jwt = false
+
+[functions.discord-announce]
+verify_jwt = false
