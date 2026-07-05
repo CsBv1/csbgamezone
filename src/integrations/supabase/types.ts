@@ -253,6 +253,7 @@ export type Database = {
       game_rooms: {
         Row: {
           created_at: string
+          created_by: string | null
           ended_at: string | null
           game_type: string
           id: string
@@ -263,6 +264,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           ended_at?: string | null
           game_type: string
           id?: string
@@ -273,6 +275,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           ended_at?: string | null
           game_type?: string
           id?: string
@@ -387,6 +390,7 @@ export type Database = {
       maze_tournaments: {
         Row: {
           created_at: string
+          created_by: string | null
           ended_at: string | null
           id: string
           max_players: number
@@ -398,6 +402,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           ended_at?: string | null
           id?: string
           max_players?: number
@@ -409,6 +414,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           ended_at?: string | null
           id?: string
           max_players?: number
