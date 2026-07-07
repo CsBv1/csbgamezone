@@ -36,14 +36,16 @@ async function post(content: string | null, embeds: Embed[] = []) {
 
 // --- Content generators ---
 
+const GAME_ZONE_URL = "https://csbgamezone.lovable.app";
+
 const DAILY_EVENTS = [
-  { day: 0, name: "🐂 Sunday Stampede", desc: "2x rewards in Bull Stampede all day. Bring the herd!" },
-  { day: 1, name: "⛏️ Mining Monday", desc: "Diamond Mines & Bull Mine drops boosted +50%." },
-  { day: 2, name: "🏟️ Tourney Tuesday", desc: "PvP tournaments in Bull Arena. Winner takes the crown." },
-  { day: 3, name: "🔮 Rune Wednesday", desc: "Rune Power claims give bonus multipliers. Stack your runes." },
-  { day: 4, name: "⚔️ Throwdown Thursday", desc: "Boss Raid HP reduced 20%. Coordinate & strike!" },
-  { day: 5, name: "🎰 Fortune Friday", desc: "Wheel of Fortune & Bonanza Spin bonus multipliers." },
-  { day: 6, name: "🏆 Season Saturday", desc: "Holders Season points x2. Climb the leaderboard!" },
+  { day: 0, name: "🐂 Sunday Stampede", desc: "2x rewards in Bull Stampede all day. Bring the herd!", path: "/games/bull-stampede" },
+  { day: 1, name: "⛏️ Mining Monday", desc: "Diamond Mines & Bull Mine drops boosted +50%.", path: "/games/diamond-mines" },
+  { day: 2, name: "🏟️ Tourney Tuesday", desc: "PvP tournaments in Bull Arena. Winner takes the crown.", path: "/games/bull-arena" },
+  { day: 3, name: "🔮 Rune Wednesday", desc: "Rune Power claims give bonus multipliers. Stack your runes.", path: "/csb" },
+  { day: 4, name: "⚔️ Throwdown Thursday", desc: "Boss Raid HP reduced 20%. Coordinate & strike!", path: "/csb/boss-raid" },
+  { day: 5, name: "🎰 Fortune Friday", desc: "Wheel of Fortune & Bonanza Spin bonus multipliers.", path: "/games/wheel-of-fortune" },
+  { day: 6, name: "🏆 Season Saturday", desc: "Holders Season points x2. Climb the leaderboard!", path: "/games/holders-arena" },
 ];
 
 const GAMES_HIGHLIGHT = [
