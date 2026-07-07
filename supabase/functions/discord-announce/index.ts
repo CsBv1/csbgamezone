@@ -193,6 +193,89 @@ async function sendEvent(title: string, description: string) {
   ]);
 }
 
+// Rotating "how the backend works" educational posts — one goes out every day.
+const BACKEND_TOPICS: Embed[] = [
+  {
+    title: "🧱 Backend 101 — Built on Lovable Cloud",
+    description:
+      "CSB Game Zone runs on **Lovable Cloud** (managed Postgres + Auth + Edge Functions + Storage). No servers to babysit — we chat with the AI, it ships the schema, RLS and functions in seconds.\n\n▶️ Try it → [lovable.dev](https://lovable.dev)\n🎮 Play → [csbgamezone.lovable.app](https://csbgamezone.lovable.app)",
+    color: PURPLE,
+  },
+  {
+    title: "🔐 Cardano Wallet Login (CIP-30)",
+    description:
+      "No emails required. We wired **Eternl, Nami, Lace, VESPR, Flint & Typhon** through the CIP-30 standard. A custom `handle_wallet_auth` Postgres function mints a Supabase session tied to your wallet address — so your bulls follow you everywhere.",
+    color: BRAND,
+  },
+  {
+    title: "🐂 NFT Detection via Koios",
+    description:
+      "The moment you connect, we hit the **Koios API** (multiple endpoints for resilience) to scan your wallet for CSB Bulls (policy `b11c9439…`). Each bull unlocks holder-only games and stacks a **+10% reward buff**, with rarity as a multiplier.",
+    color: GOLD,
+  },
+  {
+    title: "🗃️ Postgres + Row-Level Security",
+    description:
+      "Every table (`profiles`, `user_diamonds`, `user_bukals`, `csbv1_players`, `game_rooms`…) is locked down with **RLS policies**. Users can only read/write their own rows. Security-definer functions with locked `search_path` handle the sensitive stuff.",
+    color: PURPLE,
+  },
+  {
+    title: "⚡ Realtime Multiplayer",
+    description:
+      "Bull World hub, Crash, Bull Stampede maze, live chat and floating emotes all run on **Supabase Realtime** over the `game_rooms` table. Broadcast + Postgres Changes = sub-second sync with zero custom WebSocket code.",
+    color: BRAND,
+  },
+  {
+    title: "🧠 Edge Functions (Deno)",
+    description:
+      "Server logic lives in **Deno Edge Functions**: `scan-wallet-nfts`, `game-master` (AI assistant), `create-subscription`, `check-subscription`, `weekly-holder-maintenance`, and this very `discord-announce` bot. Deploys on save.",
+    color: GOLD,
+  },
+  {
+    title: "⏰ Scheduled Jobs with pg_cron",
+    description:
+      "`pg_cron` + `pg_net` (both in the `extensions` schema) let Postgres call our Edge Functions on a schedule. That's how you get **daily Discord announcements**, weekly holder season rollovers and subscriber newsletters — all from the database.",
+    color: PURPLE,
+  },
+  {
+    title: "💳 Stripe + Resend",
+    description:
+      "**Stripe** powers the holder tiers ($5 / $15 / $30 = 1 / 4 / 10 bull-equivalents), verified server-side by `check-subscription`. **Resend** sends the welcome email + weekly bulletin. Both keys live as encrypted secrets — never in the codebase.",
+    color: GOLD,
+  },
+  {
+    title: "🎨 Frontend: React + Vite + Tailwind + shadcn",
+    description:
+      "The UI is **React 18 + Vite 5 + Tailwind + shadcn/ui**, built entirely by chatting with Lovable. Design tokens in `index.css`, semantic components, dark cyan-neon Cardano theme. No CSS spaghetti.",
+    color: BRAND,
+  },
+  {
+    title: "🛡️ Security Hardening",
+    description:
+      "Ongoing scanner catches issues: `authenticated`-only RLS, no extensions in `public`, dependency upgrades, revoked function execute on `anon`. **Zero secrets in git.** Managed secrets injected at runtime only.",
+    color: PURPLE,
+  },
+  {
+    title: "🚀 Want to build like this?",
+    description:
+      "You can literally build a full-stack app like CSB Game Zone by *talking to Lovable*. Backend included.\n\n🔨 Start building → [lovable.dev](https://lovable.dev)\n🐂 Join our herd → [Cardano Stake Bulls Discord](https://discord.gg/cardanostakebulls)\n🎮 Play & learn → [csbgamezone.lovable.app](https://csbgamezone.lovable.app)",
+    color: GOLD,
+  },
+];
+
+async function sendBackend() {
+  // Rotate through topics deterministically — one per day.
+  const dayIndex = Math.floor(Date.now() / (24 * 3600 * 1000));
+  const topic = BACKEND_TOPICS[dayIndex % BACKEND_TOPICS.length];
+  await post("🧠 **Behind the Scenes — How CSB Game Zone is built**", [
+    {
+      ...topic,
+      footer: { text: "Built on Lovable Cloud • lovable.dev • Join Cardano Stake Bulls" },
+      timestamp: new Date().toISOString(),
+    },
+  ]);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
