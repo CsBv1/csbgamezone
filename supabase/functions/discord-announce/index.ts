@@ -73,7 +73,8 @@ async function sendDaily() {
       color: BRAND,
       url: "https://csbgamezone.lovable.app",
       fields: [
-        { name: "Today's Event", value: `**${event.name}**\n${event.desc}` },
+        { name: "🎯 Today's Event", value: `**${event.name}**\n${event.desc}\n▶️ [**Play now →**](${GAME_ZONE_URL}${event.path})` },
+        { name: "🎮 Game Zone Entry", value: `[csbgamezone.lovable.app](${GAME_ZONE_URL}) — connect your Cardano wallet & jump in.` },
         { name: "🎁 Daily Bonus", value: "Claim your daily reward on the Dashboard. Rune Power claim resets every 2h." },
         { name: "🪙 Mint Launchpad", value: "[csb-mint.netlify.app](https://csb-mint.netlify.app)", inline: true },
         { name: "🥩 Stake Platform", value: "[stakecsb.lovable.app](https://stakecsb.lovable.app)", inline: true },
