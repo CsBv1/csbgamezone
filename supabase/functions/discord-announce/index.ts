@@ -305,6 +305,9 @@ serve(async (req) => {
       case "journey":
         await sendJourney();
         break;
+      case "backend":
+        await sendBackend();
+        break;
       case "event":
         await sendEvent(title || "Event", description || "");
         break;
