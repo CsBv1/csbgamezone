@@ -252,7 +252,7 @@ const BACKEND_TOPICS: Embed[] = [
   {
     title: "🛡️ Security Hardening",
     description:
-      "Ongoing scanner catches issues: `authenticated`-only RLS, no extensions in `public`, dependency upgrades, revoked function execute on `anon`. **Zero secrets in git.** Managed secrets injected at runtime only.",
+      "Your bulls & balances are locked down tight 🔒 — every table protected by row-level rules so only you can touch your own data, wallet-based logins, encrypted secrets, and continuous automated security scans keeping everything battle-ready.",
     color: PURPLE,
   },
   {
