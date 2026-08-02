@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Swords, Shield, Heart, Zap, Coins, Trophy, RotateCcw, Users, Bot, Loader2, Sparkles, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCsbv1 } from "@/hooks/useCsbv1";
@@ -91,6 +92,8 @@ export default function CsbBattleArena() {
   const [bulls, setBulls] = useState<CsbBull[]>([]);
   const [selected, setSelected] = useState<CsbBull | null>(null);
   const [state, setState] = useState<GameState>('select');
+  const stateRef = useRef<GameState>('select');
+  useEffect(() => { stateRef.current = state; }, [state]);
   const [me, setMe] = useState<Fighter | null>(null);
   const [foe, setFoe] = useState<Fighter | null>(null);
   const [turn, setTurn] = useState<'me' | 'foe'>('me');
@@ -119,6 +122,7 @@ export default function CsbBattleArena() {
   const [pickingOpponent, setPickingOpponent] = useState(false);
   const [target, setTarget] = useState<Challenger | null>(null);
   const [incoming, setIncoming] = useState<{ roomId: string; fromName: string; fromLevel: number } | null>(null);
+  const [incomingLeft, setIncomingLeft] = useState(30);
 
   // Load bulls + username
   useEffect(() => {
@@ -291,22 +295,55 @@ export default function CsbBattleArena() {
     }
   };
 
-  // Listen for challenges aimed at me
+  // Listen for challenges aimed at me (+ polling fallback so both screens stay in sync)
   useEffect(() => {
     if (!userId) return;
+
+    const offer = (r: any) => {
+      const rd = r?.round_data || {};
+      if (rd.target_id !== userId) return;
+      setIncoming((prev) => {
+        if (prev?.roomId === r.id) return prev;
+        setIncomingLeft(PVP_TIMEOUT_SECONDS);
+        toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
+        return { roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 };
+      });
+    };
+
     const ch = supabase
       .channel('csb-challenge-inbox')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_rooms', filter: 'game_type=eq.csb-battle' }, (payload) => {
-        const r: any = payload.new;
-        const rd = r?.round_data || {};
-        if (rd.target_id === userId) {
-          setIncoming({ roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 });
-          toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
-        }
-      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_rooms', filter: 'game_type=eq.csb-battle' }, (payload) => offer(payload.new))
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+
+    const poll = setInterval(async () => {
+      if (stateRef.current !== 'select') return;
+      const since = new Date(Date.now() - PVP_TIMEOUT_SECONDS * 1000).toISOString();
+      const { data } = await supabase
+        .from('game_rooms')
+        .select('id, round_data, created_at')
+        .eq('game_type', 'csb-battle')
+        .eq('status', 'waiting')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      (data || []).forEach((r: any) => offer(r));
+    }, 3000);
+
+    return () => { supabase.removeChannel(ch); clearInterval(poll); };
   }, [userId]);
+
+  // Countdown on the accept window
+  useEffect(() => {
+    if (!incoming) return;
+    const t = setInterval(() => {
+      setIncomingLeft((s) => {
+        if (s <= 1) { clearInterval(t); setIncoming(null); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [incoming?.roomId]);
+
 
 
   const subscribeRoom = (rId: string, myBull: CsbBull) => {
@@ -569,17 +606,40 @@ export default function CsbBattleArena() {
           </div>
         )}
 
-        {/* Incoming challenge */}
-        {incoming && (
-          <Card className="bg-slate-900/90 border-amber-500 p-4 text-center max-w-md mx-auto space-y-2">
-            <h3 className="text-lg font-bold text-amber-300">🥊 {incoming.fromName} challenged you!</h3>
-            <p className="text-xs text-muted-foreground">Their bull is Lv {incoming.fromLevel}. Answer now or AI will fight for you.</p>
+        {/* Incoming challenge popup */}
+        <Dialog open={!!incoming} onOpenChange={(o) => { if (!o) setIncoming(null); }}>
+          <DialogContent className="max-w-sm bg-slate-900 border-amber-500">
+            <DialogHeader>
+              <DialogTitle className="text-amber-300 text-center">🥊 {incoming?.fromName} challenged you!</DialogTitle>
+              <DialogDescription className="text-center">
+                Their bull is Lv {incoming?.fromLevel}. Accept within {incomingLeft}s or AI will fight for them.
+              </DialogDescription>
+            </DialogHeader>
+            <Progress value={(incomingLeft / PVP_TIMEOUT_SECONDS) * 100} className="h-2" />
+            {bulls.length > 1 && (
+              <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                {bulls.map((b) => (
+                  <button
+                    key={b.nft_id}
+                    onClick={() => setSelected(b)}
+                    className={`rounded-lg p-1 text-[10px] ring-2 transition ${selected?.nft_id === b.nft_id ? 'ring-amber-400 bg-amber-500/10' : 'ring-white/10 bg-black/30'}`}
+                  >
+                    <div className="aspect-square rounded overflow-hidden bg-black/40 mb-1 flex items-center justify-center">
+                      {b.image ? <img src={b.image} alt={b.nft_name} className="w-full h-full object-cover" /> : <Crown className="w-5 h-5 opacity-60" />}
+                    </div>
+                    <div className="truncate">{b.nft_name}</div>
+                    <div className="opacity-70">Lv {b.level}</div>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2">
-              <Button className="flex-1 bg-gradient-to-r from-amber-500 to-red-500" onClick={acceptChallenge}>Accept</Button>
+              <Button className="flex-1 bg-gradient-to-r from-amber-500 to-red-500" onClick={acceptChallenge}>Accept Battle</Button>
               <Button variant="outline" className="flex-1" onClick={() => setIncoming(null)}>Decline</Button>
             </div>
-          </Card>
-        )}
+          </DialogContent>
+        </Dialog>
+
 
         {/* Waiting for challenged player */}
         {searching && (
