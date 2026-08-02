@@ -185,7 +185,7 @@ serve(async (req) => {
           if (data && data.length > 0) {
             for (const item of data) {
               if (item.asset_list) {
-                allAssets.push({ asset_list: item.asset_list });
+                allAssets.push({ source: "address_assets", asset_list: item.asset_list });
               }
             }
           }
@@ -215,7 +215,7 @@ serve(async (req) => {
                 for (const utxo of addrInfo.utxo_set) {
                   if (utxo.asset_list && utxo.asset_list.length > 0) {
                     console.log("Found assets in UTXOs:", utxo.asset_list.length);
-                    allAssets.push({ asset_list: utxo.asset_list });
+                    allAssets.push({ source: "address_info", asset_list: utxo.asset_list });
                   }
                 }
               }
@@ -284,17 +284,18 @@ serve(async (req) => {
     // Process found assets
     const csbNfts: Array<{ name: string; rarity: string; quantity: number; assetNameHex: string; image?: string }> = [];
     let totalBulls = 0;
-    let csbTokens = 0;
+    const tokensBySource: Record<string, number> = {};
     const seenAssetHex = new Set<string>();
 
     for (const addressData of allAssets) {
       const assetList = addressData.asset_list || [];
+      const source = addressData.source || "other";
       
       for (const asset of assetList) {
         const policyId = asset.policy_id || "";
         
         if (policyId === CSB_TOKEN_POLICY_ID && (asset.asset_name || "") === CSB_TOKEN_ASSET_NAME) {
-          csbTokens += parseInt(asset.quantity || "0", 10) || 0;
+          tokensBySource[source] = (tokensBySource[source] || 0) + (parseInt(asset.quantity || "0", 10) || 0);
           continue;
         }
 
@@ -322,6 +323,9 @@ serve(async (req) => {
         }
       }
     }
+
+    // Same wallet can be reported by multiple Koios endpoints - take the best single source
+    const csbTokens = Math.max(0, ...Object.values(tokensBySource), 0);
 
     // Fetch metadata (image) for each unique NFT via Koios asset_info
     if (csbNfts.length > 0) {
