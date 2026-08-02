@@ -328,7 +328,10 @@ export default function CsbBattleArena() {
           setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
           setTurn('me'); setSpecialReady(0);
           setSearching(false);
+          setAiProxy(false);
           setState('fighting');
+          const img = await fetchOpponentBullImage(p.user_id);
+          if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
         }
       })
       .on('broadcast', { event: 'csb-action' }, (payload) => {
