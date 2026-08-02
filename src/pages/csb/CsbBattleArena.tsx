@@ -401,11 +401,11 @@ export default function CsbBattleArena() {
     setSpecialReady((s) => Math.min(100, s + 20));
     const txt = isCrit ? `💥 CRITICAL! ${me.name} deals ${dmg}!` : `⚔️ ${me.name} attacks for ${dmg}!`;
     setLog((p) => [...p, { text: txt, type: isCrit ? 'crit' : 'attack' }]);
-    if (mode === 'pvp') { broadcast('attack', { damage: dmg, logText: txt }); setTurn('foe'); }
+    if (mode === 'pvp' && !aiProxy) { broadcast('attack', { damage: dmg, logText: txt }); setTurn('foe'); }
     if (nf.hp <= 0) setTimeout(() => onVictory(), 500);
-    else if (mode === 'ai') setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
+    else if (mode === 'ai' || aiProxy) setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
     setTimeout(() => setAnimating(false), 600);
-  }, [me, foe, turn, animating, mode]);
+  }, [me, foe, turn, animating, mode, aiProxy]);
 
   const doSpecial = useCallback(() => {
     if (!me || !foe || turn !== 'me' || animating || specialReady < 100) return;
