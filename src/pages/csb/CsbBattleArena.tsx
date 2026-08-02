@@ -508,7 +508,7 @@ export default function CsbBattleArena() {
 
   const backToSelect = () => {
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
-    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null);
+    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false);
   };
 
   const logColor = (t: string) => ({
