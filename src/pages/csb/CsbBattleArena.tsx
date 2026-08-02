@@ -100,6 +100,8 @@ export default function CsbBattleArena() {
   const [meShake, setMeShake] = useState(false);
   const [foeShake, setFoeShake] = useState(false);
   const [wins, setWins] = useState(0);
+  const [aiProxy, setAiProxy] = useState(false);
+
 
   // PvP
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -155,7 +157,7 @@ export default function CsbBattleArena() {
     const f = buildAI(bull.level, bull.rarity);
     setMe(m); setFoe(f);
     setLog([{ text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' }]);
-    setTurn('me'); setSpecialReady(0); setState('fighting');
+    setTurn('me'); setSpecialReady(0); setAiProxy(false); setState('fighting');
   };
 
   // ================== PvP Challenges ==================
@@ -182,8 +184,22 @@ export default function CsbBattleArena() {
     loadChallengers();
   };
 
+  // Fetch an opponent's real bull image from their connected wallet
+  const fetchOpponentBullImage = async (oppUserId: string): Promise<string | undefined> => {
+    try {
+      const { data: prof } = await supabase.from('profiles').select('wallet_address').eq('id', oppUserId).maybeSingle();
+      const addr = (prof as any)?.wallet_address;
+      if (!addr) return undefined;
+      const { data } = await supabase.functions.invoke('scan-wallet-nfts', { body: { walletAddress: addr } });
+      const list = (data?.nfts || []) as Array<{ image?: string }>;
+      return list.find((n) => n.image)?.image;
+    } catch {
+      return undefined;
+    }
+  };
+
   // AI stands in for a real player who didn't answer, using their name + bull
-  const startProxyAI = (bull: CsbBull, opp: Challenger) => {
+  const startProxyAI = async (bull: CsbBull, opp: Challenger) => {
     const proxy: CsbBull = {
       nft_id: 'proxy',
       nft_name: `${opp.username}'s Bull`,
@@ -197,8 +213,11 @@ export default function CsbBattleArena() {
       { text: `⏱️ ${opp.username} didn't answer — AI takes control of their bull.`, type: 'info' },
       { text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' },
     ]);
-    setTurn('me'); setSpecialReady(0); setSearching(false); setState('fighting');
+    setTurn('me'); setSpecialReady(0); setSearching(false); setAiProxy(true); setState('fighting');
+    const img = await fetchOpponentBullImage(opp.user_id);
+    if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
   };
+
 
   const challengeOpponent = async (opp: Challenger) => {
     const bull = selected;
@@ -263,7 +282,12 @@ export default function CsbBattleArena() {
     const f = buildFromBull({ nft_id: 'opp', nft_name: `${incoming.fromName}'s Bull`, rarity: bull.rarity, level: incoming.fromLevel || bull.level });
     setMe(m); setFoe(f);
     setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
-    setTurn('foe'); setSpecialReady(0); setSearching(false); setState('fighting');
+    setTurn('foe'); setSpecialReady(0); setSearching(false); setAiProxy(false); setState('fighting');
+    const rd: any = (await supabase.from('game_rooms').select('round_data').eq('id', rId).maybeSingle()).data?.round_data;
+    if (rd?.challenger_id) {
+      const img = await fetchOpponentBullImage(rd.challenger_id);
+      if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
+    }
   };
 
   // Listen for challenges aimed at me
@@ -304,7 +328,10 @@ export default function CsbBattleArena() {
           setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
           setTurn('me'); setSpecialReady(0);
           setSearching(false);
+          setAiProxy(false);
           setState('fighting');
+          const img = await fetchOpponentBullImage(p.user_id);
+          if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
         }
       })
       .on('broadcast', { event: 'csb-action' }, (payload) => {
@@ -382,11 +409,11 @@ export default function CsbBattleArena() {
     setSpecialReady((s) => Math.min(100, s + 20));
     const txt = isCrit ? `💥 CRITICAL! ${me.name} deals ${dmg}!` : `⚔️ ${me.name} attacks for ${dmg}!`;
     setLog((p) => [...p, { text: txt, type: isCrit ? 'crit' : 'attack' }]);
-    if (mode === 'pvp') { broadcast('attack', { damage: dmg, logText: txt }); setTurn('foe'); }
+    if (mode === 'pvp' && !aiProxy) { broadcast('attack', { damage: dmg, logText: txt }); setTurn('foe'); }
     if (nf.hp <= 0) setTimeout(() => onVictory(), 500);
-    else if (mode === 'ai') setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
+    else if (mode === 'ai' || aiProxy) setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
     setTimeout(() => setAnimating(false), 600);
-  }, [me, foe, turn, animating, mode]);
+  }, [me, foe, turn, animating, mode, aiProxy]);
 
   const doSpecial = useCallback(() => {
     if (!me || !foe || turn !== 'me' || animating || specialReady < 100) return;
@@ -397,11 +424,11 @@ export default function CsbBattleArena() {
     setSpecialReady(0);
     const txt = `🌟 SPECIAL STRIKE! ${dmg} damage!`;
     setLog((p) => [...p, { text: txt, type: 'special' }]);
-    if (mode === 'pvp') { broadcast('special', { damage: dmg, logText: txt }); setTurn('foe'); }
+    if (mode === 'pvp' && !aiProxy) { broadcast('special', { damage: dmg, logText: txt }); setTurn('foe'); }
     if (nf.hp <= 0) setTimeout(() => onVictory(), 500);
-    else if (mode === 'ai') setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
+    else if (mode === 'ai' || aiProxy) setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
     setTimeout(() => setAnimating(false), 600);
-  }, [me, foe, turn, animating, specialReady, mode]);
+  }, [me, foe, turn, animating, specialReady, mode, aiProxy]);
 
   const doDefend = useCallback(() => {
     if (!me || !foe || turn !== 'me' || animating) return;
@@ -411,10 +438,10 @@ export default function CsbBattleArena() {
     setMe(nm); setSpecialReady((s) => Math.min(100, s + 10));
     const txt = `🛡️ ${me.name} defends and heals ${heal}!`;
     setLog((p) => [...p, { text: txt, type: 'defend' }]);
-    if (mode === 'pvp') { broadcast('defend', { heal, logText: txt }); setTurn('foe'); }
+    if (mode === 'pvp' && !aiProxy) { broadcast('defend', { heal, logText: txt }); setTurn('foe'); }
     else setTimeout(() => { setTurn('foe'); enemyTurn(foe, nm); }, 700);
     setTimeout(() => setAnimating(false), 600);
-  }, [me, foe, turn, animating, mode]);
+  }, [me, foe, turn, animating, mode, aiProxy]);
 
   // ================== EXP / Leveling ==================
   const expNeeded = (lvl: number) => 100 + (lvl - 1) * 60;
@@ -481,7 +508,7 @@ export default function CsbBattleArena() {
 
   const backToSelect = () => {
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
-    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null);
+    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false);
   };
 
   const logColor = (t: string) => ({
@@ -702,7 +729,7 @@ export default function CsbBattleArena() {
 
             {(state === 'victory' || state === 'defeat') && (
               <div className="flex gap-2">
-                {mode === 'ai' && selected && (
+                {(mode === 'ai' || aiProxy) && selected && (
                   <Button onClick={() => startAI(selected)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
                     <RotateCcw className="w-4 h-4 mr-1" /> {state === 'victory' ? 'Next Fight' : 'Rematch'}
                   </Button>
