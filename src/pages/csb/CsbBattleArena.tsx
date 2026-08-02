@@ -110,6 +110,14 @@ export default function CsbBattleArena() {
   const queueTimerRef = useRef<any>(null);
   const [username, setUsername] = useState('Fighter');
 
+  // Challenge system
+  type Challenger = { user_id: string; username: string; top_level: number; bulls_owned: number };
+  const [challengers, setChallengers] = useState<Challenger[]>([]);
+  const [loadingChallengers, setLoadingChallengers] = useState(false);
+  const [pickingOpponent, setPickingOpponent] = useState(false);
+  const [target, setTarget] = useState<Challenger | null>(null);
+  const [incoming, setIncoming] = useState<{ roomId: string; fromName: string; fromLevel: number } | null>(null);
+
   // Load bulls + username
   useEffect(() => {
     const loadBulls = async () => {
