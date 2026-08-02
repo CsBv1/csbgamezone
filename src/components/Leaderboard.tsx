@@ -293,7 +293,8 @@ export const Leaderboard = () => {
                           <span>{userRune.name}</span>
                         </span>
                       )}
-                      <span className="text-muted-foreground">{Number(entry.total_diamonds || 0).toLocaleString()} 💎</span>
+
+
 
                     </div>
                   </div>
@@ -302,7 +303,7 @@ export const Leaderboard = () => {
                   <div className="flex items-center gap-1 mb-1">
                     <Gem className="w-4 h-4 text-cyan-400" />
                     <span className="font-bold gradient-gold bg-clip-text text-transparent">
-                      {Number(entry.csb_tokens || 0).toLocaleString()} $CsB
+                      {Number(entry.csb_tokens || 0).toLocaleString()} CsB
                     </span>
                   </div>
                   {diamondGap > 0 && (
