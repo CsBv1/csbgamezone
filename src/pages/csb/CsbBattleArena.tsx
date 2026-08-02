@@ -430,7 +430,7 @@ export default function CsbBattleArena() {
             ⚔️ CSB BULL BATTLE ARENA
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Battle with your leveled bulls. Win <span className="text-amber-300">Rune Power</span> · {mode === 'pvp' ? '1v1 Multiplayer (3x rewards)' : 'Single-Player vs AI'}
+            Battle with your leveled bulls. Win <span className="text-amber-300">Rune Power</span> + <span className="text-cyan-300">EXP</span> · {mode === 'pvp' ? '1v1 Multiplayer (3x rewards, 2x EXP)' : 'AI Bull Training vs AI'}
           </p>
           {wins > 0 && <Badge className="bg-yellow-600 mt-2">{wins} Win Streak 🔥</Badge>}
         </div>
