@@ -157,7 +157,7 @@ export default function CsbBattleArena() {
     const f = buildAI(bull.level, bull.rarity);
     setMe(m); setFoe(f);
     setLog([{ text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' }]);
-    setTurn('me'); setSpecialReady(0); setState('fighting');
+    setTurn('me'); setSpecialReady(0); setAiProxy(false); setState('fighting');
   };
 
   // ================== PvP Challenges ==================
