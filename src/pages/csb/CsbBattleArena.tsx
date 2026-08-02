@@ -430,10 +430,10 @@ export default function CsbBattleArena() {
     setMe(nm); setSpecialReady((s) => Math.min(100, s + 10));
     const txt = `🛡️ ${me.name} defends and heals ${heal}!`;
     setLog((p) => [...p, { text: txt, type: 'defend' }]);
-    if (mode === 'pvp') { broadcast('defend', { heal, logText: txt }); setTurn('foe'); }
+    if (mode === 'pvp' && !aiProxy) { broadcast('defend', { heal, logText: txt }); setTurn('foe'); }
     else setTimeout(() => { setTurn('foe'); enemyTurn(foe, nm); }, 700);
     setTimeout(() => setAnimating(false), 600);
-  }, [me, foe, turn, animating, mode]);
+  }, [me, foe, turn, animating, mode, aiProxy]);
 
   // ================== EXP / Leveling ==================
   const expNeeded = (lvl: number) => 100 + (lvl - 1) * 60;
