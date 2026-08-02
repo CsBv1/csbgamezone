@@ -488,6 +488,13 @@ export default function CsbBattleArena() {
                         <div className="text-[10px] uppercase tracking-widest font-extrabold text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.9)]">Legendary</div>
                         <div className="font-bold text-sm">{b.nft_name}</div>
                         <div className="text-xs opacity-90">Lv {b.level}</div>
+                        <div className="mt-1">
+                          <div className="flex justify-between text-[9px] text-cyan-200/90">
+                            <span>EXP</span>
+                            <span>{b.exp || 0}/{expNeeded(b.level)}</span>
+                          </div>
+                          <Progress value={Math.min(100, ((b.exp || 0) / expNeeded(b.level)) * 100)} className="h-1 mt-0.5" />
+                        </div>
                         <div className="text-[11px] mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5">
                           <span>❤️ {previewStats.maxHp}</span>
                           <span>⚔️ {previewStats.attack}</span>
