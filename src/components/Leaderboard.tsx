@@ -293,9 +293,8 @@ export const Leaderboard = () => {
                           <span>{userRune.name}</span>
                         </span>
                       )}
-                      {!userBadge && !userRune && (
-                        <span className="text-muted-foreground">{Number(entry.total_diamonds || 0).toLocaleString()} 💎 diamonds</span>
-                      )}
+                      <span className="text-muted-foreground">{Number(entry.total_diamonds || 0).toLocaleString()} 💎</span>
+
                     </div>
                   </div>
                 </div>
