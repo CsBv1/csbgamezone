@@ -6,6 +6,7 @@ interface NFTBonus {
   bullsOwned: number;
   rarityBonus: number;
   highestRarity: string;
+  csbTokens: number;
   nfts: Array<{ name: string; rarity: string; image?: string; assetNameHex?: string }>;
 }
 
@@ -14,6 +15,7 @@ export function useNFTBonuses(walletAddress: string | null) {
     bullsOwned: 0,
     rarityBonus: 0,
     highestRarity: "none",
+    csbTokens: 0,
     nfts: [],
   });
   const [isScanning, setIsScanning] = useState(false);
@@ -35,6 +37,7 @@ export function useNFTBonuses(walletAddress: string | null) {
         bullsOwned: data?.bullsOwned || 0,
         rarityBonus: data?.rarityBonus || 0,
         highestRarity: data?.highestRarity || "none",
+        csbTokens: data?.csbTokens || 0,
         nfts: data?.nfts || [],
       });
 
@@ -56,6 +59,7 @@ export function useNFTBonuses(walletAddress: string | null) {
               bulls_owned: data?.bullsOwned || 0,
               rarity_bonus: data?.rarityBonus || 0,
               highest_rarity: data?.highestRarity || "none",
+              csb_tokens: data?.csbTokens || 0,
               last_scanned_at: new Date().toISOString(),
             })
             .eq("user_id", user.id);
@@ -65,7 +69,8 @@ export function useNFTBonuses(walletAddress: string | null) {
             bulls_owned: data?.bullsOwned || 0,
             rarity_bonus: data?.rarityBonus || 0,
             highest_rarity: data?.highestRarity || "none",
-          });
+            csb_tokens: data?.csbTokens || 0,
+          } as any);
         }
       }
 
@@ -98,6 +103,7 @@ export function useNFTBonuses(walletAddress: string | null) {
             bullsOwned: (data as any).bulls_owned || 0,
             rarityBonus: Number((data as any).rarity_bonus) || 0,
             highestRarity: (data as any).highest_rarity || "none",
+            csbTokens: Number((data as any).csb_tokens) || 0,
             nfts: [],
           });
           setHasScanned(true);

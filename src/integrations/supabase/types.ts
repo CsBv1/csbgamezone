@@ -702,6 +702,7 @@ export type Database = {
         Row: {
           bulls_owned: number
           created_at: string
+          csb_tokens: number
           highest_rarity: string | null
           id: string
           last_scanned_at: string
@@ -712,6 +713,7 @@ export type Database = {
         Insert: {
           bulls_owned?: number
           created_at?: string
+          csb_tokens?: number
           highest_rarity?: string | null
           id?: string
           last_scanned_at?: string
@@ -722,6 +724,7 @@ export type Database = {
         Update: {
           bulls_owned?: number
           created_at?: string
+          csb_tokens?: number
           highest_rarity?: string | null
           id?: string
           last_scanned_at?: string
@@ -868,6 +871,18 @@ export type Database = {
       }
     }
     Views: {
+      csb_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          bulls_owned: number | null
+          csb_tokens: number | null
+          rank: number | null
+          total_diamonds: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
       leaderboard: {
         Row: {
           avatar_url: string | null

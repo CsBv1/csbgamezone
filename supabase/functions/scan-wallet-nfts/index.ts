@@ -6,6 +6,9 @@ const corsHeaders = {
 };
 
 const CSB_POLICY_ID = "b11c9439e1dbec97f89037e0f7bde3b2daad4ad279812ffd9d24e43e";
+// Real $CsB fungible token (policy + asset name hex "CSB")
+const CSB_TOKEN_POLICY_ID = "52419331e752bc3a7c6ee74d76f1169df1535d77d07da382c62b0bab";
+const CSB_TOKEN_ASSET_NAME = "435342";
 
 // Simple bonus: 10% per bull owned
 const BONUS_PER_BULL = 10;
@@ -182,7 +185,7 @@ serve(async (req) => {
           if (data && data.length > 0) {
             for (const item of data) {
               if (item.asset_list) {
-                allAssets.push({ asset_list: item.asset_list });
+                allAssets.push({ source: "address_assets", asset_list: item.asset_list });
               }
             }
           }
@@ -212,7 +215,7 @@ serve(async (req) => {
                 for (const utxo of addrInfo.utxo_set) {
                   if (utxo.asset_list && utxo.asset_list.length > 0) {
                     console.log("Found assets in UTXOs:", utxo.asset_list.length);
-                    allAssets.push({ asset_list: utxo.asset_list });
+                    allAssets.push({ source: "address_info", asset_list: utxo.asset_list });
                   }
                 }
               }
@@ -281,14 +284,21 @@ serve(async (req) => {
     // Process found assets
     const csbNfts: Array<{ name: string; rarity: string; quantity: number; assetNameHex: string; image?: string }> = [];
     let totalBulls = 0;
+    const tokensBySource: Record<string, number> = {};
     const seenAssetHex = new Set<string>();
 
     for (const addressData of allAssets) {
       const assetList = addressData.asset_list || [];
+      const source = addressData.source || "other";
       
       for (const asset of assetList) {
         const policyId = asset.policy_id || "";
         
+        if (policyId === CSB_TOKEN_POLICY_ID && (asset.asset_name || "") === CSB_TOKEN_ASSET_NAME) {
+          tokensBySource[source] = (tokensBySource[source] || 0) + (parseInt(asset.quantity || "0", 10) || 0);
+          continue;
+        }
+
         if (policyId === CSB_POLICY_ID) {
           const assetNameHex = asset.asset_name || "";
           if (seenAssetHex.has(assetNameHex)) continue;
@@ -313,6 +323,9 @@ serve(async (req) => {
         }
       }
     }
+
+    // Same wallet can be reported by multiple Koios endpoints - take the best single source
+    const csbTokens = Math.max(0, ...Object.values(tokensBySource), 0);
 
     // Fetch metadata (image) for each unique NFT via Koios asset_info
     if (csbNfts.length > 0) {
@@ -355,6 +368,7 @@ serve(async (req) => {
       bullsOwned: totalBulls,
       rarityBonus: finalBonus,
       highestRarity: totalBulls > 0 ? "holder" : "none",
+      csbTokens,
       nfts: csbNfts.slice(0, 50).map((n) => ({ name: n.name, rarity: n.rarity, quantity: n.quantity, image: n.image, assetNameHex: n.assetNameHex })),
     };
 
@@ -369,6 +383,7 @@ serve(async (req) => {
       bullsOwned: 0,
       rarityBonus: 0,
       highestRarity: "none",
+      csbTokens: 0,
       nfts: [],
       error: error instanceof Error ? error.message : "Unknown error",
     }), {

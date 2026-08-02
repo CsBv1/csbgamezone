@@ -9,8 +9,8 @@ interface LeaderboardEntry {
   username: string;
   avatar_url: string | null;
   total_diamonds: number;
-  total_wins: number;
-  total_games: number;
+  csb_tokens: number;
+  bulls_owned: number;
   user_id?: string;
 }
 
@@ -88,6 +88,7 @@ export const Leaderboard = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_badges' }, () => fetchLeaderboard())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_runes' }, () => fetchLeaderboard())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_colors' }, () => fetchLeaderboard())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_nft_bonuses' }, () => fetchLeaderboard())
       .subscribe();
 
     return () => {
@@ -100,13 +101,13 @@ export const Leaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       const { data, error } = await supabase
-        .from('leaderboard')
+        .from('csb_leaderboard' as any)
         .select('*')
         .limit(100);
 
       if (error) throw error;
       
-      setLeaderboard(data || []);
+      setLeaderboard((data as any) || []);
       
       // Fetch active colors for all users
       const { data: colorsData } = await supabase
@@ -191,7 +192,7 @@ export const Leaderboard = () => {
       <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
         <div className="flex items-center gap-3 mb-4">
           <Trophy className="w-6 h-6 text-yellow-500" />
-          <h3 className="text-xl font-bold text-foreground">Cardano Stake Bulls Leaderboard Most Diamond Hodl 💎</h3>
+          <h3 className="text-xl font-bold text-foreground">CsB Leaderboard Most Hodl💎🐂</h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -213,17 +214,17 @@ export const Leaderboard = () => {
     <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
       <div className="flex items-center gap-3 mb-4">
         <Trophy className="w-6 h-6 text-yellow-500" />
-        <h3 className="text-xl font-bold text-foreground">Cardano Stake Bulls Leaderboard Most Diamond Hodl 💎</h3>
+        <h3 className="text-xl font-bold text-foreground">CsB Leaderboard Most Hodl💎🐂</h3>
       </div>
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {leaderboard.length === 0 ? (
           <p className="text-center text-muted-foreground py-4">
-            No players yet. Be the first to earn diamonds! 💎
+            No hodlers yet. Connect a wallet holding $CsB! 💎🐂
           </p>
         ) : (
           leaderboard.map((entry, index) => {
             const nextRank = leaderboard[index - 1];
-            const diamondGap = nextRank ? nextRank.total_diamonds - entry.total_diamonds : 0;
+            const diamondGap = nextRank ? Number(nextRank.csb_tokens || 0) - Number(entry.csb_tokens || 0) : 0;
             const isHolder = entry.user_id && userBulls[entry.user_id] > 0;
             const hasBukals = entry.user_id && userBukals[entry.user_id] > 0;
             const userBadge = entry.user_id ? userBadges[entry.user_id] : null;
@@ -290,7 +291,7 @@ export const Leaderboard = () => {
                         </span>
                       )}
                       {!userBadge && !userRune && (
-                        <span className="text-muted-foreground">{entry.total_wins} wins • {entry.total_games} games</span>
+                        <span className="text-muted-foreground">{Number(entry.total_diamonds || 0).toLocaleString()} 💎 diamonds</span>
                       )}
                     </div>
                   </div>
@@ -299,12 +300,12 @@ export const Leaderboard = () => {
                   <div className="flex items-center gap-1 mb-1">
                     <Gem className="w-4 h-4 text-cyan-400" />
                     <span className="font-bold gradient-gold bg-clip-text text-transparent">
-                      {entry.total_diamonds} 💎
+                      {Number(entry.csb_tokens || 0).toLocaleString()} $CsB
                     </span>
                   </div>
                   {diamondGap > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      -{diamondGap} to next
+                      -{diamondGap.toLocaleString()} to next
                     </p>
                   )}
                 </div>
