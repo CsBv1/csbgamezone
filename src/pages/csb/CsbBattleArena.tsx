@@ -416,11 +416,11 @@ export default function CsbBattleArena() {
     setSpecialReady(0);
     const txt = `🌟 SPECIAL STRIKE! ${dmg} damage!`;
     setLog((p) => [...p, { text: txt, type: 'special' }]);
-    if (mode === 'pvp') { broadcast('special', { damage: dmg, logText: txt }); setTurn('foe'); }
+    if (mode === 'pvp' && !aiProxy) { broadcast('special', { damage: dmg, logText: txt }); setTurn('foe'); }
     if (nf.hp <= 0) setTimeout(() => onVictory(), 500);
-    else if (mode === 'ai') setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
+    else if (mode === 'ai' || aiProxy) setTimeout(() => { setTurn('foe'); enemyTurn(nf, me); }, 700);
     setTimeout(() => setAnimating(false), 600);
-  }, [me, foe, turn, animating, specialReady, mode]);
+  }, [me, foe, turn, animating, specialReady, mode, aiProxy]);
 
   const doDefend = useCallback(() => {
     if (!me || !foe || turn !== 'me' || animating) return;
