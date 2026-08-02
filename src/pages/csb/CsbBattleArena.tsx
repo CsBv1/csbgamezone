@@ -439,7 +439,7 @@ export default function CsbBattleArena() {
         {state === 'select' && !searching && (
           <div className="flex justify-center gap-2">
             <Button variant={mode === 'ai' ? 'default' : 'outline'} onClick={() => setMode('ai')}>
-              <Bot className="w-4 h-4 mr-1" /> Single Player
+              <Bot className="w-4 h-4 mr-1" /> AI Bull Training
             </Button>
             <Button variant={mode === 'pvp' ? 'default' : 'outline'} onClick={() => setMode('pvp')}>
               <Users className="w-4 h-4 mr-1" /> Multiplayer PvP
