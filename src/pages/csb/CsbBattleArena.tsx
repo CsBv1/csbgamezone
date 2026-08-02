@@ -25,6 +25,7 @@ interface CsbBull {
   rarity: string;
   level: number;
   image?: string;
+  exp?: number;
 }
 
 interface Fighter {
