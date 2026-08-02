@@ -154,6 +154,7 @@ export default function CsbBattleArena() {
   useEffect(() => () => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    if (acceptPollRef.current) clearInterval(acceptPollRef.current);
     if (roomId && userId) supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
   }, [roomId, userId]);
 
@@ -453,6 +454,8 @@ export default function CsbBattleArena() {
 
   const cancelQueue = async () => {
     if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    if (acceptPollRef.current) clearInterval(acceptPollRef.current);
+    matchedRef.current = true;
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     if (roomId && userId) {
       await supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
@@ -607,6 +610,9 @@ export default function CsbBattleArena() {
 
 
   const backToSelect = () => {
+    if (acceptPollRef.current) clearInterval(acceptPollRef.current);
+    if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    matchedRef.current = true;
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
     setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false); setTarget(null);
   };
