@@ -110,6 +110,14 @@ export default function CsbBattleArena() {
   const queueTimerRef = useRef<any>(null);
   const [username, setUsername] = useState('Fighter');
 
+  // Challenge system
+  type Challenger = { user_id: string; username: string; top_level: number; bulls_owned: number };
+  const [challengers, setChallengers] = useState<Challenger[]>([]);
+  const [loadingChallengers, setLoadingChallengers] = useState(false);
+  const [pickingOpponent, setPickingOpponent] = useState(false);
+  const [target, setTarget] = useState<Challenger | null>(null);
+  const [incoming, setIncoming] = useState<{ roomId: string; fromName: string; fromLevel: number } | null>(null);
+
   // Load bulls + username
   useEffect(() => {
     const loadBulls = async () => {
@@ -150,60 +158,131 @@ export default function CsbBattleArena() {
     setTurn('me'); setSpecialReady(0); setState('fighting');
   };
 
-  // ================== PvP ==================
-  const PVP_TIMEOUT_SECONDS = 45;
-  const startPvP = async (bull: CsbBull) => {
-    if (!userId) return;
+  // ================== PvP Challenges ==================
+  const PVP_TIMEOUT_SECONDS = 30;
+
+  const loadChallengers = async () => {
+    setLoadingChallengers(true);
+    const { data } = await supabase.from('csb_challengers' as any).select('*');
+    const list = ((data || []) as any[])
+      .filter((c) => c.user_id && c.user_id !== userId)
+      .map((c) => ({
+        user_id: c.user_id as string,
+        username: (c.username as string) || 'Bull Holder',
+        top_level: Number(c.top_level) || 1,
+        bulls_owned: Number(c.bulls_owned) || 0,
+      }));
+    setChallengers(list);
+    setLoadingChallengers(false);
+  };
+
+  const openOpponentPicker = (bull: CsbBull) => {
     setSelected(bull);
+    setPickingOpponent(true);
+    loadChallengers();
+  };
+
+  // AI stands in for a real player who didn't answer, using their name + bull
+  const startProxyAI = (bull: CsbBull, opp: Challenger) => {
+    const proxy: CsbBull = {
+      nft_id: 'proxy',
+      nft_name: `${opp.username}'s Bull`,
+      rarity: bull.rarity,
+      level: Math.max(1, opp.top_level),
+    };
+    const m = buildFromBull(bull);
+    const f = buildFromBull(proxy);
+    setMe(m); setFoe(f);
+    setLog([
+      { text: `⏱️ ${opp.username} didn't answer — AI takes control of their bull.`, type: 'info' },
+      { text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' },
+    ]);
+    setTurn('me'); setSpecialReady(0); setSearching(false); setState('fighting');
+  };
+
+  const challengeOpponent = async (opp: Challenger) => {
+    const bull = selected;
+    if (!userId || !bull) return;
+    setTarget(opp);
+    setPickingOpponent(false);
     setSearching(true);
     setQueueTime(0);
+
+    const { data: nr } = await supabase.from('game_rooms').insert({
+      game_type: 'csb-battle', status: 'waiting', max_players: 2, created_by: userId,
+      round_data: {
+        challenger_id: userId,
+        challenger_name: username,
+        challenger_level: bull.level,
+        target_id: opp.user_id,
+        target_name: opp.username,
+      } as any,
+    }).select('id').single();
+
+    if (!nr) { setSearching(false); toast({ title: 'Could not send challenge' }); return; }
+
+    setRoomId(nr.id); setIsHost(true);
+    await supabase.from('game_room_players').insert({
+      room_id: nr.id, user_id: userId, username, is_active: true,
+    });
+    subscribeRoom(nr.id, bull);
+    toast({ title: `Challenge sent to ${opp.username}`, description: 'They have 30 seconds to answer.' });
+
     queueTimerRef.current = setInterval(() => {
       setQueueTime((t) => {
         const nt = t + 1;
         if (nt >= PVP_TIMEOUT_SECONDS) {
-          // Auto-fallback to AI
           clearInterval(queueTimerRef.current);
           (async () => {
             if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
-            if (roomId && userId) {
-              await supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
-              await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
-            }
-            setRoomId(null); setSearching(false);
-            toast({ title: 'No opponent found', description: 'Starting AI match instead.' });
-            setMode('ai');
-            startAI(bull);
+            await supabase.from('game_room_players').delete().eq('room_id', nr.id).eq('user_id', userId);
+            await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', nr.id);
+            setRoomId(null);
+            startProxyAI(bull, opp);
           })();
         }
         return nt;
       });
     }, 1000);
-
-    const { data: openRooms } = await supabase
-      .from('game_rooms').select('id')
-      .eq('game_type', 'csb-battle').eq('status', 'waiting').limit(1);
-
-    if (openRooms && openRooms.length > 0) {
-      const r = openRooms[0];
-      setRoomId(r.id); setIsHost(false);
-      await supabase.from('game_room_players').insert({
-        room_id: r.id, user_id: userId, username, is_active: true,
-      });
-      await supabase.from('game_rooms').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', r.id);
-      subscribeRoom(r.id, bull);
-    } else {
-      const { data: nr } = await supabase.from('game_rooms').insert({
-        game_type: 'csb-battle', status: 'waiting', max_players: 2,
-      }).select('id').single();
-      if (nr) {
-        setRoomId(nr.id); setIsHost(true);
-        await supabase.from('game_room_players').insert({
-          room_id: nr.id, user_id: userId, username, is_active: true,
-        });
-        subscribeRoom(nr.id, bull);
-      }
-    }
   };
+
+  const acceptChallenge = async () => {
+    if (!incoming || !userId) return;
+    const bull = selected || bulls[0];
+    if (!bull) { toast({ title: 'No bull available' }); setIncoming(null); return; }
+    const rId = incoming.roomId;
+    setIncoming(null);
+    setSelected(bull);
+    setRoomId(rId); setIsHost(false);
+    subscribeRoom(rId, bull);
+    await supabase.from('game_room_players').insert({
+      room_id: rId, user_id: userId, username, is_active: true,
+    });
+    await supabase.from('game_rooms').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', rId);
+    const m = buildFromBull(bull);
+    const f = buildFromBull({ nft_id: 'opp', nft_name: `${incoming.fromName}'s Bull`, rarity: bull.rarity, level: incoming.fromLevel || bull.level });
+    setMe(m); setFoe(f);
+    setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
+    setTurn('foe'); setSpecialReady(0); setSearching(false); setState('fighting');
+  };
+
+  // Listen for challenges aimed at me
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel('csb-challenge-inbox')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_rooms', filter: 'game_type=eq.csb-battle' }, (payload) => {
+        const r: any = payload.new;
+        const rd = r?.round_data || {};
+        if (rd.target_id === userId) {
+          setIncoming({ roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 });
+          toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId]);
+
 
   const subscribeRoom = (rId: string, myBull: CsbBull) => {
     const ch = supabase
@@ -447,20 +526,66 @@ export default function CsbBattleArena() {
           </div>
         )}
 
-        {/* Searching overlay */}
+        {/* Incoming challenge */}
+        {incoming && (
+          <Card className="bg-slate-900/90 border-amber-500 p-4 text-center max-w-md mx-auto space-y-2">
+            <h3 className="text-lg font-bold text-amber-300">🥊 {incoming.fromName} challenged you!</h3>
+            <p className="text-xs text-muted-foreground">Their bull is Lv {incoming.fromLevel}. Answer now or AI will fight for you.</p>
+            <div className="flex gap-2">
+              <Button className="flex-1 bg-gradient-to-r from-amber-500 to-red-500" onClick={acceptChallenge}>Accept</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setIncoming(null)}>Decline</Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Waiting for challenged player */}
         {searching && (
           <Card className="bg-slate-900/80 border-purple-700 p-6 text-center max-w-md mx-auto space-y-3">
             <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
-            <h3 className="text-lg font-bold">Searching for opponent...</h3>
-            <p className="font-mono text-purple-300 text-2xl">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
-            <p className="text-xs text-muted-foreground">Auto-switches to AI after {PVP_TIMEOUT_SECONDS}s if no opponent found</p>
+            <h3 className="text-lg font-bold">Waiting for {target?.username || 'opponent'}...</h3>
+            <p className="font-mono text-purple-300 text-2xl">{PVP_TIMEOUT_SECONDS - queueTime}s</p>
+            <p className="text-xs text-muted-foreground">If they don't answer in {PVP_TIMEOUT_SECONDS}s, AI plays their bull with their name.</p>
             <Progress value={(queueTime / PVP_TIMEOUT_SECONDS) * 100} className="h-2" />
             <Button variant="outline" onClick={cancelQueue}>Cancel</Button>
           </Card>
         )}
 
+        {/* Opponent picker */}
+        {state === 'select' && !searching && pickingOpponent && (
+          <div className="max-w-lg mx-auto space-y-3">
+            <div className="text-center">
+              <h2 className="text-lg font-bold">Pick an opponent</h2>
+              <p className="text-xs text-muted-foreground">Fighting with {selected?.nft_name} (Lv {selected?.level})</p>
+            </div>
+            {loadingChallengers ? (
+              <div className="text-center py-8"><Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-400" /></div>
+            ) : challengers.length === 0 ? (
+              <Card className="p-6 text-center bg-slate-900/50 border-slate-700 space-y-3">
+                <p className="text-sm text-muted-foreground">No other bull holders found yet.</p>
+                <Button onClick={() => { setPickingOpponent(false); setMode('ai'); selected && startAI(selected); }}>Train vs AI instead</Button>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {challengers.map((c) => (
+                  <Card key={c.user_id} className="p-3 bg-slate-900/70 border-purple-800/50 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm truncate">🐂 {c.username}</div>
+                      <div className="text-[11px] text-muted-foreground">Top Lv {c.top_level} · {c.bulls_owned} bull{c.bulls_owned === 1 ? '' : 's'}</div>
+                    </div>
+                    <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-red-500" onClick={() => challengeOpponent(c)}>
+                      <Swords className="w-3 h-3 mr-1" /> Challenge
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            )}
+            <Button variant="ghost" className="w-full" onClick={() => setPickingOpponent(false)}>Back to bulls</Button>
+          </div>
+        )}
+
+
         {/* Bull selection */}
-        {state === 'select' && !searching && (
+        {state === 'select' && !searching && !pickingOpponent && (
           <>
             {bulls.length === 0 ? (
               <Card className="p-10 text-center bg-slate-900/50 border-slate-700">
@@ -477,7 +602,7 @@ export default function CsbBattleArena() {
                     return (
                       <Card key={b.nft_id}
                         className={`p-3 bg-gradient-to-br ${RARITY_GRAD[b.rarity] || RARITY_GRAD.common} border-2 border-white/10 cursor-pointer hover:scale-[1.02] transition-transform`}
-                        onClick={() => mode === 'ai' ? startAI(b) : startPvP(b)}>
+                        onClick={() => mode === 'ai' ? startAI(b) : openOpponentPicker(b)}>
                         <div className="aspect-square rounded-lg bg-black/40 flex items-center justify-center mb-2 overflow-hidden ring-1 ring-white/10">
                           {b.image ? (
                             <img src={b.image} alt={b.nft_name} className="w-full h-full object-cover" />
@@ -502,7 +627,7 @@ export default function CsbBattleArena() {
                           <span>⚡ {previewStats.special}</span>
                         </div>
                         <Button size="sm" className="w-full mt-2">
-                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> AI Training</> : <><Users className="w-3 h-3 mr-1" /> Find Match</>}
+                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> AI Training</> : <><Users className="w-3 h-3 mr-1" /> Pick Opponent</>}
                         </Button>
                       </Card>
                     );

@@ -874,6 +874,15 @@ export type Database = {
       }
     }
     Views: {
+      csb_challengers: {
+        Row: {
+          bulls_owned: number | null
+          top_level: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
       csb_leaderboard: {
         Row: {
           avatar_url: string | null
