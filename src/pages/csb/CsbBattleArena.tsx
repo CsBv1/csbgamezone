@@ -383,6 +383,29 @@ export default function CsbBattleArena() {
 
 
 
+  // Start the live PvP fight on the challenger's screen once the opponent answers
+  const beginPvpMatch = async (myBull: CsbBull, opp: { user_id: string; username?: string; level?: number }) => {
+    if (matchedRef.current) return;
+    matchedRef.current = true;
+    if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    if (acceptPollRef.current) clearInterval(acceptPollRef.current);
+    const oppFake: CsbBull = {
+      nft_id: 'opp', nft_name: `${opp.username || 'Opponent'}'s Bull`,
+      rarity: myBull.rarity, level: opp.level || myBull.level,
+    };
+    const m = buildFromBull(myBull);
+    const f = buildFromBull(oppFake);
+    setMe(m); setFoe(f);
+    setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
+    setMode('pvp');
+    setTurn('me'); setSpecialReady(0);
+    setSearching(false);
+    setAiProxy(false);
+    setState('fighting');
+    const img = await fetchOpponentBullImage(opp.user_id);
+    if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
+  };
+
   const subscribeRoom = (rId: string, myBull: CsbBull) => {
     const ch = supabase
       .channel(`csb-battle-${rId}`)
@@ -391,24 +414,17 @@ export default function CsbBattleArena() {
       }, async (payload) => {
         const p = payload.new as any;
         if (p && p.user_id !== userId && p.is_active) {
-          if (queueTimerRef.current) clearInterval(queueTimerRef.current);
-          // Build approximated opponent fighter from a pseudo-random level matched to mine
-          const oppFake: CsbBull = {
-            nft_id: 'opp', nft_name: p.username || 'Opponent',
-            rarity: myBull.rarity, level: myBull.level,
-          };
-          const m = buildFromBull(myBull);
-          const f = buildFromBull(oppFake);
-          setMe(m); setFoe(f);
-          setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
-          setTurn('me'); setSpecialReady(0);
-          setSearching(false);
-          setAiProxy(false);
-          setState('fighting');
-          const img = await fetchOpponentBullImage(p.user_id);
-          if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
+          await beginPvpMatch(myBull, p);
         }
       })
+      .on('broadcast', { event: 'csb-action' }, async (payload) => {
+        const d = payload.payload as any;
+        if (d.from === userId) return;
+        if (d.action === 'accept') {
+          await beginPvpMatch(myBull, { user_id: d.from, username: d.username, level: d.level });
+        }
+      })
+
       .on('broadcast', { event: 'csb-action' }, (payload) => {
         const d = payload.payload as any;
         if (d.from === userId) return;
