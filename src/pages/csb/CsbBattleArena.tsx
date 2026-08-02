@@ -745,8 +745,8 @@ export default function CsbBattleArena() {
 
             {(state === 'victory' || state === 'defeat') && (
               <div className="flex gap-2">
-                {(mode === 'ai' || aiProxy) && selected && (
-                  <Button onClick={() => startAI(selected)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
+                {selected && (
+                  <Button onClick={nextFight} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
                     <RotateCcw className="w-4 h-4 mr-1" /> {state === 'victory' ? 'Next Fight' : 'Rematch'}
                   </Button>
                 )}
