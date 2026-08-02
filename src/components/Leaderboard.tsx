@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Gem, Trophy, Award } from "lucide-react";
@@ -45,6 +46,7 @@ interface UserRune {
 }
 
 export const Leaderboard = () => {
+  const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   const [userBulls, setUserBulls] = useState<Record<string, number>>({});
@@ -246,12 +248,18 @@ export const Leaderboard = () => {
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5" />
                 )}
                 <div className="flex items-center gap-3 flex-1 min-w-0 relative z-10">
-                  {/* Rank with stacked Bukals/Bulls */}
+                  {/* Rank with Arena entry + Bulls */}
                   <div className="flex flex-col items-center min-w-[3rem]">
-                    {hasBukals && (
-                      <span className="text-[10px] text-yellow-400 font-bold leading-tight">
-                        🏆{userBukals[entry.user_id!]}
-                      </span>
+                    {isHolder && (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/csb/battle-arena')}
+                        title="Enter CsB Battle Arena"
+                        aria-label="Enter CsB Battle Arena"
+                        className="text-base leading-none mb-0.5 hover:scale-125 transition-transform drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]"
+                      >
+                        🏟️
+                      </button>
                     )}
                     <span className="text-lg font-bold">
                       {getMedalEmoji(entry.rank)}
@@ -263,6 +271,7 @@ export const Leaderboard = () => {
                     )}
 
                   </div>
+
                   <div className="flex-1 min-w-0">
                     <p 
                       className="font-semibold truncate"

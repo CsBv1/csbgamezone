@@ -49,6 +49,7 @@ export type Database = {
       }
       csbv1_nft_power: {
         Row: {
+          exp: number
           id: string
           level: number
           nft_id: string
@@ -58,6 +59,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          exp?: number
           id?: string
           level?: number
           nft_id: string
@@ -67,6 +69,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          exp?: number
           id?: string
           level?: number
           nft_id?: string

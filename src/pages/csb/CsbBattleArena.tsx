@@ -25,6 +25,7 @@ interface CsbBull {
   rarity: string;
   level: number;
   image?: string;
+  exp?: number;
 }
 
 interface Fighter {
@@ -336,6 +337,35 @@ export default function CsbBattleArena() {
     setTimeout(() => setAnimating(false), 600);
   }, [me, foe, turn, animating, mode]);
 
+  // ================== EXP / Leveling ==================
+  const expNeeded = (lvl: number) => 100 + (lvl - 1) * 60;
+
+  const grantExp = async (amount: number, reason: string) => {
+    if (!selected || !userId || amount <= 0) return;
+    let lvl = selected.level;
+    let exp = (selected.exp || 0) + amount;
+    let leveled = 0;
+    while (exp >= expNeeded(lvl)) {
+      exp -= expNeeded(lvl);
+      lvl += 1;
+      leveled += 1;
+    }
+    const updated = { ...selected, level: lvl, exp };
+    setSelected(updated);
+    setBulls((prev) => prev.map((b) => (b.nft_id === selected.nft_id ? updated : b)));
+    await supabase
+      .from('csbv1_nft_power' as any)
+      .update({ level: lvl, exp, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('nft_id', selected.nft_id);
+
+    setLog((p) => [...p, { text: `✨ ${selected.nft_name} gained +${amount} EXP (${reason})`, type: 'info' }]);
+    if (leveled > 0) {
+      setLog((p) => [...p, { text: `🎉 LEVEL UP! ${selected.nft_name} is now Lv ${lvl}!`, type: 'special' }]);
+      toast({ title: `🎉 Level Up! Lv ${lvl}`, description: `${selected.nft_name} grew stronger` });
+    }
+  };
+
   const onVictory = async () => {
     setState('victory');
     setWins((w) => w + 1);
@@ -353,6 +383,8 @@ export default function CsbBattleArena() {
     if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
     setLog((p) => [...p, { text: `🏆 VICTORY! +${reward} 🪙 Rune Power!${mode === 'pvp' ? ' (PvP 3x)' : ''}`, type: 'info' }]);
     toast({ title: 'Victory! 🏆', description: `+${reward} Rune Power earned` });
+    const expGain = Math.floor((40 + (foe?.level || 1) * 12) * (mode === 'pvp' ? 2 : 1));
+    await grantExp(expGain, mode === 'pvp' ? 'PvP win 2x' : 'AI training win');
   };
 
   const onDefeat = async () => {
@@ -364,7 +396,9 @@ export default function CsbBattleArena() {
     }
     if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
     setLog((p) => [...p, { text: `💀 DEFEATED! Train more in NFT Power.`, type: 'info' }]);
+    await grantExp(mode === 'pvp' ? 20 : 12, 'battle experience');
   };
+
 
   const backToSelect = () => {
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
@@ -396,7 +430,7 @@ export default function CsbBattleArena() {
             ⚔️ CSB BULL BATTLE ARENA
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Battle with your leveled bulls. Win <span className="text-amber-300">Rune Power</span> · {mode === 'pvp' ? '1v1 Multiplayer (3x rewards)' : 'Single-Player vs AI'}
+            Battle with your leveled bulls. Win <span className="text-amber-300">Rune Power</span> + <span className="text-cyan-300">EXP</span> · {mode === 'pvp' ? '1v1 Multiplayer (3x rewards, 2x EXP)' : 'AI Bull Training vs AI'}
           </p>
           {wins > 0 && <Badge className="bg-yellow-600 mt-2">{wins} Win Streak 🔥</Badge>}
         </div>
@@ -405,7 +439,7 @@ export default function CsbBattleArena() {
         {state === 'select' && !searching && (
           <div className="flex justify-center gap-2">
             <Button variant={mode === 'ai' ? 'default' : 'outline'} onClick={() => setMode('ai')}>
-              <Bot className="w-4 h-4 mr-1" /> Single Player
+              <Bot className="w-4 h-4 mr-1" /> AI Bull Training
             </Button>
             <Button variant={mode === 'pvp' ? 'default' : 'outline'} onClick={() => setMode('pvp')}>
               <Users className="w-4 h-4 mr-1" /> Multiplayer PvP
@@ -454,6 +488,13 @@ export default function CsbBattleArena() {
                         <div className="text-[10px] uppercase tracking-widest font-extrabold text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.9)]">Legendary</div>
                         <div className="font-bold text-sm">{b.nft_name}</div>
                         <div className="text-xs opacity-90">Lv {b.level}</div>
+                        <div className="mt-1">
+                          <div className="flex justify-between text-[9px] text-cyan-200/90">
+                            <span>EXP</span>
+                            <span>{b.exp || 0}/{expNeeded(b.level)}</span>
+                          </div>
+                          <Progress value={Math.min(100, ((b.exp || 0) / expNeeded(b.level)) * 100)} className="h-1 mt-0.5" />
+                        </div>
                         <div className="text-[11px] mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5">
                           <span>❤️ {previewStats.maxHp}</span>
                           <span>⚔️ {previewStats.attack}</span>
@@ -461,7 +502,7 @@ export default function CsbBattleArena() {
                           <span>⚡ {previewStats.special}</span>
                         </div>
                         <Button size="sm" className="w-full mt-2">
-                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> Fight AI</> : <><Users className="w-3 h-3 mr-1" /> Find Match</>}
+                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> AI Training</> : <><Users className="w-3 h-3 mr-1" /> Find Match</>}
                         </Button>
                       </Card>
                     );
