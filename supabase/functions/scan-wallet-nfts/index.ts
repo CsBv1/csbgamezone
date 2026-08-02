@@ -183,10 +183,17 @@ serve(async (req) => {
           const data = await response.json();
           console.log("address_assets count:", data?.length || 0);
           if (data && data.length > 0) {
+            const flat: any[] = [];
             for (const item of data) {
               if (item.asset_list) {
                 allAssets.push({ source: "address_assets", asset_list: item.asset_list });
+              } else if (item.policy_id) {
+                // Koios v1 returns a flat list of assets (one row per asset)
+                flat.push(item);
               }
+            }
+            if (flat.length > 0) {
+              allAssets.push({ source: "address_assets", asset_list: flat });
             }
           }
         }
