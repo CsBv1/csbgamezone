@@ -158,60 +158,131 @@ export default function CsbBattleArena() {
     setTurn('me'); setSpecialReady(0); setState('fighting');
   };
 
-  // ================== PvP ==================
-  const PVP_TIMEOUT_SECONDS = 45;
-  const startPvP = async (bull: CsbBull) => {
-    if (!userId) return;
+  // ================== PvP Challenges ==================
+  const PVP_TIMEOUT_SECONDS = 30;
+
+  const loadChallengers = async () => {
+    setLoadingChallengers(true);
+    const { data } = await supabase.from('csb_challengers' as any).select('*');
+    const list = ((data || []) as any[])
+      .filter((c) => c.user_id && c.user_id !== userId)
+      .map((c) => ({
+        user_id: c.user_id as string,
+        username: (c.username as string) || 'Bull Holder',
+        top_level: Number(c.top_level) || 1,
+        bulls_owned: Number(c.bulls_owned) || 0,
+      }));
+    setChallengers(list);
+    setLoadingChallengers(false);
+  };
+
+  const openOpponentPicker = (bull: CsbBull) => {
     setSelected(bull);
+    setPickingOpponent(true);
+    loadChallengers();
+  };
+
+  // AI stands in for a real player who didn't answer, using their name + bull
+  const startProxyAI = (bull: CsbBull, opp: Challenger) => {
+    const proxy: CsbBull = {
+      nft_id: 'proxy',
+      nft_name: `${opp.username}'s Bull`,
+      rarity: bull.rarity,
+      level: Math.max(1, opp.top_level),
+    };
+    const m = buildFromBull(bull);
+    const f = buildFromBull(proxy);
+    setMe(m); setFoe(f);
+    setLog([
+      { text: `⏱️ ${opp.username} didn't answer — AI takes control of their bull.`, type: 'info' },
+      { text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' },
+    ]);
+    setTurn('me'); setSpecialReady(0); setSearching(false); setState('fighting');
+  };
+
+  const challengeOpponent = async (opp: Challenger) => {
+    const bull = selected;
+    if (!userId || !bull) return;
+    setTarget(opp);
+    setPickingOpponent(false);
     setSearching(true);
     setQueueTime(0);
+
+    const { data: nr } = await supabase.from('game_rooms').insert({
+      game_type: 'csb-battle', status: 'waiting', max_players: 2, created_by: userId,
+      round_data: {
+        challenger_id: userId,
+        challenger_name: username,
+        challenger_level: bull.level,
+        target_id: opp.user_id,
+        target_name: opp.username,
+      } as any,
+    }).select('id').single();
+
+    if (!nr) { setSearching(false); toast({ title: 'Could not send challenge' }); return; }
+
+    setRoomId(nr.id); setIsHost(true);
+    await supabase.from('game_room_players').insert({
+      room_id: nr.id, user_id: userId, username, is_active: true,
+    });
+    subscribeRoom(nr.id, bull);
+    toast({ title: `Challenge sent to ${opp.username}`, description: 'They have 30 seconds to answer.' });
+
     queueTimerRef.current = setInterval(() => {
       setQueueTime((t) => {
         const nt = t + 1;
         if (nt >= PVP_TIMEOUT_SECONDS) {
-          // Auto-fallback to AI
           clearInterval(queueTimerRef.current);
           (async () => {
             if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
-            if (roomId && userId) {
-              await supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
-              await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
-            }
-            setRoomId(null); setSearching(false);
-            toast({ title: 'No opponent found', description: 'Starting AI match instead.' });
-            setMode('ai');
-            startAI(bull);
+            await supabase.from('game_room_players').delete().eq('room_id', nr.id).eq('user_id', userId);
+            await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', nr.id);
+            setRoomId(null);
+            startProxyAI(bull, opp);
           })();
         }
         return nt;
       });
     }, 1000);
-
-    const { data: openRooms } = await supabase
-      .from('game_rooms').select('id')
-      .eq('game_type', 'csb-battle').eq('status', 'waiting').limit(1);
-
-    if (openRooms && openRooms.length > 0) {
-      const r = openRooms[0];
-      setRoomId(r.id); setIsHost(false);
-      await supabase.from('game_room_players').insert({
-        room_id: r.id, user_id: userId, username, is_active: true,
-      });
-      await supabase.from('game_rooms').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', r.id);
-      subscribeRoom(r.id, bull);
-    } else {
-      const { data: nr } = await supabase.from('game_rooms').insert({
-        game_type: 'csb-battle', status: 'waiting', max_players: 2,
-      }).select('id').single();
-      if (nr) {
-        setRoomId(nr.id); setIsHost(true);
-        await supabase.from('game_room_players').insert({
-          room_id: nr.id, user_id: userId, username, is_active: true,
-        });
-        subscribeRoom(nr.id, bull);
-      }
-    }
   };
+
+  const acceptChallenge = async () => {
+    if (!incoming || !userId) return;
+    const bull = selected || bulls[0];
+    if (!bull) { toast({ title: 'No bull available' }); setIncoming(null); return; }
+    const rId = incoming.roomId;
+    setIncoming(null);
+    setSelected(bull);
+    setRoomId(rId); setIsHost(false);
+    subscribeRoom(rId, bull);
+    await supabase.from('game_room_players').insert({
+      room_id: rId, user_id: userId, username, is_active: true,
+    });
+    await supabase.from('game_rooms').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', rId);
+    const m = buildFromBull(bull);
+    const f = buildFromBull({ nft_id: 'opp', nft_name: `${incoming.fromName}'s Bull`, rarity: bull.rarity, level: incoming.fromLevel || bull.level });
+    setMe(m); setFoe(f);
+    setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
+    setTurn('foe'); setSpecialReady(0); setSearching(false); setState('fighting');
+  };
+
+  // Listen for challenges aimed at me
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel('csb-challenge-inbox')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_rooms', filter: 'game_type=eq.csb-battle' }, (payload) => {
+        const r: any = payload.new;
+        const rd = r?.round_data || {};
+        if (rd.target_id === userId) {
+          setIncoming({ roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 });
+          toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId]);
+
 
   const subscribeRoom = (rId: string, myBull: CsbBull) => {
     const ch = supabase
