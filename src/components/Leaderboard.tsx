@@ -46,6 +46,7 @@ interface UserRune {
 }
 
 export const Leaderboard = () => {
+  const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userColors, setUserColors] = useState<Record<string, string>>({});
   const [userBulls, setUserBulls] = useState<Record<string, number>>({});
