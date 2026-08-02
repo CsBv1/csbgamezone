@@ -512,6 +512,21 @@ export default function CsbBattleArena() {
     setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false);
   };
 
+  // "Next Fight" — re-issue the same challenge in PvP, else new AI bout
+  const nextFight = async () => {
+    if (!selected) return;
+    if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
+    if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    setMe(null); setFoe(null); setLog([]); setAiProxy(false); setRoomId(null);
+    if (target) {
+      setMode('pvp');
+      setState('select');
+      await challengeOpponent(target);
+    } else {
+      startAI(selected);
+    }
+  };
+
   const logColor = (t: string) => ({
     crit: 'text-red-400 font-bold',
     special: 'text-purple-400 font-bold',
