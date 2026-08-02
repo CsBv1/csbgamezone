@@ -336,6 +336,35 @@ export default function CsbBattleArena() {
     setTimeout(() => setAnimating(false), 600);
   }, [me, foe, turn, animating, mode]);
 
+  // ================== EXP / Leveling ==================
+  const expNeeded = (lvl: number) => 100 + (lvl - 1) * 60;
+
+  const grantExp = async (amount: number, reason: string) => {
+    if (!selected || !userId || amount <= 0) return;
+    let lvl = selected.level;
+    let exp = (selected.exp || 0) + amount;
+    let leveled = 0;
+    while (exp >= expNeeded(lvl)) {
+      exp -= expNeeded(lvl);
+      lvl += 1;
+      leveled += 1;
+    }
+    const updated = { ...selected, level: lvl, exp };
+    setSelected(updated);
+    setBulls((prev) => prev.map((b) => (b.nft_id === selected.nft_id ? updated : b)));
+    await supabase
+      .from('csbv1_nft_power' as any)
+      .update({ level: lvl, exp, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('nft_id', selected.nft_id);
+
+    setLog((p) => [...p, { text: `✨ ${selected.nft_name} gained +${amount} EXP (${reason})`, type: 'info' }]);
+    if (leveled > 0) {
+      setLog((p) => [...p, { text: `🎉 LEVEL UP! ${selected.nft_name} is now Lv ${lvl}!`, type: 'special' }]);
+      toast({ title: `🎉 Level Up! Lv ${lvl}`, description: `${selected.nft_name} grew stronger` });
+    }
+  };
+
   const onVictory = async () => {
     setState('victory');
     setWins((w) => w + 1);
@@ -353,6 +382,8 @@ export default function CsbBattleArena() {
     if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
     setLog((p) => [...p, { text: `🏆 VICTORY! +${reward} 🪙 Rune Power!${mode === 'pvp' ? ' (PvP 3x)' : ''}`, type: 'info' }]);
     toast({ title: 'Victory! 🏆', description: `+${reward} Rune Power earned` });
+    const expGain = Math.floor((40 + (foe?.level || 1) * 12) * (mode === 'pvp' ? 2 : 1));
+    await grantExp(expGain, mode === 'pvp' ? 'PvP win 2x' : 'AI training win');
   };
 
   const onDefeat = async () => {
@@ -364,7 +395,9 @@ export default function CsbBattleArena() {
     }
     if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
     setLog((p) => [...p, { text: `💀 DEFEATED! Train more in NFT Power.`, type: 'info' }]);
+    await grantExp(mode === 'pvp' ? 20 : 12, 'battle experience');
   };
+
 
   const backToSelect = () => {
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
