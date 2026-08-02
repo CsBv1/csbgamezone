@@ -327,16 +327,18 @@ export default function CsbBattleArena() {
   useEffect(() => {
     if (!userId) return;
 
-    const offer = (r: any) => {
+    const offer = (r: any, left = PVP_TIMEOUT_SECONDS) => {
       const rd = r?.round_data || {};
       if (rd.target_id !== userId) return;
+      if (stateRef.current === 'fighting') return;
       setIncoming((prev) => {
         if (prev?.roomId === r.id) return prev;
-        setIncomingLeft(PVP_TIMEOUT_SECONDS);
-        toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
+        setIncomingLeft(Math.max(1, left));
+        toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: `Answer within ${Math.max(1, left)} seconds.` });
         return { roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 };
       });
     };
+
 
     const ch = supabase
       .channel('csb-challenge-inbox')
