@@ -531,6 +531,18 @@ export default function CsbBattleArena() {
     setTimeout(() => setAnimating(false), 600);
   }, [me, foe, turn, animating, mode, aiProxy]);
 
+  // Anti-stall: if a live PvP opponent doesn't answer their turn in 15s, AI takes over so the fight continues
+  useEffect(() => {
+    if (state !== 'fighting' || mode !== 'pvp' || aiProxy || turn !== 'foe' || !me || !foe) return;
+    const t = setTimeout(() => {
+      setAiProxy(true);
+      setLog((p) => [...p, { text: `⏱️ Opponent went quiet — AI takes over their bull.`, type: 'info' }]);
+      enemyTurn(foe, me);
+    }, 15000);
+    return () => clearTimeout(t);
+  }, [state, mode, aiProxy, turn, me?.hp, foe?.hp]);
+
+
   // ================== EXP / Leveling ==================
   const expNeeded = (lvl: number) => 100 + (lvl - 1) * 60;
 
