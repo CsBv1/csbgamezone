@@ -113,6 +113,9 @@ export default function CsbBattleArena() {
   const [searching, setSearching] = useState(false);
   const channelRef = useRef<any>(null);
   const queueTimerRef = useRef<any>(null);
+  const acceptPollRef = useRef<any>(null);
+  const matchedRef = useRef(false);
+
   const [username, setUsername] = useState('Fighter');
 
   // Challenge system
