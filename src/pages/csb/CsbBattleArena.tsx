@@ -100,6 +100,8 @@ export default function CsbBattleArena() {
   const [meShake, setMeShake] = useState(false);
   const [foeShake, setFoeShake] = useState(false);
   const [wins, setWins] = useState(0);
+  const [aiProxy, setAiProxy] = useState(false);
+
 
   // PvP
   const [roomId, setRoomId] = useState<string | null>(null);
