@@ -230,6 +230,7 @@ export default function CsbBattleArena() {
   const challengeOpponent = async (opp: Challenger) => {
     const bull = selected;
     if (!userId || !bull) return;
+    matchedRef.current = false;
     setTarget(opp);
     setPickingOpponent(false);
     setSearching(true);
@@ -255,12 +256,28 @@ export default function CsbBattleArena() {
     subscribeRoom(nr.id, bull);
     toast({ title: `Challenge sent to ${opp.username}`, description: 'They have 30 seconds to answer.' });
 
+    // Fallback poll: catch the accept even if realtime drops the event
+    if (acceptPollRef.current) clearInterval(acceptPollRef.current);
+    acceptPollRef.current = setInterval(async () => {
+      if (matchedRef.current) { clearInterval(acceptPollRef.current); return; }
+      const { data } = await supabase
+        .from('game_room_players')
+        .select('user_id, username, is_active')
+        .eq('room_id', nr.id);
+      const other = (data || []).find((p: any) => p.user_id !== userId && p.is_active);
+      if (other) beginPvpMatch(bull, other);
+    }, 1000);
+
     queueTimerRef.current = setInterval(() => {
       setQueueTime((t) => {
         const nt = t + 1;
+        if (matchedRef.current) { clearInterval(queueTimerRef.current); return t; }
         if (nt >= PVP_TIMEOUT_SECONDS) {
           clearInterval(queueTimerRef.current);
           (async () => {
+            if (matchedRef.current) return;
+            matchedRef.current = true;
+            if (acceptPollRef.current) clearInterval(acceptPollRef.current);
             if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
             await supabase.from('game_room_players').delete().eq('room_id', nr.id).eq('user_id', userId);
             await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', nr.id);
@@ -278,16 +295,23 @@ export default function CsbBattleArena() {
     const bull = selected || bulls[0];
     if (!bull) { toast({ title: 'No bull available' }); setIncoming(null); return; }
     const rId = incoming.roomId;
+    const fromName = incoming.fromName;
+    const fromLevel = incoming.fromLevel;
     setIncoming(null);
     setSelected(bull);
     setRoomId(rId); setIsHost(false);
+    matchedRef.current = true;
     subscribeRoom(rId, bull);
     await supabase.from('game_room_players').insert({
       room_id: rId, user_id: userId, username, is_active: true,
     });
     await supabase.from('game_rooms').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', rId);
+    // Broadcast the accept a few times — the challenger may still be subscribing
+    [200, 900, 2000].forEach((d) =>
+      setTimeout(() => broadcast('accept', { username, level: bull.level }), d)
+    );
     const m = buildFromBull(bull);
-    const f = buildFromBull({ nft_id: 'opp', nft_name: `${incoming.fromName}'s Bull`, rarity: bull.rarity, level: incoming.fromLevel || bull.level });
+    const f = buildFromBull({ nft_id: 'opp', nft_name: `${fromName}'s Bull`, rarity: bull.rarity, level: fromLevel || bull.level });
     setMe(m); setFoe(f);
     setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
     setTurn('foe'); setSpecialReady(0); setSearching(false); setAiProxy(false); setState('fighting');
@@ -297,6 +321,7 @@ export default function CsbBattleArena() {
       if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
     }
   };
+
 
   // Listen for challenges aimed at me (+ polling fallback so both screens stay in sync)
   useEffect(() => {
