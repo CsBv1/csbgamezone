@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      csb_battle_states: {
+        Row: {
+          created_at: string
+          guest_fighter: Json
+          guest_user_id: string
+          host_fighter: Json
+          host_user_id: string
+          last_action: Json | null
+          room_id: string
+          status: string
+          turn_user_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          guest_fighter: Json
+          guest_user_id: string
+          host_fighter: Json
+          host_user_id: string
+          last_action?: Json | null
+          room_id: string
+          status?: string
+          turn_user_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          guest_fighter?: Json
+          guest_user_id?: string
+          host_fighter?: Json
+          host_user_id?: string
+          last_action?: Json | null
+          room_id?: string
+          status?: string
+          turn_user_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "csb_battle_states_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       csbv1_missions: {
         Row: {
           claimed: boolean
@@ -931,6 +981,50 @@ export type Database = {
     }
     Functions: {
       cleanup_old_chat_messages: { Args: never; Returns: undefined }
+      csb_apply_battle_action: {
+        Args: { _action: string; _room_id: string }
+        Returns: {
+          created_at: string
+          guest_fighter: Json
+          guest_user_id: string
+          host_fighter: Json
+          host_user_id: string
+          last_action: Json | null
+          room_id: string
+          status: string
+          turn_user_id: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "csb_battle_states"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      csb_start_battle: {
+        Args: { _guest_fighter: Json; _host_fighter: Json; _room_id: string }
+        Returns: {
+          created_at: string
+          guest_fighter: Json
+          guest_user_id: string
+          host_fighter: Json
+          host_user_id: string
+          last_action: Json | null
+          room_id: string
+          status: string
+          turn_user_id: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "csb_battle_states"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       handle_wallet_auth: {
         Args: {
           _nickname?: string
