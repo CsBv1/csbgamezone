@@ -1,0 +1,1 @@
+ALTER TABLE public.csbv1_nft_power ADD COLUMN IF NOT EXISTS exp integer NOT NULL DEFAULT 0;
