@@ -282,7 +282,12 @@ export default function CsbBattleArena() {
     const f = buildFromBull({ nft_id: 'opp', nft_name: `${incoming.fromName}'s Bull`, rarity: bull.rarity, level: incoming.fromLevel || bull.level });
     setMe(m); setFoe(f);
     setLog([{ text: `⚔️ PvP! ${m.name} VS ${f.name}!`, type: 'info' }]);
-    setTurn('foe'); setSpecialReady(0); setSearching(false); setState('fighting');
+    setTurn('foe'); setSpecialReady(0); setSearching(false); setAiProxy(false); setState('fighting');
+    const rd: any = (await supabase.from('game_rooms').select('round_data').eq('id', rId).maybeSingle()).data?.round_data;
+    if (rd?.challenger_id) {
+      const img = await fetchOpponentBullImage(rd.challenger_id);
+      if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
+    }
   };
 
   // Listen for challenges aimed at me
