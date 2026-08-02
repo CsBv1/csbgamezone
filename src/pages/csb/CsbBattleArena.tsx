@@ -182,8 +182,22 @@ export default function CsbBattleArena() {
     loadChallengers();
   };
 
+  // Fetch an opponent's real bull image from their connected wallet
+  const fetchOpponentBullImage = async (oppUserId: string): Promise<string | undefined> => {
+    try {
+      const { data: prof } = await supabase.from('profiles').select('wallet_address').eq('id', oppUserId).maybeSingle();
+      const addr = (prof as any)?.wallet_address;
+      if (!addr) return undefined;
+      const { data } = await supabase.functions.invoke('scan-wallet-nfts', { body: { walletAddress: addr } });
+      const list = (data?.nfts || []) as Array<{ image?: string }>;
+      return list.find((n) => n.image)?.image;
+    } catch {
+      return undefined;
+    }
+  };
+
   // AI stands in for a real player who didn't answer, using their name + bull
-  const startProxyAI = (bull: CsbBull, opp: Challenger) => {
+  const startProxyAI = async (bull: CsbBull, opp: Challenger) => {
     const proxy: CsbBull = {
       nft_id: 'proxy',
       nft_name: `${opp.username}'s Bull`,
@@ -197,8 +211,11 @@ export default function CsbBattleArena() {
       { text: `⏱️ ${opp.username} didn't answer — AI takes control of their bull.`, type: 'info' },
       { text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' },
     ]);
-    setTurn('me'); setSpecialReady(0); setSearching(false); setState('fighting');
+    setTurn('me'); setSpecialReady(0); setSearching(false); setAiProxy(true); setState('fighting');
+    const img = await fetchOpponentBullImage(opp.user_id);
+    if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
   };
+
 
   const challengeOpponent = async (opp: Challenger) => {
     const bull = selected;
