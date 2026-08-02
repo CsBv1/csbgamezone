@@ -344,7 +344,7 @@ export default function CsbBattleArena() {
       .subscribe();
 
     const poll = setInterval(async () => {
-      if (stateRef.current !== 'select') return;
+      if (stateRef.current === 'fighting') return;
       const since = new Date(Date.now() - PVP_TIMEOUT_SECONDS * 1000).toISOString();
       const { data } = await supabase
         .from('game_rooms')
@@ -354,8 +354,15 @@ export default function CsbBattleArena() {
         .gte('created_at', since)
         .order('created_at', { ascending: false })
         .limit(5);
-      (data || []).forEach((r: any) => offer(r));
-    }, 3000);
+      (data || []).forEach((r: any) => {
+        // Keep both screens on the same clock: remaining time is based on when the challenge was created
+        const elapsed = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 1000);
+        const left = PVP_TIMEOUT_SECONDS - elapsed;
+        if (left <= 2) return;
+        offer(r, left);
+      });
+    }, 1000);
+
 
     return () => { supabase.removeChannel(ch); clearInterval(poll); };
   }, [userId]);
