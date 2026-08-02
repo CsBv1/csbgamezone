@@ -91,6 +91,8 @@ export default function CsbBattleArena() {
   const [bulls, setBulls] = useState<CsbBull[]>([]);
   const [selected, setSelected] = useState<CsbBull | null>(null);
   const [state, setState] = useState<GameState>('select');
+  const stateRef = useRef<GameState>('select');
+  useEffect(() => { stateRef.current = state; }, [state]);
   const [me, setMe] = useState<Fighter | null>(null);
   const [foe, setFoe] = useState<Fighter | null>(null);
   const [turn, setTurn] = useState<'me' | 'foe'>('me');
