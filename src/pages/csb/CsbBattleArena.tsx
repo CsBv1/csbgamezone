@@ -119,6 +119,7 @@ export default function CsbBattleArena() {
   const [pickingOpponent, setPickingOpponent] = useState(false);
   const [target, setTarget] = useState<Challenger | null>(null);
   const [incoming, setIncoming] = useState<{ roomId: string; fromName: string; fromLevel: number } | null>(null);
+  const [incomingLeft, setIncomingLeft] = useState(30);
 
   // Load bulls + username
   useEffect(() => {
