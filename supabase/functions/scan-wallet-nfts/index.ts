@@ -6,6 +6,9 @@ const corsHeaders = {
 };
 
 const CSB_POLICY_ID = "b11c9439e1dbec97f89037e0f7bde3b2daad4ad279812ffd9d24e43e";
+// Real $CsB fungible token (policy + asset name hex "CSB")
+const CSB_TOKEN_POLICY_ID = "52419331e752bc3a7c6ee74d76f1169df1535d77d07da382c62b0bab";
+const CSB_TOKEN_ASSET_NAME = "435342";
 
 // Simple bonus: 10% per bull owned
 const BONUS_PER_BULL = 10;
@@ -281,6 +284,7 @@ serve(async (req) => {
     // Process found assets
     const csbNfts: Array<{ name: string; rarity: string; quantity: number; assetNameHex: string; image?: string }> = [];
     let totalBulls = 0;
+    let csbTokens = 0;
     const seenAssetHex = new Set<string>();
 
     for (const addressData of allAssets) {
@@ -289,6 +293,11 @@ serve(async (req) => {
       for (const asset of assetList) {
         const policyId = asset.policy_id || "";
         
+        if (policyId === CSB_TOKEN_POLICY_ID && (asset.asset_name || "") === CSB_TOKEN_ASSET_NAME) {
+          csbTokens += parseInt(asset.quantity || "0", 10) || 0;
+          continue;
+        }
+
         if (policyId === CSB_POLICY_ID) {
           const assetNameHex = asset.asset_name || "";
           if (seenAssetHex.has(assetNameHex)) continue;
@@ -355,6 +364,7 @@ serve(async (req) => {
       bullsOwned: totalBulls,
       rarityBonus: finalBonus,
       highestRarity: totalBulls > 0 ? "holder" : "none",
+      csbTokens,
       nfts: csbNfts.slice(0, 50).map((n) => ({ name: n.name, rarity: n.rarity, quantity: n.quantity, image: n.image, assetNameHex: n.assetNameHex })),
     };
 
@@ -369,6 +379,7 @@ serve(async (req) => {
       bullsOwned: 0,
       rarityBonus: 0,
       highestRarity: "none",
+      csbTokens: 0,
       nfts: [],
       error: error instanceof Error ? error.message : "Unknown error",
     }), {
