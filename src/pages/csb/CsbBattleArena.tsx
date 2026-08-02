@@ -526,17 +526,63 @@ export default function CsbBattleArena() {
           </div>
         )}
 
-        {/* Searching overlay */}
+        {/* Incoming challenge */}
+        {incoming && (
+          <Card className="bg-slate-900/90 border-amber-500 p-4 text-center max-w-md mx-auto space-y-2">
+            <h3 className="text-lg font-bold text-amber-300">🥊 {incoming.fromName} challenged you!</h3>
+            <p className="text-xs text-muted-foreground">Their bull is Lv {incoming.fromLevel}. Answer now or AI will fight for you.</p>
+            <div className="flex gap-2">
+              <Button className="flex-1 bg-gradient-to-r from-amber-500 to-red-500" onClick={acceptChallenge}>Accept</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setIncoming(null)}>Decline</Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Waiting for challenged player */}
         {searching && (
           <Card className="bg-slate-900/80 border-purple-700 p-6 text-center max-w-md mx-auto space-y-3">
             <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto" />
-            <h3 className="text-lg font-bold">Searching for opponent...</h3>
-            <p className="font-mono text-purple-300 text-2xl">{Math.floor(queueTime / 60)}:{String(queueTime % 60).padStart(2, '0')}</p>
-            <p className="text-xs text-muted-foreground">Auto-switches to AI after {PVP_TIMEOUT_SECONDS}s if no opponent found</p>
+            <h3 className="text-lg font-bold">Waiting for {target?.username || 'opponent'}...</h3>
+            <p className="font-mono text-purple-300 text-2xl">{PVP_TIMEOUT_SECONDS - queueTime}s</p>
+            <p className="text-xs text-muted-foreground">If they don't answer in {PVP_TIMEOUT_SECONDS}s, AI plays their bull with their name.</p>
             <Progress value={(queueTime / PVP_TIMEOUT_SECONDS) * 100} className="h-2" />
             <Button variant="outline" onClick={cancelQueue}>Cancel</Button>
           </Card>
         )}
+
+        {/* Opponent picker */}
+        {state === 'select' && !searching && pickingOpponent && (
+          <div className="max-w-lg mx-auto space-y-3">
+            <div className="text-center">
+              <h2 className="text-lg font-bold">Pick an opponent</h2>
+              <p className="text-xs text-muted-foreground">Fighting with {selected?.nft_name} (Lv {selected?.level})</p>
+            </div>
+            {loadingChallengers ? (
+              <div className="text-center py-8"><Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-400" /></div>
+            ) : challengers.length === 0 ? (
+              <Card className="p-6 text-center bg-slate-900/50 border-slate-700 space-y-3">
+                <p className="text-sm text-muted-foreground">No other bull holders found yet.</p>
+                <Button onClick={() => { setPickingOpponent(false); setMode('ai'); selected && startAI(selected); }}>Train vs AI instead</Button>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {challengers.map((c) => (
+                  <Card key={c.user_id} className="p-3 bg-slate-900/70 border-purple-800/50 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm truncate">🐂 {c.username}</div>
+                      <div className="text-[11px] text-muted-foreground">Top Lv {c.top_level} · {c.bulls_owned} bull{c.bulls_owned === 1 ? '' : 's'}</div>
+                    </div>
+                    <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-red-500" onClick={() => challengeOpponent(c)}>
+                      <Swords className="w-3 h-3 mr-1" /> Challenge
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            )}
+            <Button variant="ghost" className="w-full" onClick={() => setPickingOpponent(false)}>Back to bulls</Button>
+          </div>
+        )}
+
 
         {/* Bull selection */}
         {state === 'select' && !searching && (
