@@ -88,6 +88,7 @@ export const Leaderboard = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_badges' }, () => fetchLeaderboard())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_runes' }, () => fetchLeaderboard())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_colors' }, () => fetchLeaderboard())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_nft_bonuses' }, () => fetchLeaderboard())
       .subscribe();
 
     return () => {
