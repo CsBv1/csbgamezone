@@ -869,7 +869,11 @@ export default function CsbBattleArena() {
               <Progress value={(foe.hp / foe.maxHp) * 100} className="h-3" />
               <div className="flex justify-between text-xs mt-1 text-muted-foreground">
                 <span><Heart className="w-3 h-3 inline text-red-400" /> {foe.hp}/{foe.maxHp}</span>
-                <span><Swords className="w-3 h-3 inline text-orange-400" /> {foe.attack} <Shield className="w-3 h-3 inline text-blue-400" /> {foe.defense}</span>
+                <span><Swords className="w-3 h-3 inline text-orange-400" /> {foe.attack} <Shield className="w-3 h-3 inline text-blue-400" /> {foe.defense} <Zap className="w-3 h-3 inline text-purple-400" /> {foe.special}</span>
+              </div>
+              <div className="mt-1">
+                <div className="text-xs text-purple-400">Special: {Number((foe as Fighter & { specialReady?: number }).specialReady) || 0}%</div>
+                <Progress value={Number((foe as Fighter & { specialReady?: number }).specialReady) || 0} className="h-1.5 mt-0.5" />
               </div>
             </Card>
 
