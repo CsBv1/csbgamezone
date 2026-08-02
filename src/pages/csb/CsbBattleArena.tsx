@@ -509,7 +509,7 @@ export default function CsbBattleArena() {
 
   const backToSelect = () => {
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
-    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false);
+    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false); setTarget(null);
   };
 
   // "Next Fight" — re-issue the same challenge in PvP, else new AI bout
