@@ -502,7 +502,7 @@ export default function CsbBattleArena() {
                           <span>⚡ {previewStats.special}</span>
                         </div>
                         <Button size="sm" className="w-full mt-2">
-                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> Fight AI</> : <><Users className="w-3 h-3 mr-1" /> Find Match</>}
+                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> AI Training</> : <><Users className="w-3 h-3 mr-1" /> Find Match</>}
                         </Button>
                       </Card>
                     );
