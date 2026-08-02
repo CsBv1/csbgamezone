@@ -157,6 +157,7 @@ export default function CsbBattleArena() {
     const f = buildAI(bull.level, bull.rarity);
     setMe(m); setFoe(f);
     setLog([{ text: `⚔️ ${m.name} (Lv ${m.level}) VS ${f.name} (Lv ${f.level})!`, type: 'info' }]);
+    setMode('ai'); setRoomId(null);
     setTurn('me'); setSpecialReady(0); setAiProxy(false); setState('fighting');
   };
 
@@ -508,7 +509,22 @@ export default function CsbBattleArena() {
 
   const backToSelect = () => {
     if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
-    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false);
+    setRoomId(null); setMe(null); setFoe(null); setLog([]); setState('select'); setSelected(null); setAiProxy(false); setTarget(null);
+  };
+
+  // "Next Fight" — re-issue the same challenge in PvP, else new AI bout
+  const nextFight = async () => {
+    if (!selected) return;
+    if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; }
+    if (queueTimerRef.current) clearInterval(queueTimerRef.current);
+    setMe(null); setFoe(null); setLog([]); setAiProxy(false); setRoomId(null);
+    if (target) {
+      setMode('pvp');
+      setState('select');
+      await challengeOpponent(target);
+    } else {
+      startAI(selected);
+    }
   };
 
   const logColor = (t: string) => ({
@@ -729,8 +745,8 @@ export default function CsbBattleArena() {
 
             {(state === 'victory' || state === 'defeat') && (
               <div className="flex gap-2">
-                {(mode === 'ai' || aiProxy) && selected && (
-                  <Button onClick={() => startAI(selected)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
+                {selected && (
+                  <Button onClick={nextFight} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 h-12">
                     <RotateCcw className="w-4 h-4 mr-1" /> {state === 'victory' ? 'Next Fight' : 'Rematch'}
                   </Button>
                 )}
