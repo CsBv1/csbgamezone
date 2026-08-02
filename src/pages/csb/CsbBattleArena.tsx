@@ -292,22 +292,55 @@ export default function CsbBattleArena() {
     }
   };
 
-  // Listen for challenges aimed at me
+  // Listen for challenges aimed at me (+ polling fallback so both screens stay in sync)
   useEffect(() => {
     if (!userId) return;
+
+    const offer = (r: any) => {
+      const rd = r?.round_data || {};
+      if (rd.target_id !== userId) return;
+      setIncoming((prev) => {
+        if (prev?.roomId === r.id) return prev;
+        setIncomingLeft(PVP_TIMEOUT_SECONDS);
+        toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
+        return { roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 };
+      });
+    };
+
     const ch = supabase
       .channel('csb-challenge-inbox')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_rooms', filter: 'game_type=eq.csb-battle' }, (payload) => {
-        const r: any = payload.new;
-        const rd = r?.round_data || {};
-        if (rd.target_id === userId) {
-          setIncoming({ roomId: r.id, fromName: rd.challenger_name || 'A challenger', fromLevel: Number(rd.challenger_level) || 1 });
-          toast({ title: `🥊 ${rd.challenger_name || 'A player'} challenged you!`, description: 'Answer within 30 seconds.' });
-        }
-      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_rooms', filter: 'game_type=eq.csb-battle' }, (payload) => offer(payload.new))
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+
+    const poll = setInterval(async () => {
+      if (stateRef.current !== 'select') return;
+      const since = new Date(Date.now() - PVP_TIMEOUT_SECONDS * 1000).toISOString();
+      const { data } = await supabase
+        .from('game_rooms')
+        .select('id, round_data, created_at')
+        .eq('game_type', 'csb-battle')
+        .eq('status', 'waiting')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      (data || []).forEach((r: any) => offer(r));
+    }, 3000);
+
+    return () => { supabase.removeChannel(ch); clearInterval(poll); };
   }, [userId]);
+
+  // Countdown on the accept window
+  useEffect(() => {
+    if (!incoming) return;
+    const t = setInterval(() => {
+      setIncomingLeft((s) => {
+        if (s <= 1) { clearInterval(t); setIncoming(null); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [incoming?.roomId]);
+
 
 
   const subscribeRoom = (rId: string, myBull: CsbBull) => {
