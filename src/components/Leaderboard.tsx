@@ -225,10 +225,12 @@ export const Leaderboard = () => {
           leaderboard.map((entry, index) => {
             const nextRank = leaderboard[index - 1];
             const diamondGap = nextRank ? Number(nextRank.csb_tokens || 0) - Number(entry.csb_tokens || 0) : 0;
-            const isHolder = entry.user_id && userBulls[entry.user_id] > 0;
+            const bulls = Number(entry.bulls_owned || 0) || (entry.user_id ? userBulls[entry.user_id] || 0 : 0);
+            const isHolder = bulls > 0;
             const hasBukals = entry.user_id && userBukals[entry.user_id] > 0;
             const userBadge = entry.user_id ? userBadges[entry.user_id] : null;
             const userRune = entry.user_id ? userRunes[entry.user_id] : null;
+
             
             return (
               <div
