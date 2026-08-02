@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Swords, Shield, Heart, Zap, Coins, Trophy, RotateCcw, Users, Bot, Loader2, Sparkles, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCsbv1 } from "@/hooks/useCsbv1";
