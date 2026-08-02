@@ -258,9 +258,10 @@ export const Leaderboard = () => {
                     </span>
                     {isHolder && (
                       <span className="text-[10px] text-amber-400 font-bold leading-tight">
-                        🐂{userBulls[entry.user_id!]}
+                        🐂{bulls}
                       </span>
                     )}
+
                   </div>
                   <div className="flex-1 min-w-0">
                     <p 
