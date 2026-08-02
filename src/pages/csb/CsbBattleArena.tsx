@@ -422,12 +422,8 @@ export default function CsbBattleArena() {
         if (d.from === userId) return;
         if (d.action === 'accept') {
           await beginPvpMatch(myBull, { user_id: d.from, username: d.username, level: d.level });
+          return;
         }
-      })
-
-      .on('broadcast', { event: 'csb-action' }, (payload) => {
-        const d = payload.payload as any;
-        if (d.from === userId) return;
         if (d.action === 'attack' || d.action === 'special') {
           setMe((prev) => {
             if (!prev) return prev;
@@ -444,6 +440,7 @@ export default function CsbBattleArena() {
           setTurn('me');
         }
       })
+
       .subscribe();
     channelRef.current = ch;
   };
