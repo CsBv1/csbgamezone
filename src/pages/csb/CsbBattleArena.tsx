@@ -585,7 +585,7 @@ export default function CsbBattleArena() {
 
 
         {/* Bull selection */}
-        {state === 'select' && !searching && (
+        {state === 'select' && !searching && !pickingOpponent && (
           <>
             {bulls.length === 0 ? (
               <Card className="p-10 text-center bg-slate-900/50 border-slate-700">
@@ -602,7 +602,7 @@ export default function CsbBattleArena() {
                     return (
                       <Card key={b.nft_id}
                         className={`p-3 bg-gradient-to-br ${RARITY_GRAD[b.rarity] || RARITY_GRAD.common} border-2 border-white/10 cursor-pointer hover:scale-[1.02] transition-transform`}
-                        onClick={() => mode === 'ai' ? startAI(b) : startPvP(b)}>
+                        onClick={() => mode === 'ai' ? startAI(b) : openOpponentPicker(b)}>
                         <div className="aspect-square rounded-lg bg-black/40 flex items-center justify-center mb-2 overflow-hidden ring-1 ring-white/10">
                           {b.image ? (
                             <img src={b.image} alt={b.nft_name} className="w-full h-full object-cover" />
@@ -627,7 +627,7 @@ export default function CsbBattleArena() {
                           <span>⚡ {previewStats.special}</span>
                         </div>
                         <Button size="sm" className="w-full mt-2">
-                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> AI Training</> : <><Users className="w-3 h-3 mr-1" /> Find Match</>}
+                          {mode === 'ai' ? <><Bot className="w-3 h-3 mr-1" /> AI Training</> : <><Users className="w-3 h-3 mr-1" /> Pick Opponent</>}
                         </Button>
                       </Card>
                     );
