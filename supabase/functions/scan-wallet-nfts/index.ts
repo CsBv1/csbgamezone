@@ -91,11 +91,10 @@ function hexToBech32(hexAddress: string): string | null {
     const firstByte = bytes[0];
     let hrp = "addr";
     
-    // Mainnet addresses start with 0x0, 0x1, 0x2, 0x3 (base), 0x4, 0x5 (pointer), 0x6, 0x7 (enterprise), 0x8 (bootstrap)
-    // Testnet adds 1 to the network nibble
-    if ((firstByte & 0x0F) === 0) {
+    // Header byte: high nibble = address type, low nibble = network id (1 = mainnet, 0 = testnet)
+    if ((firstByte & 0x0F) === 1) {
       hrp = "addr"; // mainnet
-    } else if ((firstByte & 0x0F) === 1) {
+    } else {
       hrp = "addr_test"; // testnet
     }
     
