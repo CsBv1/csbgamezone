@@ -283,7 +283,7 @@ export default function CsbBattleArena() {
         .select('user_id, username, is_active')
         .eq('room_id', nr.id);
       const other = (data || []).find((p: any) => p.user_id !== userId && p.is_active);
-      if (other) beginPvpMatch(bull, other);
+      if (other) beginPvpMatch(bull, other, nr.id);
     }, 1000);
 
     queueTimerRef.current = setInterval(() => {
@@ -332,7 +332,7 @@ export default function CsbBattleArena() {
     } else if (!resolvedBattleRef.current) {
       resolvedBattleRef.current = true;
       const won = battle.status === (amHost ? 'host_won' : 'guest_won');
-      setTimeout(() => won ? onVictory() : onDefeat(), 300);
+      setTimeout(() => won ? onVictory(mine, theirs, battle.room_id) : onDefeat(battle.room_id), 300);
     }
   };
 
@@ -445,7 +445,7 @@ export default function CsbBattleArena() {
 
 
   // Start the live PvP fight on the challenger's screen once the opponent answers
-  const beginPvpMatch = async (myBull: CsbBull, opp: { user_id: string; username?: string; level?: number }) => {
+  const beginPvpMatch = async (myBull: CsbBull, opp: { user_id: string; username?: string; level?: number }, activeRoomId: string) => {
     if (matchedRef.current) return;
     matchedRef.current = true;
     if (queueTimerRef.current) clearInterval(queueTimerRef.current);
@@ -454,7 +454,7 @@ export default function CsbBattleArena() {
     setSearching(false);
     setAiProxy(false);
     resolvedBattleRef.current = false; lastBattleVersionRef.current = -1;
-    if (roomId) await fetchSharedBattle(roomId);
+    await fetchSharedBattle(activeRoomId);
     const img = await fetchOpponentBullImage(opp.user_id);
     if (img) setFoe((prev) => (prev ? { ...prev, image: img } : prev));
   };
@@ -468,7 +468,7 @@ export default function CsbBattleArena() {
       }, async (payload) => {
         const p = payload.new as any;
         if (p && p.user_id !== userId && p.is_active) {
-          await beginPvpMatch(myBull, p);
+          await beginPvpMatch(myBull, p, rId);
         }
       })
       .on('postgres_changes', {
@@ -480,23 +480,8 @@ export default function CsbBattleArena() {
         const d = payload.payload as any;
         if (d.from === userId) return;
         if (d.action === 'accept') {
-          await beginPvpMatch(myBull, { user_id: d.from, username: d.username, level: d.level });
+          await beginPvpMatch(myBull, { user_id: d.from, username: d.username, level: d.level }, rId);
           return;
-        }
-        if (d.action === 'attack' || d.action === 'special') {
-          setMe((prev) => {
-            if (!prev) return prev;
-            const newHp = Math.max(0, prev.hp - (d.damage || 0));
-            if (newHp <= 0) setTimeout(() => onDefeat(), 500);
-            return { ...prev, hp: newHp };
-          });
-          setMeShake(true); setTimeout(() => setMeShake(false), 300);
-          setLog((prev) => [...prev, { text: d.logText || `Opponent hits for ${d.damage}`, type: d.action === 'special' ? 'special' : 'attack' }]);
-          setTurn('me');
-        } else if (d.action === 'defend') {
-          setFoe((prev) => prev ? { ...prev, hp: Math.min(prev.maxHp, prev.hp + (d.heal || 0)) } : prev);
-          setLog((prev) => [...prev, { text: d.logText || `Opponent defends`, type: 'defend' }]);
-          setTurn('me');
         }
       })
 
@@ -636,12 +621,12 @@ export default function CsbBattleArena() {
     }
   };
 
-  const onVictory = async () => {
+  const onVictory = async (winner = me, defeated = foe, battleRoomId = roomId) => {
     setState('victory');
     setWins((w) => w + 1);
-    if (!me) return;
-    const baseReward = 25 + me.level * 10;
-    const rarityMult = RARITY_BASE[me.rarity] || 1;
+    if (!winner) return;
+    const baseReward = 25 + winner.level * 10;
+    const rarityMult = RARITY_BASE[winner.rarity] || 1;
     const modeMult = mode === 'pvp' ? 3 : 1;
     const reward = Math.floor(baseReward * rarityMult * modeMult);
     await addBalance(reward);
@@ -650,21 +635,21 @@ export default function CsbBattleArena() {
         user_id: userId, game_name: 'CSB Battle Arena', result: 'win', diamonds_won: 0,
       });
     }
-    if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+    if (battleRoomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', battleRoomId);
     setLog((p) => [...p, { text: `🏆 VICTORY! +${reward} 🪙 Rune Power!${mode === 'pvp' ? ' (PvP 3x)' : ''}`, type: 'info' }]);
     toast({ title: 'Victory! 🏆', description: `+${reward} Rune Power earned` });
-    const expGain = Math.floor((40 + (foe?.level || 1) * 12) * (mode === 'pvp' ? 2 : 1));
+    const expGain = Math.floor((40 + (defeated?.level || 1) * 12) * (mode === 'pvp' ? 2 : 1));
     await grantExp(expGain, mode === 'pvp' ? 'PvP win 2x' : 'AI training win');
   };
 
-  const onDefeat = async () => {
+  const onDefeat = async (battleRoomId = roomId) => {
     setState('defeat');
     if (userId) {
       await supabase.from('game_results').insert({
         user_id: userId, game_name: 'CSB Battle Arena', result: 'loss', diamonds_won: 0,
       });
     }
-    if (roomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', roomId);
+    if (battleRoomId) await supabase.from('game_rooms').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', battleRoomId);
     setLog((p) => [...p, { text: `💀 DEFEATED! Train more in NFT Power.`, type: 'info' }]);
     await grantExp(mode === 'pvp' ? 20 : 12, 'battle experience');
   };
