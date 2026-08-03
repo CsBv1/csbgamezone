@@ -120,6 +120,10 @@ export default function CsbBattleArena() {
 
   // PvP
   const [roomId, setRoomId] = useState<string | null>(null);
+  const roomIdRef = useRef<string | null>(null);
+  useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
+  const userIdRef = useRef<string | null>(null);
+  useEffect(() => { userIdRef.current = userId ?? null; }, [userId]);
   const [isHost, setIsHost] = useState(false);
   const [queueTime, setQueueTime] = useState(0);
   const [searching, setSearching] = useState(false);
