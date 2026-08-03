@@ -169,14 +169,16 @@ export default function CsbBattleArena() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [log]);
 
-  // Cleanup
+  // Cleanup — runs only when leaving the arena, never on room changes
+  // (a roomId-dependent cleanup used to kill the freshly created channel/polls on rematch)
   useEffect(() => () => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     if (queueTimerRef.current) clearInterval(queueTimerRef.current);
     if (acceptPollRef.current) clearInterval(acceptPollRef.current);
     if (battlePollRef.current) clearInterval(battlePollRef.current);
-    if (roomId && userId) supabase.from('game_room_players').delete().eq('room_id', roomId).eq('user_id', userId);
-  }, [roomId, userId]);
+    const rid = roomIdRef.current, uid = userIdRef.current;
+    if (rid && uid) supabase.from('game_room_players').delete().eq('room_id', rid).eq('user_id', uid);
+  }, []);
 
   // ================== AI ==================
   const startAI = (bull: CsbBull) => {
