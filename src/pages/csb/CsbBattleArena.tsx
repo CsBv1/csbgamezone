@@ -254,6 +254,8 @@ export default function CsbBattleArena() {
     const bull = selected;
     if (!userId || !bull) return;
     matchedRef.current = false;
+    resolvedBattleRef.current = false;
+    lastBattleVersionRef.current = -1;
     setTarget(opp);
     setPickingOpponent(false);
     setSearching(true);
@@ -273,6 +275,7 @@ export default function CsbBattleArena() {
 
     if (!nr) { setSearching(false); toast({ title: 'Could not send challenge' }); return; }
 
+    roomIdRef.current = nr.id;
     setRoomId(nr.id); setIsHost(true);
     await supabase.from('game_room_players').insert({
       room_id: nr.id, user_id: userId, username, is_active: true,
