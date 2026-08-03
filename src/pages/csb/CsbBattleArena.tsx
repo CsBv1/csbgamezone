@@ -361,8 +361,10 @@ export default function CsbBattleArena() {
     const fromLevel = incoming.fromLevel;
     setIncoming(null);
     setSelected(bull);
+    roomIdRef.current = rId;
     setRoomId(rId); setIsHost(false);
     matchedRef.current = true;
+    resolvedBattleRef.current = false; lastBattleVersionRef.current = -1;
     subscribeRoom(rId, bull);
     await supabase.from('game_room_players').insert({
       room_id: rId, user_id: userId, username, is_active: true,
