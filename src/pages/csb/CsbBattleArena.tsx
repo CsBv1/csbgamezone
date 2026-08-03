@@ -319,6 +319,8 @@ export default function CsbBattleArena() {
 
   const applySharedBattle = (battle: SharedBattleState) => {
     if (!userId) return;
+    // Ignore late updates from a previous room (rematch safety)
+    if (roomIdRef.current && battle.room_id !== roomIdRef.current) return;
     const amHost = battle.host_user_id === userId;
     const mine = amHost ? battle.host_fighter : battle.guest_fighter;
     const theirs = amHost ? battle.guest_fighter : battle.host_fighter;
