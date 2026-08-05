@@ -216,7 +216,8 @@ export default function CsbBattleArena() {
         username: (c.username as string) || 'Bull Holder',
         top_level: Number(c.top_level) || 1,
         bulls_owned: Number(c.bulls_owned) || 0,
-      }));
+      }))
+      .sort((a, b) => b.top_level - a.top_level);
     setChallengers(list);
     setLoadingChallengers(false);
   };
