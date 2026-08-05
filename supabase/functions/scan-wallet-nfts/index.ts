@@ -226,9 +226,7 @@ serve(async (req) => {
       }
     }
 
-    if (allAssets.length === 0)
-
-    for (const addr of addressesToTry) {
+    for (const addr of allAssets.length === 0 ? addressesToTry : []) {
       console.log("Trying address:", addr.substring(0, 40) + "...");
       
       // Method 1: address_assets endpoint
