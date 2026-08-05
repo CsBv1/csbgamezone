@@ -124,6 +124,16 @@ export default function CsbTcg() {
     load();
   }, [userId, walletNfts.length]);
 
+  // Arrived from the Battle Arena with an opponent already in mind
+  const autoOppRef = useRef(false);
+  useEffect(() => {
+    const opp = params.get('opp');
+    if (!opp || autoOppRef.current || bulls.length === 0) return;
+    autoOppRef.current = true;
+    setMode('pvp'); setScreen('picking'); loadChallengers();
+  }, [params, bulls.length]);
+
+
   // cleanup on leave only
   useEffect(() => () => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
