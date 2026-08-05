@@ -196,6 +196,38 @@ serve(async (req) => {
       addressesToTry.push(walletAddress);
     }
 
+    // Method 0 (best): account-wide assets via stake address — covers every
+    // payment/change address in the wallet, not just the one returned by the dApp API.
+    const stakeAddr = toStakeAddress(walletAddress);
+    if (stakeAddr) {
+      console.log("Stake address:", stakeAddr);
+      try {
+        const res = await fetch("https://api.koios.rest/api/v1/account_assets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ _stake_addresses: [stakeAddr] }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log("account_assets rows:", data?.length || 0);
+          if (Array.isArray(data) && data.length > 0) {
+            const flat: any[] = [];
+            for (const item of data) {
+              if (item.asset_list) flat.push(...item.asset_list);
+              else if (item.policy_id) flat.push(item);
+            }
+            if (flat.length > 0) allAssets.push({ source: "account_assets", asset_list: flat });
+          }
+        } else {
+          console.log("account_assets status:", res.status);
+        }
+      } catch (e) {
+        console.log("account_assets error:", e);
+      }
+    }
+
+    if (allAssets.length === 0)
+
     for (const addr of addressesToTry) {
       console.log("Trying address:", addr.substring(0, 40) + "...");
       
