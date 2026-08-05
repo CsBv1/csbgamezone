@@ -819,9 +819,14 @@ export default function CsbBattleArena() {
                       <div className="font-bold text-sm truncate">🐂 {c.username}</div>
                       <div className="text-[11px] text-muted-foreground">Top Lv {c.top_level} · {c.bulls_owned} bull{c.bulls_owned === 1 ? '' : 's'}</div>
                     </div>
-                    <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-red-500" onClick={() => challengeOpponent(c)}>
-                      <Swords className="w-3 h-3 mr-1" /> Challenge
-                    </Button>
+                    <div className="flex flex-col gap-1">
+                      <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-red-500" onClick={() => challengeOpponent(c)}>
+                        <Swords className="w-3 h-3 mr-1" /> Challenge
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-sky-500 text-sky-300" onClick={() => navigate(`/csb/tcg?opp=${c.user_id}`)}>
+                        🃏 TCG Duel
+                      </Button>
+                    </div>
                   </Card>
                 ))}
               </div>
