@@ -456,6 +456,31 @@ export default function CsbBattleArena() {
     return () => { supabase.removeChannel(ch); clearInterval(poll); };
   }, [userId]);
 
+  // Someone challenged me to a TCG duel — hop over to the card table
+  useEffect(() => {
+    if (!userId) return;
+    let sent = false;
+    const poll = setInterval(async () => {
+      if (sent || stateRef.current === 'fighting') return;
+      const since = new Date(Date.now() - PVP_TIMEOUT_SECONDS * 1000).toISOString();
+      const { data } = await supabase
+        .from('game_rooms')
+        .select('id, round_data, created_at')
+        .eq('game_type', 'csb-tcg')
+        .eq('status', 'waiting')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      const mine = (data || []).find((r: any) => (r.round_data || {}).target_id === userId);
+      if (mine) {
+        sent = true;
+        toast({ title: '🃏 TCG duel challenge!', description: 'Opening the card table…' });
+        navigate('/csb/tcg');
+      }
+    }, 2000);
+    return () => clearInterval(poll);
+  }, [userId, navigate]);
+
   // Countdown on the accept window
   useEffect(() => {
     if (!incoming) return;
