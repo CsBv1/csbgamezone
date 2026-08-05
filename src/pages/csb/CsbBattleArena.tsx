@@ -168,7 +168,7 @@ export default function CsbBattleArena() {
         const numMatch = (r.nft_name || '').match(/(\d+)\s*$/);
         const num = numMatch ? numMatch[1] : String(idx + 1);
         return { ...r, image: match?.image, nft_name: `Bull #${num}` } as CsbBull;
-      });
+      }).sort((a, b) => b.level - a.level);
       setBulls(merged);
       const { data: prof } = await supabase.from('profiles').select('username').eq('id', userId).maybeSingle();
       if (prof?.username) setUsername(prof.username);
