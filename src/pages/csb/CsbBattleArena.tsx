@@ -148,11 +148,20 @@ export default function CsbBattleArena() {
   const [incoming, setIncoming] = useState<{ roomId: string; fromName: string; fromLevel: number; hostFighter?: Fighter } | null>(null);
   const [incomingLeft, setIncomingLeft] = useState(30);
 
-  // Load bulls + username
   useEffect(() => {
     const loadBulls = async () => {
       if (!userId) return;
-      const { data } = await supabase.from('csbv1_nft_power' as any).select('*').eq('user_id', userId).order('nft_id');
+      // Seed a power row for every bull currently in the wallet so ALL of them are selectable
+      const { data: existingData } = await supabase.from('csbv1_nft_power' as any).select('*').eq('user_id', userId).order('nft_id');
+      const existingIds = new Set(((existingData || []) as any[]).map((r) => r.nft_id));
+      const toInsert = (walletNfts || [])
+        .filter((w) => w.assetNameHex && !existingIds.has(`csb_${w.assetNameHex}`))
+        .map((w) => ({ user_id: userId, nft_id: `csb_${w.assetNameHex}`, nft_name: w.name || 'CSB Bull', rarity: 'common', level: 1 }));
+      if (toInsert.length) await supabase.from('csbv1_nft_power' as any).insert(toInsert);
+
+      const { data } = toInsert.length
+        ? await supabase.from('csbv1_nft_power' as any).select('*').eq('user_id', userId).order('nft_id')
+        : { data: existingData };
       const rows = ((data || []) as any[]).filter((r) => r.nft_id?.startsWith('csb_') && (walletNfts.length === 0 || walletNfts.some((w) => w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`)));
       const merged = rows.map((r, idx) => {
         const match = walletNfts?.find((w) => w.assetNameHex && r.nft_id === `csb_${w.assetNameHex}`);
@@ -166,6 +175,7 @@ export default function CsbBattleArena() {
     };
     loadBulls();
   }, [userId, walletNfts.length]);
+
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
