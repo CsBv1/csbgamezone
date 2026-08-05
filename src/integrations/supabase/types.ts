@@ -64,6 +64,80 @@ export type Database = {
           },
         ]
       }
+      csb_tcg_cards: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      csb_tcg_states: {
+        Row: {
+          board: Json
+          created_at: string
+          guest_user_id: string
+          host_user_id: string
+          last_action: Json | null
+          room_id: string
+          status: string
+          turn_user_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          board?: Json
+          created_at?: string
+          guest_user_id: string
+          host_user_id: string
+          last_action?: Json | null
+          room_id: string
+          status?: string
+          turn_user_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          board?: Json
+          created_at?: string
+          guest_user_id?: string
+          host_user_id?: string
+          last_action?: Json | null
+          room_id?: string
+          status?: string
+          turn_user_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "csb_tcg_states_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       csbv1_missions: {
         Row: {
           claimed: boolean

@@ -65,6 +65,7 @@ import CsbBullSiege from "./pages/csb/CsbBullSiege";
 import CsbBullVault from "./pages/csb/CsbBullVault";
 import CsbBullArena from "./pages/csb/CsbBullArena";
 import CsbBullSummit from "./pages/csb/CsbBullSummit";
+import CsbTcg from "./pages/csb/CsbTcg";
 
 // Holder-only strategy games
 import BullTactician from "./pages/games/holders/BullTactician";
@@ -202,6 +203,7 @@ const App = () => (
           <Route path="/csb/bull-vault" element={<CsbBullVault />} />
           <Route path="/csb/bull-arena" element={<CsbBullArena />} />
           <Route path="/csb/bull-summit" element={<CsbBullSummit />} />
+          <Route path="/csb/tcg" element={<CsbTcg />} />
 
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.csb_tcg_validate_update() FROM PUBLIC, anon, authenticated;
