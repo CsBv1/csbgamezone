@@ -203,6 +203,7 @@ const App = () => (
           <Route path="/csb/bull-vault" element={<CsbBullVault />} />
           <Route path="/csb/bull-arena" element={<CsbBullArena />} />
           <Route path="/csb/bull-summit" element={<CsbBullSummit />} />
+          <Route path="/csb/tcg" element={<CsbTcg />} />
 
           {/* Holder-only strategy games */}
           <Route path="/games/bull-tactician" element={<BullTactician />} />
