@@ -114,18 +114,50 @@ function hexToBech32(hexAddress: string): string | null {
   }
 }
 
-// Extract stake address from full address (for account-based queries)
-function extractStakeKeyHash(hexAddress: string): string | null {
+// Decode a bech32 string back to raw bytes (no checksum verification needed here)
+function bech32ToBytes(addr: string): number[] | null {
   try {
-    // For Shelley base addresses, stake key hash is the last 28 bytes
-    if (hexAddress.length >= 114) {
-      return hexAddress.substring(58); // Skip first 29 bytes (58 hex chars)
+    const pos = addr.lastIndexOf("1");
+    if (pos < 1) return null;
+    const dataPart = addr.slice(pos + 1).toLowerCase();
+    const data5: number[] = [];
+    for (let i = 0; i < dataPart.length - 6; i++) {
+      const v = BECH32_ALPHABET.indexOf(dataPart[i]);
+      if (v === -1) return null;
+      data5.push(v);
     }
-    return null;
-  } catch (e) {
+    return convertBits(data5, 5, 8, false);
+  } catch {
     return null;
   }
 }
+
+function bytesToBech32(bytes: number[], hrp: string): string {
+  const data5bit = convertBits(bytes, 8, 5, true);
+  const checksum = bech32CreateChecksum(hrp, data5bit);
+  let result = hrp + "1";
+  for (const c of data5bit.concat(checksum)) result += BECH32_ALPHABET[c];
+  return result;
+}
+
+// Derive the stake (reward) address from any base address, so we can query the
+// WHOLE account (all payment/change addresses) instead of a single address.
+function toStakeAddress(address: string): string | null {
+  try {
+    let bytes: number[] | null;
+    if (address.startsWith("stake")) return address;
+    if (address.startsWith("addr")) bytes = bech32ToBytes(address);
+    else bytes = hexToBytes(address);
+    if (!bytes || bytes.length < 57) return null;
+    const network = bytes[0] & 0x0f; // 1 = mainnet
+    const stakeHash = bytes.slice(bytes.length - 28);
+    const header = 0xe0 | network; // reward address, key hash
+    return bytesToBech32([header, ...stakeHash], network === 1 ? "stake" : "stake_test");
+  } catch {
+    return null;
+  }
+}
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
