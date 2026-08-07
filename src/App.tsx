@@ -32,6 +32,7 @@ import WheelOfFortune from "./pages/games/WheelOfFortune";
 
 // Multiplayer / Bull World
 import BullWorld from "./pages/games/BullWorld";
+import BullWorldMMO from "./pages/games/BullWorldMMO";
 import MultiplayerCrash from "./pages/games/MultiplayerCrash";
 import BullStampede from "./pages/games/BullStampede";
 import HoldersArena from "./pages/games/HoldersArena";
@@ -169,7 +170,8 @@ const App = () => (
           <Route path="/games/wheel-of-fortune" element={<ProtectedGameRoute><WheelOfFortune /></ProtectedGameRoute>} />
           
           {/* Bull World & Multiplayer */}
-          <Route path="/games/bull-world" element={<ProtectedGameRoute><BullWorld /></ProtectedGameRoute>} />
+          <Route path="/games/bull-world" element={<BullWorldMMO />} />
+          <Route path="/games/bull-world-classic" element={<ProtectedGameRoute><BullWorld /></ProtectedGameRoute>} />
           <Route path="/games/multiplayer-crash" element={<MultiplayerCrash />} />
           <Route path="/games/bull-stampede" element={<BullStampede />} />
           <Route path="/games/bull-sprint" element={<BullSprint />} />
