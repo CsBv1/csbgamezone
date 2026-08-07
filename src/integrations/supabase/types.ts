@@ -14,6 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
+      bw_boss_damage: {
+        Row: {
+          boss_id: string
+          claimed: boolean
+          created_at: string
+          damage: number
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          boss_id: string
+          claimed?: boolean
+          created_at?: string
+          damage?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          boss_id?: string
+          claimed?: boolean
+          created_at?: string
+          damage?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bw_boss_damage_boss_id_fkey"
+            columns: ["boss_id"]
+            isOneToOne: false
+            referencedRelation: "bw_world_bosses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bw_characters: {
+        Row: {
+          attack: number
+          bull_image: string | null
+          bull_name: string
+          bull_nft_id: string | null
+          crafting: number
+          created_at: string
+          crit_chance: number
+          defense: number
+          discovered_regions: Json
+          energy: number
+          experience: number
+          fishing: number
+          gold: number
+          hp: number
+          id: string
+          is_guest: boolean
+          level: number
+          luck: number
+          magic: number
+          max_energy: number
+          max_hp: number
+          mining: number
+          move_speed: number
+          pos_x: number
+          pos_y: number
+          region: string
+          skill_points: number
+          updated_at: string
+          user_id: string
+          weapon: string
+          woodcutting: number
+        }
+        Insert: {
+          attack?: number
+          bull_image?: string | null
+          bull_name?: string
+          bull_nft_id?: string | null
+          crafting?: number
+          created_at?: string
+          crit_chance?: number
+          defense?: number
+          discovered_regions?: Json
+          energy?: number
+          experience?: number
+          fishing?: number
+          gold?: number
+          hp?: number
+          id?: string
+          is_guest?: boolean
+          level?: number
+          luck?: number
+          magic?: number
+          max_energy?: number
+          max_hp?: number
+          mining?: number
+          move_speed?: number
+          pos_x?: number
+          pos_y?: number
+          region?: string
+          skill_points?: number
+          updated_at?: string
+          user_id: string
+          weapon?: string
+          woodcutting?: number
+        }
+        Update: {
+          attack?: number
+          bull_image?: string | null
+          bull_name?: string
+          bull_nft_id?: string | null
+          crafting?: number
+          created_at?: string
+          crit_chance?: number
+          defense?: number
+          discovered_regions?: Json
+          energy?: number
+          experience?: number
+          fishing?: number
+          gold?: number
+          hp?: number
+          id?: string
+          is_guest?: boolean
+          level?: number
+          luck?: number
+          magic?: number
+          max_energy?: number
+          max_hp?: number
+          mining?: number
+          move_speed?: number
+          pos_x?: number
+          pos_y?: number
+          region?: string
+          skill_points?: number
+          updated_at?: string
+          user_id?: string
+          weapon?: string
+          woodcutting?: number
+        }
+        Relationships: []
+      }
+      bw_world_bosses: {
+        Row: {
+          boss_key: string
+          created_at: string
+          despawn_at: string
+          hp: number
+          id: string
+          level: number
+          max_hp: number
+          name: string
+          pos_x: number
+          pos_y: number
+          region: string
+          spawned_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          boss_key: string
+          created_at?: string
+          despawn_at?: string
+          hp: number
+          id?: string
+          level?: number
+          max_hp: number
+          name: string
+          pos_x: number
+          pos_y: number
+          region: string
+          spawned_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          boss_key?: string
+          created_at?: string
+          despawn_at?: string
+          hp?: number
+          id?: string
+          level?: number
+          max_hp?: number
+          name?: string
+          pos_x?: number
+          pos_y?: number
+          region?: string
+          spawned_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       csb_battle_states: {
         Row: {
           created_at: string
