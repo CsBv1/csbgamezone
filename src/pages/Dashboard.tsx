@@ -257,6 +257,14 @@ const Dashboard = () => {
                 { id: 'milk-the-bull', name: '🥛 Milk The Bull', desc: 'Click to milk! Build streaks for bonuses!', gradient: 'from-blue-600 to-cyan-700', icon: Gem, btn: 'Start Milking' },
                 { id: 'bull-kingdom', name: '🏰 Bull Kingdom', desc: 'Build your empire & earn passive diamonds!', gradient: 'from-purple-600 to-pink-700', icon: Trophy, btn: 'Build Kingdom' },
                 { id: 'diamond-mines', name: '⛏️ Diamond Mines', desc: 'Dig deep, unlock mines & auto-farm diamonds!', gradient: 'from-cyan-600 to-purple-700', icon: Pickaxe, btn: 'Start Mining' },
+                { id: 'bull-stampede', name: '🏃 Bull Maze', desc: 'Race the maze against other bulls for diamonds!', gradient: 'from-orange-600 to-red-700', icon: Flag, btn: 'Enter Maze' },
+                { id: 'bull-sprint', name: '⚡ Bull Sprint', desc: 'Flat-out multiplayer sprint racing!', gradient: 'from-violet-600 to-fuchsia-700', icon: Gauge, btn: 'Sprint Now' },
+                { id: 'bull-relay', name: '🔄 Bull Relay', desc: 'Team relay racing — pass the baton, win big!', gradient: 'from-green-600 to-emerald-700', icon: Users, btn: 'Join Relay' },
+                { id: 'obstacle-rush', name: '🚧 Obstacle Rush', desc: 'Dodge, jump and rush through hazards!', gradient: 'from-rose-600 to-orange-700', icon: Target, btn: 'Start Rush' },
+                { id: 'bull-arena', name: '⚔️ Bull Arena', desc: '1v1 PvP duels for diamonds and glory!', gradient: 'from-red-600 to-rose-800', icon: Swords, btn: 'Enter Arena' },
+                { id: 'bull-city', name: '🏙️ Bull City', desc: 'Multiplayer metropolis — explore & collect!', gradient: 'from-amber-600 to-orange-700', icon: Building2, btn: 'Visit City' },
+                { id: 'holders-arena', name: '👑 Holders Arena', desc: 'Exclusive RPG arena for CSB Bull holders!', gradient: 'from-yellow-500 to-amber-700', icon: Crown, btn: 'Enter Arena', holdersOnly: true },
+
               ].map(game => (
                 <Card key={game.id} className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${bullsOwned > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-primary hover:border-accent'}`}
                   onClick={() => navigate(`/games/${game.id}`)}>
