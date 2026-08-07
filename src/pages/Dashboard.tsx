@@ -265,14 +265,21 @@ const Dashboard = () => {
                 { id: 'bull-city', name: '🏙️ Bull City', desc: 'Multiplayer metropolis — explore & collect!', gradient: 'from-amber-600 to-orange-700', icon: Building2, btn: 'Visit City' },
                 { id: 'holders-arena', name: '👑 Holders Arena', desc: 'Exclusive RPG arena for CSB Bull holders!', gradient: 'from-yellow-500 to-amber-700', icon: Crown, btn: 'Enter Arena', holdersOnly: true },
 
-              ].map(game => (
+              ].map((game: any) => (
                 <Card key={game.id} className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${bullsOwned > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-primary hover:border-accent'}`}
-                  onClick={() => navigate(`/games/${game.id}`)}>
+                  onClick={() => {
+                    if (game.holdersOnly && totalBulls === 0) {
+                      toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" });
+                      return;
+                    }
+                    navigate(`/games/${game.id}`);
+                  }}>
                   {bullsOwned > 0 && <div className="absolute top-2 left-2 bg-amber-500/90 text-black px-2 py-0.5 rounded-full text-xs font-bold z-10 animate-pulse">🐂 HOLDER BOOST</div>}
                   <div className={`h-40 bg-gradient-to-br ${game.gradient} flex items-center justify-center relative`}>
-                    <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">NEW!</div>
+                    <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold">{game.holdersOnly ? '👑 HOLDERS' : 'NEW!'}</div>
                     <game.icon className="w-20 h-20 text-white group-hover:scale-110 transition-transform" />
                   </div>
+
                   <div className="p-6">
                     <h3 className="text-xl font-bold mb-2 text-foreground">{game.name}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{game.desc}</p>
