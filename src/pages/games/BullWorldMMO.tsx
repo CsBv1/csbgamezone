@@ -948,7 +948,7 @@ export default function BullWorldMMO() {
 
       {/* chat */}
       {userId && (
-        <div className="absolute bottom-2 left-2 hidden md:block w-72 pointer-events-auto">
+        <div className="absolute bottom-44 left-2 hidden md:block w-72 pointer-events-auto">
           <WorldChat userId={userId} username={username} playerPosition={{ x: p.current.x, y: p.current.y }} onEmoteSent={() => {}} />
         </div>
       )}
