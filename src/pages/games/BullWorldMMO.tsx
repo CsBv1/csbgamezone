@@ -771,8 +771,9 @@ export default function BullWorldMMO() {
   if (!character || selecting) {
     return (
       <CharacterSelect
-        bulls={bulls}
-        loading={bullsLoading}
+        bulls={selectableBulls as any}
+        loading={bullsLoading && selectableBulls.length === 0}
+
         onBack={() => (selecting ? setSelecting(false) : navigate("/dashboard"))}
         onPick={async (b) => { await chooseBull(b); setSelecting(false); }}
       />
