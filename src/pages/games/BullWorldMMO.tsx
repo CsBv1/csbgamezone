@@ -9,6 +9,10 @@ import { WorldChat } from "@/components/WorldChat";
 import { audioManager } from "@/hooks/useAudioManager";
 import { useBullWorldCharacter, StatKey, BwCharacter } from "@/hooks/useBullWorldCharacter";
 import { useWorldBoss } from "@/hooks/useWorldBoss";
+import { useCardanoWallet } from "@/hooks/useCardanoWallet";
+import { useNFTBonuses } from "@/hooks/useNFTBonuses";
+import { useHeldCsbBulls } from "@/hooks/useHeldCsbBulls";
+
 import {
   REGIONS, REGION_BY_ID, REGION_SIZE, WORLD_WIDTH, WORLD_HEIGHT,
   regionAt, regionBounds, SPAWN, Region,
