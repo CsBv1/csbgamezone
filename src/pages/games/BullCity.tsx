@@ -101,6 +101,8 @@ export default function BullCity() {
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
   const posRef = useRef({ x: 1200, y: 800 });
+  const joystick = useRef({ active: false, dx: 0, dy: 0 });
+
 
   // Canvas viewport size
   const VIEWPORT_W = 1400;
