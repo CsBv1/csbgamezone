@@ -57,6 +57,41 @@ export function useBullWorldCharacter(userId: string | null) {
       : JSON.parse(row.discovered_regions || '["bull-city"]'),
   });
 
+  /** Consumes any banked experience into levels (also fixes "stuck full XP bar"). */
+  const resolveLevels = (c: BwCharacter): BwCharacter => {
+    let exp = c.experience;
+    let level = c.level;
+    let points = c.skill_points;
+    let gained = 0;
+    let guard = 0;
+    while (exp >= expForLevel(level) && guard++ < 500) {
+      exp -= expForLevel(level);
+      level += 1;
+      points += 3;
+      gained += 1;
+    }
+    if (!gained) return c;
+    return {
+      ...c,
+      experience: exp,
+      level,
+      skill_points: points,
+      max_hp: c.max_hp + gained * 15,
+      hp: c.max_hp + gained * 15,
+      attack: c.attack + gained * 2,
+    };
+  };
+
+  /** Persist level/exp back to the NFT so the bull itself levels up everywhere. */
+  const syncNft = useCallback(async (c: BwCharacter) => {
+    if (!userId || !c.bull_nft_id) return;
+    await supabase
+      .from("csbv1_nft_power" as any)
+      .update({ level: c.level, exp: c.experience })
+      .eq("user_id", userId)
+      .eq("nft_id", c.bull_nft_id);
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -67,11 +102,22 @@ export function useBullWorldCharacter(userId: string | null) {
         .eq("user_id", userId)
         .maybeSingle();
       if (cancelled) return;
-      setCharacter(data ? normalize(data) : null);
+      if (!data) { setCharacter(null); setLoading(false); return; }
+      const raw = normalize(data);
+      const fixed = resolveLevels(raw);
+      setCharacter(fixed);
       setLoading(false);
+      if (fixed.level !== raw.level) {
+        await supabase.from("bw_characters" as any).update({
+          level: fixed.level, experience: fixed.experience, skill_points: fixed.skill_points,
+          max_hp: fixed.max_hp, hp: fixed.hp, attack: fixed.attack,
+        }).eq("user_id", userId);
+        syncNft(fixed);
+      }
     })();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, syncNft]);
+
 
   /** Pick (or re-pick) the bull that becomes the in-world character. */
   const chooseBull = useCallback(
@@ -120,35 +166,21 @@ export function useBullWorldCharacter(userId: string | null) {
 
   /** Award experience and handle level-ups (3 skill points per level). */
   const gainExp = useCallback((amount: number) => {
+    if (!amount || amount <= 0) return;
     setCharacter((prev) => {
       if (!prev) return prev;
-      let exp = prev.experience + amount;
-      let level = prev.level;
-      let points = prev.skill_points;
-      while (exp >= expForLevel(level)) {
-        exp -= expForLevel(level);
-        level += 1;
-        points += 3;
-      }
-      const leveled = level !== prev.level;
-      const next = {
-        ...prev,
-        experience: exp,
-        level,
-        skill_points: points,
-        max_hp: leveled ? prev.max_hp + (level - prev.level) * 15 : prev.max_hp,
-        hp: leveled ? prev.max_hp + (level - prev.level) * 15 : prev.hp,
-        attack: leveled ? prev.attack + (level - prev.level) * 2 : prev.attack,
-      };
+      const next = resolveLevels({ ...prev, experience: prev.experience + amount });
       if (userId) {
         supabase.from("bw_characters" as any).update({
           experience: next.experience, level: next.level, skill_points: next.skill_points,
           max_hp: next.max_hp, hp: next.hp, attack: next.attack,
         }).eq("user_id", userId).then(() => {});
+        if (next.level !== prev.level) syncNft(next);
       }
       return next;
     });
-  }, [userId]);
+  }, [userId, syncNft]);
+
 
   const spendSkillPoint = useCallback((stat: StatKey) => {
     setCharacter((prev) => {

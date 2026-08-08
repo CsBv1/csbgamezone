@@ -9,6 +9,10 @@ import { WorldChat } from "@/components/WorldChat";
 import { audioManager } from "@/hooks/useAudioManager";
 import { useBullWorldCharacter, StatKey, BwCharacter } from "@/hooks/useBullWorldCharacter";
 import { useWorldBoss } from "@/hooks/useWorldBoss";
+import { useCardanoWallet } from "@/hooks/useCardanoWallet";
+import { useNFTBonuses } from "@/hooks/useNFTBonuses";
+import { useHeldCsbBulls } from "@/hooks/useHeldCsbBulls";
+
 import {
   REGIONS, REGION_BY_ID, REGION_SIZE, WORLD_WIDTH, WORLD_HEIGHT,
   regionAt, regionBounds, SPAWN, Region,
@@ -116,6 +120,25 @@ export default function BullWorldMMO() {
     useBullWorldCharacter(userId);
   const { boss, myDamage, damageBoss } = useWorldBoss(userId, username);
 
+  /* ---- real NFT artwork from the connected Cardano wallet ---- */
+  const { connectedWallet } = useCardanoWallet();
+  const { nfts: walletNfts, rescan } = useNFTBonuses(connectedWallet?.address || null);
+  const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
+  const rescanned = useRef(false);
+  useEffect(() => {
+    if (connectedWallet?.address && (walletNfts || []).length === 0 && !rescanned.current) {
+      rescanned.current = true;
+      rescan();
+    }
+  }, [connectedWallet?.address, walletNfts, rescan]);
+
+  const selectableBulls = useMemo(() => {
+    const withArt = (heldBulls || []).filter((b) => b.image);
+    const list = withArt.length > 0 ? heldBulls : (heldBulls.length > 0 ? heldBulls : bulls);
+    return [...list].sort((a: any, b: any) => (b.level || 1) - (a.level || 1));
+  }, [heldBulls, bulls]);
+
+
   /* ------------------------------ mutable refs --------------------------- */
   const p = useRef({
     x: SPAWN.x, y: SPAWN.y, dir: "down", hp: 100, maxHp: 100,
@@ -167,6 +190,44 @@ export default function BullWorldMMO() {
     p.current.energy = character.energy; p.current.maxEnergy = character.max_energy;
     setCurrentRegion(regionAt(character.pos_x, character.pos_y));
   }, [character?.id]);
+
+  /* keep runtime caps in sync when the bull levels up mid-session */
+  useEffect(() => {
+    if (!character) return;
+    p.current.maxHp = character.max_hp;
+    p.current.maxEnergy = character.max_energy;
+  }, [character?.max_hp, character?.max_energy]);
+
+  /* level-up celebration */
+  const lastLevel = useRef<number | null>(null);
+  useEffect(() => {
+    if (!character) return;
+    if (lastLevel.current === null) { lastLevel.current = character.level; return; }
+    if (character.level > lastLevel.current) {
+      const gained = character.level - lastLevel.current;
+      lastLevel.current = character.level;
+      p.current.hp = p.current.maxHp;
+      addFloat(p.current.x, p.current.y - 80, `LEVEL ${character.level}!`, "#facc15");
+      burst(p.current.x, p.current.y, "#facc15", 40);
+      audioManager.playSFX("win");
+      toast({ title: `⬆️ LEVEL UP — Lv ${character.level}`, description: `${character.bull_name} grew stronger. +${gained * 3} skill points, HP restored.` });
+    } else {
+      lastLevel.current = character.level;
+    }
+  }, [character?.level]);
+
+  /* load the bull's real NFT artwork for in-world rendering */
+  const bullArt = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    bullArt.current = null;
+    const src = character?.bull_image;
+    if (!src) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { bullArt.current = img; };
+    img.src = src;
+  }, [character?.bull_image]);
+
 
   /* --------------------------- multiplayer sync --------------------------- */
   useEffect(() => {
@@ -628,9 +689,24 @@ export default function BullWorldMMO() {
       ctx.beginPath(); ctx.arc(px, py, 46, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.globalAlpha = p.current.dead ? 0.35 : 1;
-    ctx.font = "44px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("🐂", px, py + 16);
+    const art = bullArt.current;
+    if (art) {
+      const R = 30;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      ctx.drawImage(art, px - R, py - R, R * 2, R * 2);
+      ctx.restore();
+      ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 3;
+      ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.font = "44px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("🐂", px, py + 16);
+    }
+    ctx.textAlign = "center";
     ctx.globalAlpha = 1;
+
     ctx.font = "bold 13px sans-serif"; ctx.fillStyle = "#facc15";
     ctx.fillText(`${c.bull_name} · Lv${c.level}`, px, py - 34);
     const w = WEAPON_BY_ID[c.weapon] || WEAPONS[0];
@@ -695,8 +771,9 @@ export default function BullWorldMMO() {
   if (!character || selecting) {
     return (
       <CharacterSelect
-        bulls={bulls}
-        loading={bullsLoading}
+        bulls={selectableBulls as any}
+        loading={bullsLoading && selectableBulls.length === 0}
+
         onBack={() => (selecting ? setSelecting(false) : navigate("/dashboard"))}
         onPick={async (b) => { await chooseBull(b); setSelecting(false); }}
       />
@@ -751,7 +828,7 @@ export default function BullWorldMMO() {
       )}
 
       {/* minimap */}
-      <div className="absolute bottom-28 right-2 md:bottom-4 md:right-4">
+      <div className="absolute top-24 right-2 md:top-28 md:right-4">
         <div className="grid grid-cols-5 gap-0.5 p-1 bg-slate-900/85 border border-cyan-500/40 rounded backdrop-blur">
           {Array.from({ length: 15 }).map((_, i) => {
             const col = i % 5, row = Math.floor(i / 5);
@@ -761,7 +838,7 @@ export default function BullWorldMMO() {
             return (
               <button key={i} disabled={!known} onClick={() => reg && fastTravel(reg.id)}
                 title={known ? `${reg?.name} — fast travel` : "Undiscovered"}
-                className={`w-7 h-7 md:w-9 md:h-9 rounded-sm text-[11px] flex items-center justify-center transition-all ${
+                className={`w-6 h-6 md:w-9 md:h-9 rounded-sm text-[11px] flex items-center justify-center transition-all ${
                   here ? "ring-2 ring-cyan-300 scale-110" : ""} ${known ? "opacity-100 hover:brightness-125" : "opacity-25"}`}
                 style={{ background: known && reg ? reg.ground : "#0b1020" }}>
                 {known ? reg?.emoji : "❔"}
@@ -773,23 +850,20 @@ export default function BullWorldMMO() {
 
       {/* portal prompt */}
       {nearPortal && (
-        <Card className="absolute bottom-44 left-1/2 -translate-x-1/2 p-3 bg-slate-900/90 border-cyan-400 backdrop-blur pointer-events-auto">
-          <Button onClick={() => navigate(nearPortal.route)} className="gap-2">{nearPortal.emoji} Enter {nearPortal.name}</Button>
+        <Card className="absolute bottom-52 left-1/2 -translate-x-1/2 p-2 bg-slate-900/90 border-cyan-400 backdrop-blur pointer-events-auto">
+          <Button size="sm" onClick={() => navigate(nearPortal.route)} className="gap-2">{nearPortal.emoji} Enter {nearPortal.name}</Button>
         </Card>
       )}
 
-      {/* skill bar */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 md:gap-2 flex-wrap justify-center max-w-[92vw]">
-        <button onClick={doAttack}
-          className="w-14 h-14 rounded-lg bg-gradient-to-br from-rose-600 to-red-700 border-2 border-rose-300 text-2xl shadow-[0_0_18px_rgba(244,63,94,0.5)] active:scale-95">
-          {(WEAPON_BY_ID[character.weapon] || WEAPONS[0]).emoji}
-        </button>
+      {/* ---------------- bottom action deck ---------------- */}
+      {/* skill row sits just above the attack + joystick */}
+      <div className="absolute bottom-28 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-[92vw]">
         {skills.slice(0, 8).map((s, i) => {
           const cd = Math.max(0, (cooldowns.current[s.id] || 0) - now);
           const pct = cd > 0 ? (cd / s.cooldown) * 100 : 0;
           return (
             <button key={s.id} onClick={() => useSkill(s.id)} title={`${s.name} — ${s.desc}`}
-              className="relative w-12 h-12 rounded-lg bg-slate-900/90 border-2 border-cyan-500/50 text-xl overflow-hidden active:scale-95">
+              className="relative w-11 h-11 md:w-12 md:h-12 rounded-lg bg-slate-900/90 border-2 border-cyan-500/50 text-xl overflow-hidden active:scale-95 backdrop-blur">
               <span>{s.emoji}</span>
               <span className="absolute top-0 left-0.5 text-[9px] text-cyan-300">{i + 1}</span>
               {pct > 0 && <div className="absolute inset-x-0 bottom-0 bg-slate-950/80" style={{ height: `${pct}%` }} />}
@@ -798,17 +872,26 @@ export default function BullWorldMMO() {
         })}
       </div>
 
-      {/* mobile joystick */}
-      <div className="absolute bottom-24 left-4 md:hidden">
+      {/* attack button — bottom right thumb zone */}
+      <button onClick={doAttack} aria-label="Attack"
+        className="absolute bottom-6 right-4 w-20 h-20 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-4 border-rose-300 text-4xl shadow-[0_0_28px_rgba(244,63,94,0.6)] active:scale-90 transition-transform flex items-center justify-center">
+        {(WEAPON_BY_ID[character.weapon] || WEAPONS[0]).emoji}
+      </button>
+
+      {/* joystick — bottom left thumb zone (same feel as the dungeon) */}
+      <div className="absolute bottom-6 left-4">
         <div
-          className="w-32 h-32 rounded-full bg-slate-900/60 border-2 border-cyan-500/40 touch-none"
+          className="w-32 h-32 rounded-full bg-slate-900/60 border-2 border-cyan-500/40 touch-none flex items-center justify-center"
           onTouchStart={(e) => { joystick.current.active = true; handleStick(e); }}
           onTouchMove={handleStick}
           onTouchEnd={() => { joystick.current.active = false; joystick.current.dx = 0; joystick.current.dy = 0; }}
+          onMouseDown={() => { joystick.current.active = true; }}
+          onMouseUp={() => { joystick.current.active = false; joystick.current.dx = 0; joystick.current.dy = 0; }}
         >
-          <div className="w-full h-full flex items-center justify-center text-cyan-400/60 text-xs">MOVE</div>
+          <div className="w-14 h-14 rounded-full bg-cyan-500/25 border border-cyan-300/50 flex items-center justify-center text-cyan-200/70 text-[10px]">MOVE</div>
         </div>
       </div>
+
 
       {/* panels */}
       {panel === "stats" && (
@@ -865,7 +948,7 @@ export default function BullWorldMMO() {
 
       {/* chat */}
       {userId && (
-        <div className="absolute bottom-2 left-2 hidden md:block w-72 pointer-events-auto">
+        <div className="absolute bottom-44 left-2 hidden md:block w-72 pointer-events-auto">
           <WorldChat userId={userId} username={username} playerPosition={{ x: p.current.x, y: p.current.y }} onEmoteSent={() => {}} />
         </div>
       )}
