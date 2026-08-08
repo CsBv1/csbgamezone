@@ -323,16 +323,21 @@ export default function BullCity() {
     if (!gameActive || !userId) return;
 
     const gameLoop = setInterval(() => {
-      if (!document.hasFocus()) return;
       let dx = 0, dy = 0;
       let newDirection = myDirection;
 
-      if (keysPressed.current.has('arrowup') || keysPressed.current.has('w')) { dy = -MOVE_SPEED; newDirection = 'up'; }
-      if (keysPressed.current.has('arrowdown') || keysPressed.current.has('s')) { dy = MOVE_SPEED; newDirection = 'down'; }
-      if (keysPressed.current.has('arrowleft') || keysPressed.current.has('a')) { dx = -MOVE_SPEED; newDirection = 'left'; }
-      if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) { dx = MOVE_SPEED; newDirection = 'right'; }
+      if (keysPressed.current.has('arrowup') || keysPressed.current.has('w')) dy -= 1;
+      if (keysPressed.current.has('arrowdown') || keysPressed.current.has('s')) dy += 1;
+      if (keysPressed.current.has('arrowleft') || keysPressed.current.has('a')) dx -= 1;
+      if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) dx += 1;
+      if (joystick.current.active) { dx += joystick.current.dx; dy += joystick.current.dy; }
 
-      if (dx !== 0 || dy !== 0) {
+      const mag = Math.hypot(dx, dy);
+      if (mag > 0.05) {
+        dx = (dx / mag) * MOVE_SPEED;
+        dy = (dy / mag) * MOVE_SPEED;
+        newDirection = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+
         const newX = Math.max(35, Math.min(CITY_WIDTH - 35, posRef.current.x + dx));
         const newY = Math.max(35, Math.min(CITY_HEIGHT - 35, posRef.current.y + dy));
         posRef.current = { x: newX, y: newY };
@@ -354,6 +359,7 @@ export default function BullCity() {
             .eq('user_id', userId);
         }
       }
+
 
       // Check diamond collection
       diamonds.forEach(diamond => {
