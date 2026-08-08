@@ -414,30 +414,23 @@ export default function BullCity() {
     }
   };
 
-  const handleMobileMove = (direction: string) => {
-    let dx = 0, dy = 0;
-    if (direction === 'up') dy = -MOVE_SPEED * 2;
-    if (direction === 'down') dy = MOVE_SPEED * 2;
-    if (direction === 'left') dx = -MOVE_SPEED * 2;
-    if (direction === 'right') dx = MOVE_SPEED * 2;
+  /** Analog joystick — same movement feel as the Bull World dungeon. */
+  const handleStick = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const point = 'touches' in e ? e.touches[0] : (e as React.MouseEvent);
+    if (!point) return;
+    const dx = (point.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+    const dy = (point.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+    const m = Math.max(1, Math.hypot(dx, dy));
+    joystick.current.dx = dx / m;
+    joystick.current.dy = dy / m;
+  };
 
-    const newX = Math.max(40, Math.min(CITY_WIDTH - 40, posRef.current.x + dx));
-    const newY = Math.max(40, Math.min(CITY_HEIGHT - 40, posRef.current.y + dy));
-    posRef.current = { x: newX, y: newY };
-    setMyPosition({ x: newX, y: newY });
-    setMyDirection(direction);
+  const releaseStick = () => {
+    joystick.current.active = false;
+    joystick.current.dx = 0;
+    joystick.current.dy = 0;
 
-    setCameraOffset({
-      x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, newX - VIEWPORT_W / 2)),
-      y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, newY - VIEWPORT_H / 2))
-    });
-
-    if (userId) {
-      supabase
-        .from('world_players')
-        .update({ x: newX, y: newY, direction, last_seen: new Date().toISOString() })
-        .eq('user_id', userId);
-    }
   };
 
   // Canvas rendering
