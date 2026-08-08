@@ -191,6 +191,44 @@ export default function BullWorldMMO() {
     setCurrentRegion(regionAt(character.pos_x, character.pos_y));
   }, [character?.id]);
 
+  /* keep runtime caps in sync when the bull levels up mid-session */
+  useEffect(() => {
+    if (!character) return;
+    p.current.maxHp = character.max_hp;
+    p.current.maxEnergy = character.max_energy;
+  }, [character?.max_hp, character?.max_energy]);
+
+  /* level-up celebration */
+  const lastLevel = useRef<number | null>(null);
+  useEffect(() => {
+    if (!character) return;
+    if (lastLevel.current === null) { lastLevel.current = character.level; return; }
+    if (character.level > lastLevel.current) {
+      const gained = character.level - lastLevel.current;
+      lastLevel.current = character.level;
+      p.current.hp = p.current.maxHp;
+      addFloat(p.current.x, p.current.y - 80, `LEVEL ${character.level}!`, "#facc15");
+      burst(p.current.x, p.current.y, "#facc15", 40);
+      audioManager.playSFX("win");
+      toast({ title: `⬆️ LEVEL UP — Lv ${character.level}`, description: `${character.bull_name} grew stronger. +${gained * 3} skill points, HP restored.` });
+    } else {
+      lastLevel.current = character.level;
+    }
+  }, [character?.level]);
+
+  /* load the bull's real NFT artwork for in-world rendering */
+  const bullArt = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    bullArt.current = null;
+    const src = character?.bull_image;
+    if (!src) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { bullArt.current = img; };
+    img.src = src;
+  }, [character?.bull_image]);
+
+
   /* --------------------------- multiplayer sync --------------------------- */
   useEffect(() => {
     if (!userId || !character) return;
