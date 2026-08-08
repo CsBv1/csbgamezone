@@ -120,6 +120,25 @@ export default function BullWorldMMO() {
     useBullWorldCharacter(userId);
   const { boss, myDamage, damageBoss } = useWorldBoss(userId, username);
 
+  /* ---- real NFT artwork from the connected Cardano wallet ---- */
+  const { connectedWallet } = useCardanoWallet();
+  const { nfts: walletNfts, rescan } = useNFTBonuses(connectedWallet?.address || null);
+  const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
+  const rescanned = useRef(false);
+  useEffect(() => {
+    if (connectedWallet?.address && (walletNfts || []).length === 0 && !rescanned.current) {
+      rescanned.current = true;
+      rescan();
+    }
+  }, [connectedWallet?.address, walletNfts, rescan]);
+
+  const selectableBulls = useMemo(() => {
+    const withArt = (heldBulls || []).filter((b) => b.image);
+    const list = withArt.length > 0 ? heldBulls : (heldBulls.length > 0 ? heldBulls : bulls);
+    return [...list].sort((a: any, b: any) => (b.level || 1) - (a.level || 1));
+  }, [heldBulls, bulls]);
+
+
   /* ------------------------------ mutable refs --------------------------- */
   const p = useRef({
     x: SPAWN.x, y: SPAWN.y, dir: "down", hp: 100, maxHp: 100,
