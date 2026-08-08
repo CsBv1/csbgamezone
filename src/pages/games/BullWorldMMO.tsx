@@ -689,9 +689,24 @@ export default function BullWorldMMO() {
       ctx.beginPath(); ctx.arc(px, py, 46, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.globalAlpha = p.current.dead ? 0.35 : 1;
-    ctx.font = "44px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("🐂", px, py + 16);
+    const art = bullArt.current;
+    if (art) {
+      const R = 30;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      ctx.drawImage(art, px - R, py - R, R * 2, R * 2);
+      ctx.restore();
+      ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 3;
+      ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.font = "44px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("🐂", px, py + 16);
+    }
+    ctx.textAlign = "center";
     ctx.globalAlpha = 1;
+
     ctx.font = "bold 13px sans-serif"; ctx.fillStyle = "#facc15";
     ctx.fillText(`${c.bull_name} · Lv${c.level}`, px, py - 34);
     const w = WEAPON_BY_ID[c.weapon] || WEAPONS[0];
