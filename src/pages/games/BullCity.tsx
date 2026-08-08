@@ -818,11 +818,11 @@ export default function BullCity() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b1a2e] p-4">
+    <div className="min-h-screen bg-gradient-to-b from-[#050b18] via-[#071427] to-[#050b18] p-3 md:p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <Button variant="ghost" className="text-[#FF9900] hover:bg-[#FF9900]/10" onClick={() => { leaveCity(); navigate('/games/bull-world'); }}>
+          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/games/bull-world'); }}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Bull World
           </Button>
           <CreditBar />
@@ -830,32 +830,32 @@ export default function BullCity() {
 
         {/* Title */}
         <div className="text-center mb-3">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#FF9900] via-[#FFD700] to-[#FF9900] bg-clip-text text-transparent">
-            🏙️ Bull City 🌆
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
+            🐂 Cardano Stake Bulls · Bull City
           </h1>
-          <p className="text-[#FF9900]/60 text-sm">Explore the city, work at buildings to earn 💎, collect diamonds scattered around!</p>
+          <p className="text-cyan-200/50 text-xs md:text-sm">Roam the neon metropolis, work the buildings for 💎 and sweep up loose diamonds.</p>
         </div>
 
         {/* Stats */}
-        <div className="flex justify-center gap-3 mb-3">
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-[#0d2640] border-[#FF9900]/30">
-            <Users className="w-4 h-4 text-[#FF9900]" />
+        <div className="flex justify-center gap-2 md:gap-3 mb-3 flex-wrap">
+          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
+            <Users className="w-4 h-4 text-cyan-300" />
             <span className="text-white text-sm">{players.length} Online</span>
           </Card>
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-[#0d2640] border-[#FF9900]/30">
-            <Gem className="w-4 h-4 text-[#00D4FF]" />
+          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
+            <Gem className="w-4 h-4 text-cyan-300" />
             <span className="text-white text-sm">+{collectedDiamonds} Earned</span>
           </Card>
           {isWorking && (
-            <Card className="px-3 py-1.5 flex items-center gap-2 bg-[#0d2640] border-[#FFD700]/50 animate-pulse">
-              <Hammer className="w-4 h-4 text-[#FFD700]" />
-              <span className="text-[#FFD700] text-sm font-bold">Working...</span>
+            <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/50 animate-pulse">
+              <Hammer className="w-4 h-4 text-amber-300" />
+              <span className="text-amber-300 text-sm font-bold">Working...</span>
             </Card>
           )}
         </div>
 
-        {/* Game Canvas */}
-        <Card className="p-2 mb-3 overflow-hidden bg-[#0d2640] border-[#FF9900]/30">
+        {/* Game Canvas + on-screen controls */}
+        <Card className="relative p-2 mb-3 overflow-hidden bg-slate-900/70 border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
           <canvas
             ref={canvasRef}
             width={VIEWPORT_W}
@@ -863,39 +863,37 @@ export default function BullCity() {
             className="w-full rounded-lg"
             style={{ maxHeight: '60vh' }}
           />
+
+          {/* joystick — analog, identical feel to the dungeon */}
+          <div className="absolute bottom-4 left-4">
+            <div
+              className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-slate-950/60 border-2 border-cyan-500/40 backdrop-blur touch-none flex items-center justify-center select-none"
+              onTouchStart={(e) => { joystick.current.active = true; handleStick(e); }}
+              onTouchMove={handleStick}
+              onTouchEnd={releaseStick}
+              onMouseDown={(e) => { joystick.current.active = true; handleStick(e); }}
+              onMouseMove={(e) => { if (joystick.current.active) handleStick(e); }}
+              onMouseUp={releaseStick}
+              onMouseLeave={releaseStick}
+            >
+              <div className="w-12 h-12 rounded-full bg-cyan-500/25 border border-cyan-300/50 flex items-center justify-center text-[10px] text-cyan-200/70">MOVE</div>
+            </div>
+          </div>
+
+          {/* work button — bottom right thumb zone */}
+          <button
+            onClick={() => nearBuilding && workAtBuilding(nearBuilding)}
+            disabled={!nearBuilding?.reward || isWorking}
+            className={`absolute bottom-6 right-4 w-20 h-20 rounded-full text-3xl font-bold border-4 transition-transform active:scale-90 flex items-center justify-center ${
+              nearBuilding?.reward && !isWorking
+                ? 'bg-gradient-to-br from-amber-400 to-amber-600 border-amber-200 text-black shadow-[0_0_28px_rgba(251,191,36,0.6)]'
+                : 'bg-slate-900/60 border-slate-700 text-slate-600'
+            }`}
+          >
+            ⚒️
+          </button>
         </Card>
 
-        {/* Mobile Controls */}
-        <Card className="p-3 md:hidden bg-[#0d2640] border-[#FF9900]/30">
-          <div className="flex flex-col items-center gap-2">
-            <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#FF9900] text-[#FF9900]" onTouchStart={() => handleMobileMove('up')}>
-              <ArrowUp className="w-6 h-6" />
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#FF9900] text-[#FF9900]" onTouchStart={() => handleMobileMove('left')}>
-                <ArrowLeftIcon className="w-6 h-6" />
-              </Button>
-              {nearBuilding?.reward ? (
-                <Button 
-                  size="lg" 
-                  className="w-14 h-14 rounded-full bg-[#FFD700] text-black font-bold"
-                  onClick={() => nearBuilding && workAtBuilding(nearBuilding)}
-                  disabled={isWorking}
-                >
-                  ⚒️
-                </Button>
-              ) : (
-                <div className="w-14 h-14" />
-              )}
-              <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#FF9900] text-[#FF9900]" onTouchStart={() => handleMobileMove('right')}>
-                <ArrowRight className="w-6 h-6" />
-              </Button>
-            </div>
-            <Button variant="outline" size="lg" className="w-14 h-14 rounded-full border-[#FF9900] text-[#FF9900]" onTouchStart={() => handleMobileMove('down')}>
-              <ArrowDown className="w-6 h-6" />
-            </Button>
-          </div>
-        </Card>
 
         {/* Buildings Guide */}
         <Card className="p-4 mt-3 bg-[#0d2640] border-[#FF9900]/30">
