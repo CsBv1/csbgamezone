@@ -166,35 +166,21 @@ export function useBullWorldCharacter(userId: string | null) {
 
   /** Award experience and handle level-ups (3 skill points per level). */
   const gainExp = useCallback((amount: number) => {
+    if (!amount || amount <= 0) return;
     setCharacter((prev) => {
       if (!prev) return prev;
-      let exp = prev.experience + amount;
-      let level = prev.level;
-      let points = prev.skill_points;
-      while (exp >= expForLevel(level)) {
-        exp -= expForLevel(level);
-        level += 1;
-        points += 3;
-      }
-      const leveled = level !== prev.level;
-      const next = {
-        ...prev,
-        experience: exp,
-        level,
-        skill_points: points,
-        max_hp: leveled ? prev.max_hp + (level - prev.level) * 15 : prev.max_hp,
-        hp: leveled ? prev.max_hp + (level - prev.level) * 15 : prev.hp,
-        attack: leveled ? prev.attack + (level - prev.level) * 2 : prev.attack,
-      };
+      const next = resolveLevels({ ...prev, experience: prev.experience + amount });
       if (userId) {
         supabase.from("bw_characters" as any).update({
           experience: next.experience, level: next.level, skill_points: next.skill_points,
           max_hp: next.max_hp, hp: next.hp, attack: next.attack,
         }).eq("user_id", userId).then(() => {});
+        if (next.level !== prev.level) syncNft(next);
       }
       return next;
     });
-  }, [userId]);
+  }, [userId, syncNft]);
+
 
   const spendSkillPoint = useCallback((stat: StatKey) => {
     setCharacter((prev) => {
