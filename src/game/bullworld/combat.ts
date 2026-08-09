@@ -171,7 +171,8 @@ export const BOSS_BY_KEY = Object.fromEntries(BOSSES.map((b) => [b.key, b]));
 /* ------------------------------- FORMULAS ------------------------------- */
 
 export function expForLevel(level: number) {
-  return Math.floor(100 * Math.pow(level, 1.55));
+  // Flat, farm-friendly curve: high-level NFT bulls stay levelable.
+  return Math.floor(80 + level * 45);
 }
 
 export function statsForBull(level: number, rarityBonus = 0) {

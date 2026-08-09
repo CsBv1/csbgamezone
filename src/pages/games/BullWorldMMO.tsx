@@ -42,7 +42,7 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
 interface OtherPlayer { user_id: string; x: number; y: number; username: string | null; color: string; }
 
 const DAY_MS = 10 * 60 * 1000;   // full day/night cycle
-const ENEMIES_PER_REGION = 26;
+const ENEMIES_PER_REGION = 44;
 const VIEW_PAD = 200;
 
 /* ============================ CHARACTER SELECT =========================== */
@@ -156,6 +156,11 @@ export default function BullWorldMMO() {
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
   const lastDbSync = useRef(0);
   const lastBossHit = useRef(0);
+  const respawnQueue = useRef<Array<{ tplId: string; x: number; y: number; at: number }>>([]);
+  const respawnSeq = useRef(0);
+  const lastBossKey = useRef<string | null>(null);
+  const otherArt = useRef<Record<string, HTMLImageElement>>({});
+  const otherMeta = useRef<Record<string, { name: string; level: number }>>({});
 
   charRef.current = character;
   bossRef.current = boss;
@@ -229,6 +234,27 @@ export default function BullWorldMMO() {
   }, [character?.bull_image]);
 
 
+  /* boss defeat → big experience payout (guaranteed level for contributors) */
+  const bossSeen = useRef<{ id: string; key: string } | null>(null);
+  const myDamageRef = useRef(0);
+  myDamageRef.current = myDamage;
+  useEffect(() => {
+    if (boss) { bossSeen.current = { id: boss.id, key: boss.boss_key }; return; }
+    const prev = bossSeen.current;
+    bossSeen.current = null;
+    if (!prev || myDamageRef.current <= 0) return;
+    const tpl = BOSS_BY_KEY[prev.key];
+    const c = charRef.current;
+    if (!tpl || !c) return;
+    // at least one full level for anyone who helped bring the boss down
+    const reward = Math.max(tpl.reward.exp, expForLevel(c.level) + 10);
+    gainExp(reward);
+    patch({ gold: c.gold + tpl.reward.gold });
+    addFloat(p.current.x, p.current.y - 90, `BOSS +${reward} XP`, "#ffd700");
+    burst(p.current.x, p.current.y, "#ffd700", 50);
+    toast({ title: `🏆 ${tpl.name} defeated!`, description: `+${reward} XP and +${tpl.reward.gold} gold for your bull.` });
+  }, [boss, gainExp, patch, toast, myDamage]);
+
   /* --------------------------- multiplayer sync --------------------------- */
   useEffect(() => {
     if (!userId || !character) return;
@@ -241,7 +267,26 @@ export default function BullWorldMMO() {
     const pull = async () => {
       const { data } = await supabase.from("world_players").select("user_id,x,y,username,color")
         .eq("is_online", true).gt("last_seen", new Date(Date.now() - 60000).toISOString()).limit(200);
-      setOthers(((data || []) as any[]).filter((o) => o.user_id !== userId));
+      const list = ((data || []) as any[]).filter((o) => o.user_id !== userId);
+      setOthers(list);
+
+      /* pull the other players' real bull artwork so they don't render as 🐂 */
+      const missing = list.map((o) => o.user_id).filter((id) => !otherMeta.current[id]);
+      if (missing.length) {
+        const { data: chars } = await supabase
+          .from("bw_characters" as any)
+          .select("user_id,bull_name,bull_image,level")
+          .in("user_id", missing);
+        for (const ch of ((chars || []) as any[])) {
+          otherMeta.current[ch.user_id] = { name: ch.bull_name, level: ch.level };
+          if (ch.bull_image) {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => { otherArt.current[ch.user_id] = img; };
+            img.src = ch.bull_image;
+          }
+        }
+      }
     };
     push(); pull();
     const t1 = window.setInterval(push, 900);
@@ -256,6 +301,7 @@ export default function BullWorldMMO() {
   const spawnRegionEnemies = useCallback((region: Region) => {
     if (spawnedRegion.current === region.id) return;
     spawnedRegion.current = region.id;
+    respawnQueue.current = [];
     if (region.safe || region.enemies.length === 0) { enemies.current = []; return; }
     const b = regionBounds(region);
     const list: LiveEnemy[] = [];
@@ -287,11 +333,15 @@ export default function BullWorldMMO() {
 
   const killReward = useCallback((e: LiveEnemy) => {
     const c = charRef.current; if (!c) return;
-    gainExp(e.tpl.exp);
+    // scale with the bull's level so high-level NFT bulls keep progressing
+    const exp = Math.max(1, Math.round(e.tpl.exp * (1 + c.level * 0.12)));
+    gainExp(exp);
     patch({ gold: c.gold + e.tpl.gold });
-    addFloat(e.x, e.y - 40, `+${e.tpl.exp} XP`, "#facc15");
+    addFloat(e.x, e.y - 40, `+${exp} XP`, "#facc15");
     burst(e.x, e.y, e.tpl.color, 22);
     audioManager.playSFX("win");
+    // queue a fast respawn so every region always has monsters to farm
+    respawnQueue.current.push({ tplId: e.tpl.id, x: e.hx, y: e.hy, at: performance.now() + 4000 });
   }, [gainExp, patch]);
 
   const damageEnemy = useCallback((e: LiveEnemy, amount: number, crit: boolean) => {
@@ -528,6 +578,41 @@ export default function BullWorldMMO() {
         e.hitFlash = Math.max(0, e.hitFlash - dt / 250);
       }
 
+      /* ---- fast monster respawn: keep every region populated ---- */
+      if (!region.safe && region.enemies.length > 0) {
+        if (respawnQueue.current.length) {
+          const ready = respawnQueue.current.filter((r) => r.at <= now);
+          if (ready.length) {
+            respawnQueue.current = respawnQueue.current.filter((r) => r.at > now);
+            for (const r of ready) {
+              const tpl = ENEMY_BY_ID[r.tplId]; if (!tpl) continue;
+              enemies.current.push({
+                uid: `${region.id}-r${respawnSeq.current++}`, tpl,
+                x: r.x, y: r.y, hx: r.x, hy: r.y,
+                hp: tpl.hp, maxHp: tpl.hp, state: "patrol",
+                nextAttack: 0, wanderUntil: 0, vx: 0, vy: 0, hitFlash: 0,
+              });
+            }
+          }
+        }
+        // safety top-up so the region never runs dry
+        if (enemies.current.length < ENEMIES_PER_REGION) {
+          const b = regionBounds(region);
+          const tpl = ENEMY_BY_ID[region.enemies[respawnSeq.current % region.enemies.length]];
+          if (tpl) {
+            const ang = Math.random() * Math.PI * 2;
+            const dist = 700 + Math.random() * 700;
+            const x = Math.max(b.x + 80, Math.min(b.x + b.w - 80, p.current.x + Math.cos(ang) * dist));
+            const y = Math.max(b.y + 80, Math.min(b.y + b.h - 80, p.current.y + Math.sin(ang) * dist));
+            enemies.current.push({
+              uid: `${region.id}-t${respawnSeq.current++}`, tpl,
+              x, y, hx: x, hy: y, hp: tpl.hp, maxHp: tpl.hp,
+              state: "patrol", nextAttack: 0, wanderUntil: 0, vx: 0, vy: 0, hitFlash: 0,
+            });
+          }
+        }
+      }
+
       /* ---- boss contact damage ---- */
       const bs = bossRef.current;
       if (bs && !p.current.dead) {
@@ -666,14 +751,31 @@ export default function BullWorldMMO() {
       ctx.fillText(e.state.toUpperCase(), ex2, ey2 - 36);
     }
 
-    /* --- other players --- */
+    /* --- other players (their real bull NFT artwork) --- */
     for (const o of others) {
       const ox = o.x - camX, oy = o.y - camY;
       if (ox < -VIEW_PAD || ox > W + VIEW_PAD || oy < -VIEW_PAD || oy > H + VIEW_PAD) continue;
-      ctx.font = "30px sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("🐂", ox, oy + 10);
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.beginPath(); ctx.ellipse(ox, oy + 22, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+      const oart = otherArt.current[o.user_id];
+      const meta = otherMeta.current[o.user_id];
+      if (oart) {
+        const R = 26;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(ox, oy, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+        ctx.drawImage(oart, ox - R, oy - R, R * 2, R * 2);
+        ctx.restore();
+        ctx.strokeStyle = o.color || "#a78bfa"; ctx.lineWidth = 2.5;
+        ctx.shadowColor = o.color || "#a78bfa"; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(ox, oy, R, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.font = "30px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText("🐂", ox, oy + 10);
+      }
+      ctx.textAlign = "center";
       ctx.font = "bold 11px sans-serif"; ctx.fillStyle = o.color || "#00d4ff";
-      ctx.fillText(o.username || "Bull", ox, oy - 24);
+      ctx.fillText(`${meta?.name || o.username || "Bull"}${meta ? ` · Lv${meta.level}` : ""}`, ox, oy - 32);
     }
 
     /* --- player --- */
@@ -814,21 +916,8 @@ export default function BullWorldMMO() {
         </Card>
       </div>
 
-      {/* boss banner */}
-      {boss && (
-        <Card className="absolute top-24 left-1/2 -translate-x-1/2 p-2 px-4 bg-slate-900/90 border-amber-400/60 backdrop-blur text-center">
-          <div className="text-xs font-bold text-amber-300">
-            {BOSS_BY_KEY[boss.boss_key]?.emoji} WORLD BOSS · {boss.name} in {REGION_BY_ID[boss.region]?.name}
-          </div>
-          <div className="w-56 h-2 bg-slate-800 rounded mt-1 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-amber-500 to-red-500" style={{ width: `${(boss.hp / boss.max_hp) * 100}%` }} />
-          </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">Your damage: {myDamage.toLocaleString()}</div>
-        </Card>
-      )}
-
-      {/* minimap */}
-      <div className="absolute top-24 right-2 md:top-28 md:right-4">
+      {/* right column: minimap sits under the bull HP/XP card, boss card under the map */}
+      <div className="absolute top-20 right-2 md:top-24 md:right-4 w-[136px] md:w-[196px] space-y-2">
         <div className="grid grid-cols-5 gap-0.5 p-1 bg-slate-900/85 border border-cyan-500/40 rounded backdrop-blur">
           {Array.from({ length: 15 }).map((_, i) => {
             const col = i % 5, row = Math.floor(i / 5);
@@ -838,7 +927,7 @@ export default function BullWorldMMO() {
             return (
               <button key={i} disabled={!known} onClick={() => reg && fastTravel(reg.id)}
                 title={known ? `${reg?.name} — fast travel` : "Undiscovered"}
-                className={`w-6 h-6 md:w-9 md:h-9 rounded-sm text-[11px] flex items-center justify-center transition-all ${
+                className={`w-full aspect-square rounded-sm text-[11px] flex items-center justify-center transition-all ${
                   here ? "ring-2 ring-cyan-300 scale-110" : ""} ${known ? "opacity-100 hover:brightness-125" : "opacity-25"}`}
                 style={{ background: known && reg ? reg.ground : "#0b1020" }}>
                 {known ? reg?.emoji : "❔"}
@@ -846,6 +935,20 @@ export default function BullWorldMMO() {
             );
           })}
         </div>
+
+        {boss && (
+          <Card className="w-full p-2 bg-slate-900/90 border-amber-400/60 backdrop-blur text-center">
+            <div className="text-[10px] font-bold text-amber-300 leading-tight">
+              {BOSS_BY_KEY[boss.boss_key]?.emoji} WORLD BOSS
+            </div>
+            <div className="text-[10px] text-amber-200/80 truncate">{boss.name}</div>
+            <div className="text-[9px] text-muted-foreground truncate">{REGION_BY_ID[boss.region]?.name}</div>
+            <div className="w-full h-2 bg-slate-800 rounded mt-1 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-amber-500 to-red-500" style={{ width: `${(boss.hp / boss.max_hp) * 100}%` }} />
+            </div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Your dmg: {myDamage.toLocaleString()}</div>
+          </Card>
+        )}
       </div>
 
       {/* portal prompt */}
@@ -857,7 +960,7 @@ export default function BullWorldMMO() {
 
       {/* ---------------- bottom action deck ---------------- */}
       {/* skill row sits just above the attack + joystick */}
-      <div className="absolute bottom-28 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-[92vw]">
+      <div className="absolute bottom-[92px] md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-[92vw]">
         {skills.slice(0, 8).map((s, i) => {
           const cd = Math.max(0, (cooldowns.current[s.id] || 0) - now);
           const pct = cd > 0 ? (cd / s.cooldown) * 100 : 0;
@@ -874,7 +977,7 @@ export default function BullWorldMMO() {
 
       {/* attack button — bottom right thumb zone */}
       <button onClick={doAttack} aria-label="Attack"
-        className="absolute bottom-6 right-4 w-20 h-20 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-4 border-rose-300 text-4xl shadow-[0_0_28px_rgba(244,63,94,0.6)] active:scale-90 transition-transform flex items-center justify-center">
+        className="absolute bottom-3 right-4 w-20 h-20 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-4 border-rose-300 text-4xl shadow-[0_0_28px_rgba(244,63,94,0.6)] active:scale-90 transition-transform flex items-center justify-center">
         {(WEAPON_BY_ID[character.weapon] || WEAPONS[0]).emoji}
       </button>
 
