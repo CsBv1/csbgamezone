@@ -287,11 +287,15 @@ export default function BullWorldMMO() {
 
   const killReward = useCallback((e: LiveEnemy) => {
     const c = charRef.current; if (!c) return;
-    gainExp(e.tpl.exp);
+    // scale with the bull's level so high-level NFT bulls keep progressing
+    const exp = Math.max(1, Math.round(e.tpl.exp * (1 + c.level * 0.12)));
+    gainExp(exp);
     patch({ gold: c.gold + e.tpl.gold });
-    addFloat(e.x, e.y - 40, `+${e.tpl.exp} XP`, "#facc15");
+    addFloat(e.x, e.y - 40, `+${exp} XP`, "#facc15");
     burst(e.x, e.y, e.tpl.color, 22);
     audioManager.playSFX("win");
+    // queue a fast respawn so every region always has monsters to farm
+    respawnQueue.current.push({ tplId: e.tpl.id, x: e.hx, y: e.hy, at: performance.now() + 4000 });
   }, [gainExp, patch]);
 
   const damageEnemy = useCallback((e: LiveEnemy, amount: number, crit: boolean) => {
