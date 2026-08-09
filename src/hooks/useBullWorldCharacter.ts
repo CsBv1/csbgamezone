@@ -104,13 +104,24 @@ export function useBullWorldCharacter(userId: string | null) {
       if (cancelled) return;
       if (!data) { setCharacter(null); setLoading(false); return; }
       const raw = normalize(data);
-      const fixed = resolveLevels(raw);
+      const lv = resolveLevels(raw);
+      // keep hp/energy inside their caps after any level change or refresh
+      const fixed: BwCharacter = {
+        ...lv,
+        hp: Math.max(1, Math.min(lv.hp, lv.max_hp)),
+        energy: Math.max(0, Math.min(lv.energy, lv.max_energy)),
+      };
       setCharacter(fixed);
       setLoading(false);
-      if (fixed.level !== raw.level) {
+      if (
+        fixed.level !== raw.level ||
+        fixed.experience !== raw.experience ||
+        fixed.hp !== raw.hp ||
+        fixed.energy !== raw.energy
+      ) {
         await supabase.from("bw_characters" as any).update({
           level: fixed.level, experience: fixed.experience, skill_points: fixed.skill_points,
-          max_hp: fixed.max_hp, hp: fixed.hp, attack: fixed.attack,
+          max_hp: fixed.max_hp, hp: fixed.hp, energy: fixed.energy, attack: fixed.attack,
         }).eq("user_id", userId);
         syncNft(fixed);
       }
