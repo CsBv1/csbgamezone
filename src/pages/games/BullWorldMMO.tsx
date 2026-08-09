@@ -916,21 +916,8 @@ export default function BullWorldMMO() {
         </Card>
       </div>
 
-      {/* boss banner */}
-      {boss && (
-        <Card className="absolute top-24 left-1/2 -translate-x-1/2 p-2 px-4 bg-slate-900/90 border-amber-400/60 backdrop-blur text-center">
-          <div className="text-xs font-bold text-amber-300">
-            {BOSS_BY_KEY[boss.boss_key]?.emoji} WORLD BOSS · {boss.name} in {REGION_BY_ID[boss.region]?.name}
-          </div>
-          <div className="w-56 h-2 bg-slate-800 rounded mt-1 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-amber-500 to-red-500" style={{ width: `${(boss.hp / boss.max_hp) * 100}%` }} />
-          </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">Your damage: {myDamage.toLocaleString()}</div>
-        </Card>
-      )}
-
-      {/* minimap */}
-      <div className="absolute top-24 right-2 md:top-28 md:right-4">
+      {/* right column: minimap sits under the bull HP/XP card, boss card under the map */}
+      <div className="absolute top-20 right-2 md:top-24 md:right-4 w-[136px] md:w-[196px] space-y-2">
         <div className="grid grid-cols-5 gap-0.5 p-1 bg-slate-900/85 border border-cyan-500/40 rounded backdrop-blur">
           {Array.from({ length: 15 }).map((_, i) => {
             const col = i % 5, row = Math.floor(i / 5);
@@ -940,7 +927,7 @@ export default function BullWorldMMO() {
             return (
               <button key={i} disabled={!known} onClick={() => reg && fastTravel(reg.id)}
                 title={known ? `${reg?.name} — fast travel` : "Undiscovered"}
-                className={`w-6 h-6 md:w-9 md:h-9 rounded-sm text-[11px] flex items-center justify-center transition-all ${
+                className={`w-full aspect-square rounded-sm text-[11px] flex items-center justify-center transition-all ${
                   here ? "ring-2 ring-cyan-300 scale-110" : ""} ${known ? "opacity-100 hover:brightness-125" : "opacity-25"}`}
                 style={{ background: known && reg ? reg.ground : "#0b1020" }}>
                 {known ? reg?.emoji : "❔"}
@@ -948,6 +935,20 @@ export default function BullWorldMMO() {
             );
           })}
         </div>
+
+        {boss && (
+          <Card className="w-full p-2 bg-slate-900/90 border-amber-400/60 backdrop-blur text-center">
+            <div className="text-[10px] font-bold text-amber-300 leading-tight">
+              {BOSS_BY_KEY[boss.boss_key]?.emoji} WORLD BOSS
+            </div>
+            <div className="text-[10px] text-amber-200/80 truncate">{boss.name}</div>
+            <div className="text-[9px] text-muted-foreground truncate">{REGION_BY_ID[boss.region]?.name}</div>
+            <div className="w-full h-2 bg-slate-800 rounded mt-1 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-amber-500 to-red-500" style={{ width: `${(boss.hp / boss.max_hp) * 100}%` }} />
+            </div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Your dmg: {myDamage.toLocaleString()}</div>
+          </Card>
+        )}
       </div>
 
       {/* portal prompt */}
