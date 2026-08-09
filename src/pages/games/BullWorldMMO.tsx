@@ -960,7 +960,7 @@ export default function BullWorldMMO() {
 
       {/* ---------------- bottom action deck ---------------- */}
       {/* skill row sits just above the attack + joystick */}
-      <div className="absolute bottom-28 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-[92vw]">
+      <div className="absolute bottom-[92px] md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-[92vw]">
         {skills.slice(0, 8).map((s, i) => {
           const cd = Math.max(0, (cooldowns.current[s.id] || 0) - now);
           const pct = cd > 0 ? (cd / s.cooldown) * 100 : 0;
@@ -977,7 +977,7 @@ export default function BullWorldMMO() {
 
       {/* attack button — bottom right thumb zone */}
       <button onClick={doAttack} aria-label="Attack"
-        className="absolute bottom-6 right-4 w-20 h-20 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-4 border-rose-300 text-4xl shadow-[0_0_28px_rgba(244,63,94,0.6)] active:scale-90 transition-transform flex items-center justify-center">
+        className="absolute bottom-3 right-4 w-20 h-20 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-4 border-rose-300 text-4xl shadow-[0_0_28px_rgba(244,63,94,0.6)] active:scale-90 transition-transform flex items-center justify-center">
         {(WEAPON_BY_ID[character.weapon] || WEAPONS[0]).emoji}
       </button>
 
