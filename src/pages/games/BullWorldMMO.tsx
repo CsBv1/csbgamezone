@@ -751,14 +751,31 @@ export default function BullWorldMMO() {
       ctx.fillText(e.state.toUpperCase(), ex2, ey2 - 36);
     }
 
-    /* --- other players --- */
+    /* --- other players (their real bull NFT artwork) --- */
     for (const o of others) {
       const ox = o.x - camX, oy = o.y - camY;
       if (ox < -VIEW_PAD || ox > W + VIEW_PAD || oy < -VIEW_PAD || oy > H + VIEW_PAD) continue;
-      ctx.font = "30px sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("🐂", ox, oy + 10);
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.beginPath(); ctx.ellipse(ox, oy + 22, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+      const oart = otherArt.current[o.user_id];
+      const meta = otherMeta.current[o.user_id];
+      if (oart) {
+        const R = 26;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(ox, oy, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+        ctx.drawImage(oart, ox - R, oy - R, R * 2, R * 2);
+        ctx.restore();
+        ctx.strokeStyle = o.color || "#a78bfa"; ctx.lineWidth = 2.5;
+        ctx.shadowColor = o.color || "#a78bfa"; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(ox, oy, R, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.font = "30px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText("🐂", ox, oy + 10);
+      }
+      ctx.textAlign = "center";
       ctx.font = "bold 11px sans-serif"; ctx.fillStyle = o.color || "#00d4ff";
-      ctx.fillText(o.username || "Bull", ox, oy - 24);
+      ctx.fillText(`${meta?.name || o.username || "Bull"}${meta ? ` · Lv${meta.level}` : ""}`, ox, oy - 32);
     }
 
     /* --- player --- */
