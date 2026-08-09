@@ -301,6 +301,7 @@ export default function BullWorldMMO() {
   const spawnRegionEnemies = useCallback((region: Region) => {
     if (spawnedRegion.current === region.id) return;
     spawnedRegion.current = region.id;
+    respawnQueue.current = [];
     if (region.safe || region.enemies.length === 0) { enemies.current = []; return; }
     const b = regionBounds(region);
     const list: LiveEnemy[] = [];
