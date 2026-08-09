@@ -234,6 +234,27 @@ export default function BullWorldMMO() {
   }, [character?.bull_image]);
 
 
+  /* boss defeat → big experience payout (guaranteed level for contributors) */
+  const bossSeen = useRef<{ id: string; key: string } | null>(null);
+  const myDamageRef = useRef(0);
+  myDamageRef.current = myDamage;
+  useEffect(() => {
+    if (boss) { bossSeen.current = { id: boss.id, key: boss.boss_key }; return; }
+    const prev = bossSeen.current;
+    bossSeen.current = null;
+    if (!prev || myDamageRef.current <= 0) return;
+    const tpl = BOSS_BY_KEY[prev.key];
+    const c = charRef.current;
+    if (!tpl || !c) return;
+    // at least one full level for anyone who helped bring the boss down
+    const reward = Math.max(tpl.reward.exp, expForLevel(c.level) + 10);
+    gainExp(reward);
+    patch({ gold: c.gold + tpl.reward.gold });
+    addFloat(p.current.x, p.current.y - 90, `BOSS +${reward} XP`, "#ffd700");
+    burst(p.current.x, p.current.y, "#ffd700", 50);
+    toast({ title: `🏆 ${tpl.name} defeated!`, description: `+${reward} XP and +${tpl.reward.gold} gold for your bull.` });
+  }, [boss, gainExp, patch, toast, myDamage]);
+
   /* --------------------------- multiplayer sync --------------------------- */
   useEffect(() => {
     if (!userId || !character) return;
@@ -246,7 +267,26 @@ export default function BullWorldMMO() {
     const pull = async () => {
       const { data } = await supabase.from("world_players").select("user_id,x,y,username,color")
         .eq("is_online", true).gt("last_seen", new Date(Date.now() - 60000).toISOString()).limit(200);
-      setOthers(((data || []) as any[]).filter((o) => o.user_id !== userId));
+      const list = ((data || []) as any[]).filter((o) => o.user_id !== userId);
+      setOthers(list);
+
+      /* pull the other players' real bull artwork so they don't render as 🐂 */
+      const missing = list.map((o) => o.user_id).filter((id) => !otherMeta.current[id]);
+      if (missing.length) {
+        const { data: chars } = await supabase
+          .from("bw_characters" as any)
+          .select("user_id,bull_name,bull_image,level")
+          .in("user_id", missing);
+        for (const ch of ((chars || []) as any[])) {
+          otherMeta.current[ch.user_id] = { name: ch.bull_name, level: ch.level };
+          if (ch.bull_image) {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => { otherArt.current[ch.user_id] = img; };
+            img.src = ch.bull_image;
+          }
+        }
+      }
     };
     push(); pull();
     const t1 = window.setInterval(push, 900);
