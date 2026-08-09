@@ -578,6 +578,41 @@ export default function BullWorldMMO() {
         e.hitFlash = Math.max(0, e.hitFlash - dt / 250);
       }
 
+      /* ---- fast monster respawn: keep every region populated ---- */
+      if (!region.safe && region.enemies.length > 0) {
+        if (respawnQueue.current.length) {
+          const ready = respawnQueue.current.filter((r) => r.at <= now);
+          if (ready.length) {
+            respawnQueue.current = respawnQueue.current.filter((r) => r.at > now);
+            for (const r of ready) {
+              const tpl = ENEMY_BY_ID[r.tplId]; if (!tpl) continue;
+              enemies.current.push({
+                uid: `${region.id}-r${respawnSeq.current++}`, tpl,
+                x: r.x, y: r.y, hx: r.x, hy: r.y,
+                hp: tpl.hp, maxHp: tpl.hp, state: "patrol",
+                nextAttack: 0, wanderUntil: 0, vx: 0, vy: 0, hitFlash: 0,
+              });
+            }
+          }
+        }
+        // safety top-up so the region never runs dry
+        if (enemies.current.length < ENEMIES_PER_REGION) {
+          const b = regionBounds(region);
+          const tpl = ENEMY_BY_ID[region.enemies[respawnSeq.current % region.enemies.length]];
+          if (tpl) {
+            const ang = Math.random() * Math.PI * 2;
+            const dist = 700 + Math.random() * 700;
+            const x = Math.max(b.x + 80, Math.min(b.x + b.w - 80, p.current.x + Math.cos(ang) * dist));
+            const y = Math.max(b.y + 80, Math.min(b.y + b.h - 80, p.current.y + Math.sin(ang) * dist));
+            enemies.current.push({
+              uid: `${region.id}-t${respawnSeq.current++}`, tpl,
+              x, y, hx: x, hy: y, hp: tpl.hp, maxHp: tpl.hp,
+              state: "patrol", nextAttack: 0, wanderUntil: 0, vx: 0, vy: 0, hitFlash: 0,
+            });
+          }
+        }
+      }
+
       /* ---- boss contact damage ---- */
       const bs = bossRef.current;
       if (bs && !p.current.dead) {
