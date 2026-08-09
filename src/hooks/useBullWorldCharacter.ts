@@ -52,6 +52,9 @@ export function useBullWorldCharacter(userId: string | null) {
 
   const normalize = (row: any): BwCharacter => ({
     ...row,
+    // keep hp/energy inside their caps so a refresh never restores broken values
+    hp: Math.max(0, Math.min(Number(row.hp) || 0, Number(row.max_hp) || 1)),
+    energy: Math.max(0, Math.min(Number(row.energy) || 0, Number(row.max_energy) || 1)),
     discovered_regions: Array.isArray(row.discovered_regions)
       ? row.discovered_regions
       : JSON.parse(row.discovered_regions || '["bull-city"]'),
