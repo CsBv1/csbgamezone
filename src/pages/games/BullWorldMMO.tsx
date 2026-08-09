@@ -42,7 +42,7 @@ interface Particle { x: number; y: number; vx: number; vy: number; life: number;
 interface OtherPlayer { user_id: string; x: number; y: number; username: string | null; color: string; }
 
 const DAY_MS = 10 * 60 * 1000;   // full day/night cycle
-const ENEMIES_PER_REGION = 26;
+const ENEMIES_PER_REGION = 44;
 const VIEW_PAD = 200;
 
 /* ============================ CHARACTER SELECT =========================== */
