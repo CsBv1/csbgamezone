@@ -156,6 +156,11 @@ export default function BullWorldMMO() {
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
   const lastDbSync = useRef(0);
   const lastBossHit = useRef(0);
+  const respawnQueue = useRef<Array<{ tplId: string; x: number; y: number; at: number }>>([]);
+  const respawnSeq = useRef(0);
+  const lastBossKey = useRef<string | null>(null);
+  const otherArt = useRef<Record<string, HTMLImageElement>>({});
+  const otherMeta = useRef<Record<string, { name: string; level: number }>>({});
 
   charRef.current = character;
   bossRef.current = boss;
