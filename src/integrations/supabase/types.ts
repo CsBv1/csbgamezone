@@ -1192,30 +1192,6 @@ export type Database = {
       }
     }
     Views: {
-      bw_public_characters: {
-        Row: {
-          bull_image: string | null
-          bull_name: string | null
-          level: number | null
-          region: string | null
-          user_id: string | null
-        }
-        Insert: {
-          bull_image?: string | null
-          bull_name?: string | null
-          level?: number | null
-          region?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          bull_image?: string | null
-          bull_name?: string | null
-          level?: number | null
-          region?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       csb_challengers: {
         Row: {
           bulls_owned: number | null
