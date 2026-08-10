@@ -864,21 +864,28 @@ export default function BullCity() {
       ctx.restore();
 
       // Minimap
-      const mmW = 180, mmH = 120;
+      const mmW = 170, mmH = 170;
       const mmX = VIEWPORT_W - mmW - 10, mmY = 10;
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillStyle = 'rgba(3,10,20,0.78)';
       ctx.fillRect(mmX, mmY, mmW, mmH);
       ctx.strokeStyle = '#FF9900';
       ctx.lineWidth = 2;
       ctx.strokeRect(mmX, mmY, mmW, mmH);
 
+      // Minimap districts
+      DISTRICTS.forEach(d => {
+        ctx.fillStyle = d.color + '33';
+        ctx.fillRect(mmX + (d.x / CITY_WIDTH) * mmW, mmY + (d.y / CITY_HEIGHT) * mmH, (d.w / CITY_WIDTH) * mmW, (d.h / CITY_HEIGHT) * mmH);
+      });
+
       // Minimap buildings
       BUILDINGS.forEach(b => {
         const bx = mmX + (b.x / CITY_WIDTH) * mmW;
         const by = mmY + (b.y / CITY_HEIGHT) * mmH;
-        ctx.fillStyle = b.color + '88';
-        ctx.fillRect(bx, by, Math.max(4, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
+        ctx.fillStyle = b.color + 'aa';
+        ctx.fillRect(bx, by, Math.max(3, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
       });
+
 
       // Minimap players
       players.forEach(p => {
