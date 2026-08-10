@@ -534,57 +534,181 @@ export default function BullCity() {
       ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
       ctx.translate(-cameraOffset.x, -cameraOffset.y);
 
+      const time = Date.now() / 1000;
+      // visible window (used to cull props so the big map stays smooth)
+      const vx0 = cameraOffset.x - 120, vy0 = cameraOffset.y - 120;
+      const vx1 = cameraOffset.x + VIEWPORT_W + 120, vy1 = cameraOffset.y + VIEWPORT_H + 120;
+      const inView = (x: number, y: number) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
+
       // City background - dark with grid
       const bgGrad = ctx.createLinearGradient(0, 0, 0, CITY_HEIGHT);
-      bgGrad.addColorStop(0, '#0b1a2e');
+      bgGrad.addColorStop(0, '#081524');
       bgGrad.addColorStop(0.5, '#0d2640');
-      bgGrad.addColorStop(1, '#071420');
+      bgGrad.addColorStop(1, '#050f1c');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
+
+      /* ---------- districts ---------- */
+      DISTRICTS.forEach(d => {
+        const g = ctx.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
+        g.addColorStop(0, d.color + '22');
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.fillRect(d.x, d.y, d.w, d.h);
+        ctx.strokeStyle = d.color + '33';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([16, 12]);
+        ctx.strokeRect(d.x, d.y, d.w, d.h);
+        ctx.setLineDash([]);
+        ctx.fillStyle = d.color + 'aa';
+        ctx.font = 'bold 22px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(d.label, d.x + 22, d.y + 38);
+      });
+
+      /* ---------- water (Hydra Harbour) ---------- */
+      WATER.forEach(w => {
+        const wg = ctx.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
+        wg.addColorStop(0, 'rgba(20,120,160,0.75)');
+        wg.addColorStop(1, 'rgba(8,50,80,0.85)');
+        ctx.fillStyle = wg;
+        ctx.beginPath();
+        ctx.roundRect(w.x, w.y, w.w, w.h, 40);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120,230,255,0.35)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        // animated wave lines
+        ctx.strokeStyle = 'rgba(160,240,255,0.18)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+          const yy = w.y + 40 + i * (w.h / 9);
+          ctx.beginPath();
+          for (let xx = w.x + 20; xx < w.x + w.w - 20; xx += 24) {
+            ctx.lineTo(xx, yy + Math.sin(time * 1.6 + xx * 0.02 + i) * 5);
+          }
+          ctx.stroke();
+        }
+      });
 
       // Grid pattern
       ctx.strokeStyle = 'rgba(0, 212, 255, 0.04)';
       ctx.lineWidth = 1;
-      for (let x = 0; x < CITY_WIDTH; x += 80) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CITY_HEIGHT); ctx.stroke();
+      for (let x = Math.floor(vx0 / 100) * 100; x < vx1; x += 100) {
+        ctx.beginPath(); ctx.moveTo(x, vy0); ctx.lineTo(x, vy1); ctx.stroke();
       }
-      for (let y = 0; y < CITY_HEIGHT; y += 80) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CITY_WIDTH, y); ctx.stroke();
+      for (let y = Math.floor(vy0 / 100) * 100; y < vy1; y += 100) {
+        ctx.beginPath(); ctx.moveTo(vx0, y); ctx.lineTo(vx1, y); ctx.stroke();
       }
 
       // Roads
       ROADS.forEach(road => {
-        ctx.fillStyle = 'rgba(40, 60, 80, 0.8)';
+        ctx.fillStyle = 'rgba(30, 48, 66, 0.92)';
         if (road.x1 === road.x2) {
           // Vertical
           ctx.fillRect(road.x1 - road.width / 2, road.y1, road.width, road.y2 - road.y1);
-          // Road lines
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
+          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
           ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(road.x1 - road.width / 2, road.y1); ctx.lineTo(road.x1 - road.width / 2, road.y2);
+          ctx.moveTo(road.x1 + road.width / 2, road.y1); ctx.lineTo(road.x1 + road.width / 2, road.y2); ctx.stroke();
+          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
           ctx.setLineDash([20, 15]);
           ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x1, road.y2); ctx.stroke();
           ctx.setLineDash([]);
         } else {
           // Horizontal
           ctx.fillRect(road.x1, road.y1 - road.width / 2, road.x2 - road.x1, road.width);
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
+          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
           ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(road.x1, road.y1 - road.width / 2); ctx.lineTo(road.x2, road.y1 - road.width / 2);
+          ctx.moveTo(road.x1, road.y1 + road.width / 2); ctx.lineTo(road.x2, road.y1 + road.width / 2); ctx.stroke();
+          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
           ctx.setLineDash([20, 15]);
           ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x2, road.y1); ctx.stroke();
           ctx.setLineDash([]);
         }
       });
 
+      /* ---------- spawn plaza ---------- */
+      const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
+      const pg = ctx.createRadialGradient(SPAWN_X, SPAWN_Y, 20, SPAWN_X, SPAWN_Y, 340 * plazaPulse);
+      pg.addColorStop(0, 'rgba(0,212,255,0.22)');
+      pg.addColorStop(1, 'transparent');
+      ctx.fillStyle = pg;
+      ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,212,255,0.45)';
+      ctx.lineWidth = 4;
+      for (let r = 120; r <= 300; r += 90) {
+        ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(0,212,255,0.7)';
+      ctx.font = 'bold 26px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
+
+      /* ---------- ambient props ---------- */
+      PROPS.forEach((p, i) => {
+        if (!inView(p.x, p.y)) return;
+        const s = p.s || 1;
+        if (p.kind === 'tree') {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.beginPath(); ctx.ellipse(p.x, p.y + 14 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#3b2a18';
+          ctx.fillRect(p.x - 3 * s, p.y - 6 * s, 6 * s, 20 * s);
+          const tg = ctx.createRadialGradient(p.x - 4 * s, p.y - 22 * s, 2, p.x, p.y - 16 * s, 22 * s);
+          tg.addColorStop(0, '#7ef7a8');
+          tg.addColorStop(1, '#12633a');
+          ctx.fillStyle = tg;
+          ctx.beginPath(); ctx.arc(p.x, p.y - 18 * s, 18 * s, 0, Math.PI * 2); ctx.fill();
+        } else if (p.kind === 'rock') {
+          ctx.fillStyle = 'rgba(120,140,160,0.5)';
+          ctx.beginPath(); ctx.ellipse(p.x, p.y, 14 * s, 10 * s, 0.4, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = 'rgba(180,220,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+        } else if (p.kind === 'crate') {
+          ctx.fillStyle = 'rgba(180,120,60,0.75)';
+          ctx.fillRect(p.x - 14 * s, p.y - 14 * s, 28 * s, 28 * s);
+          ctx.strokeStyle = '#f0b96b'; ctx.lineWidth = 2;
+          ctx.strokeRect(p.x - 14 * s, p.y - 14 * s, 28 * s, 28 * s);
+          ctx.beginPath(); ctx.moveTo(p.x - 14 * s, p.y - 14 * s); ctx.lineTo(p.x + 14 * s, p.y + 14 * s); ctx.stroke();
+        } else if (p.kind === 'lamp') {
+          ctx.strokeStyle = '#5b7488'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - 46); ctx.stroke();
+          const flicker = 0.55 + Math.sin(time * 3 + i) * 0.12;
+          const lg = ctx.createRadialGradient(p.x, p.y - 50, 0, p.x, p.y - 50, 60);
+          lg.addColorStop(0, `rgba(255,215,120,${flicker * 0.5})`);
+          lg.addColorStop(1, 'transparent');
+          ctx.fillStyle = lg;
+          ctx.beginPath(); ctx.arc(p.x, p.y - 50, 60, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffe08a';
+          ctx.beginPath(); ctx.arc(p.x, p.y - 50, 6, 0, Math.PI * 2); ctx.fill();
+        } else if (p.kind === 'holo') {
+          const float = Math.sin(time * 1.2 + i) * 6;
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = 'rgba(0,212,255,0.12)';
+          ctx.strokeStyle = 'rgba(0,212,255,0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(p.x - 110, p.y - 34 + float, 220, 56, 10); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#7df9ff';
+          ctx.font = 'bold 20px Arial';
+          ctx.textAlign = 'center';
+          ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 14;
+          ctx.fillText(p.text || '', p.x, p.y + 3 + float);
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+      });
+
       // Floating particles
-      const time = Date.now() / 1000;
-      for (let i = 0; i < 30; i++) {
-        const px = (i * 83 + time * 5) % CITY_WIDTH;
-        const py = (i * 57 + Math.sin(time + i * 0.7) * 20) % CITY_HEIGHT;
-        ctx.fillStyle = 'rgba(0, 212, 255, 0.25)';
+      for (let i = 0; i < 60; i++) {
+        const px = vx0 + ((i * 137 + time * 12) % (VIEWPORT_W + 240));
+        const py = vy0 + ((i * 211 + Math.sin(time * 0.8 + i) * 40) % (VIEWPORT_H + 240));
+        ctx.fillStyle = i % 3 === 0 ? 'rgba(255,215,0,0.25)' : 'rgba(0, 212, 255, 0.28)';
         ctx.beginPath();
         ctx.arc(px, py, 2, 0, Math.PI * 2);
         ctx.fill();
       }
+
 
       // Draw buildings
       BUILDINGS.forEach(building => {
