@@ -177,7 +177,7 @@ export default function BullCity() {
   const [userId, setUserId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [diamonds, setDiamonds] = useState<CityDiamond[]>([]);
-  const [myPosition, setMyPosition] = useState({ x: 1200, y: 800 });
+  const [myPosition, setMyPosition] = useState({ x: SPAWN_X, y: SPAWN_Y });
   const [myDirection, setMyDirection] = useState('down');
   const [myColor, setMyColor] = useState('#00D4FF');
   const [username, setUsername] = useState<string | null>(null);
@@ -190,7 +190,7 @@ export default function BullCity() {
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
-  const posRef = useRef({ x: 1200, y: 800 });
+  const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
 
 
@@ -244,18 +244,18 @@ export default function BullCity() {
         .update({ is_online: true, color, username: uname, last_seen: new Date().toISOString() })
         .eq('user_id', uid);
       // Start in city center
-      setMyPosition({ x: 1200, y: 800 });
-      posRef.current = { x: 1200, y: 800 };
+      setMyPosition({ x: SPAWN_X, y: SPAWN_Y });
+      posRef.current = { x: SPAWN_X, y: SPAWN_Y };
     } else {
       await supabase.from('world_players').insert({
         user_id: uid,
-        x: 1200,
-        y: 800,
+        x: SPAWN_X,
+        y: SPAWN_Y,
         color,
         username: uname
       });
-      setMyPosition({ x: 1200, y: 800 });
-      posRef.current = { x: 1200, y: 800 };
+      setMyPosition({ x: SPAWN_X, y: SPAWN_Y });
+      posRef.current = { x: SPAWN_X, y: SPAWN_Y };
     }
 
     spawnCityDiamonds();
