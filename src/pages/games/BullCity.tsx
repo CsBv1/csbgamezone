@@ -41,43 +41,133 @@ interface Building {
   cooldownMs?: number;
 }
 
-const CITY_WIDTH = 2400;
-const CITY_HEIGHT = 1600;
+const CITY_WIDTH = 4000;   // same footprint as a Bull World dungeon region
+const CITY_HEIGHT = 4000;
 const PLAYER_SIZE = 45;
 const MOVE_SPEED = 7;
 const DB_UPDATE_INTERVAL = 200;
+const SPAWN_X = 2000;
+const SPAWN_Y = 2000;
+
+/** Themed districts painted under the city grid. */
+const DISTRICTS: { name: string; x: number; y: number; w: number; h: number; color: string; label: string }[] = [
+  { name: 'Stake Plaza', x: 1550, y: 1550, w: 900, h: 900, color: '#00d4ff', label: '🐂 CARDANO STAKE BULLS PLAZA' },
+  { name: 'Epoch Financial', x: 2500, y: 1350, w: 1350, h: 1050, color: '#ffd700', label: '🏦 EPOCH FINANCIAL DISTRICT' },
+  { name: 'Plutus Tech Park', x: 150, y: 1300, w: 1300, h: 1100, color: '#9933ff', label: '🧪 PLUTUS TECH PARK' },
+  { name: 'Hydra Harbour', x: 150, y: 2550, w: 1650, h: 1250, color: '#22d3ee', label: '🌊 HYDRA HARBOUR' },
+  { name: 'Ouroboros Fields', x: 1400, y: 150, w: 1400, h: 1050, color: '#00ff88', label: '🌾 OUROBOROS FIELDS' },
+  { name: 'Voltaire Quarter', x: 2000, y: 2600, w: 1800, h: 1200, color: '#f472b6', label: '🏛️ VOLTAIRE GOVERNANCE QUARTER' },
+  { name: 'Midnight Ridge', x: 2900, y: 200, w: 950, h: 950, color: '#8b5cf6', label: '🌌 MIDNIGHT RIDGE' },
+  { name: 'Genesis Wilds', x: 200, y: 200, w: 1000, h: 900, color: '#5ce65c', label: '🌲 GENESIS WILDS' },
+];
 
 const BUILDINGS: Building[] = [
-  // Work buildings - earn diamonds
-  { id: 'diamond-mine', name: 'Diamond Mine', x: 300, y: 300, width: 160, height: 120, color: '#00D4FF', emoji: '⛏️', type: 'mine', reward: 5, cooldownMs: 10000 },
-  { id: 'gold-forge', name: 'Gold Forge', x: 800, y: 250, width: 140, height: 110, color: '#FFD700', emoji: '🔥', type: 'forge', reward: 8, cooldownMs: 15000 },
-  { id: 'crystal-lab', name: 'Crystal Lab', x: 1500, y: 350, width: 150, height: 120, color: '#9933FF', emoji: '🔮', type: 'forge', reward: 10, cooldownMs: 20000 },
-  { id: 'gem-quarry', name: 'Gem Quarry', x: 2000, y: 500, width: 160, height: 120, color: '#FF6B35', emoji: '💎', type: 'mine', reward: 6, cooldownMs: 12000 },
-  { id: 'stake-factory', name: 'Stake Factory', x: 400, y: 900, width: 180, height: 130, color: '#00FF88', emoji: '🏭', type: 'forge', reward: 12, cooldownMs: 25000 },
-  { id: 'bull-bank', name: 'Bull Bank', x: 1200, y: 800, width: 160, height: 130, color: '#FFD700', emoji: '🏦', type: 'bank', reward: 15, cooldownMs: 30000 },
-  // Social buildings
-  { id: 'tavern', name: 'Bull Tavern', x: 1800, y: 900, width: 150, height: 110, color: '#FF4444', emoji: '🍺', type: 'tavern' },
-  { id: 'market', name: 'City Market', x: 600, y: 1200, width: 180, height: 120, color: '#44FF44', emoji: '🏪', type: 'market' },
-  // Decorative
-  { id: 'tower1', name: 'Watch Tower', x: 100, y: 100, width: 80, height: 100, color: '#667788', emoji: '🗼', type: 'tower' },
-  { id: 'tower2', name: 'Clock Tower', x: 2200, y: 100, width: 80, height: 100, color: '#667788', emoji: '🕐', type: 'tower' },
-  { id: 'tower3', name: 'Guard Tower', x: 100, y: 1400, width: 80, height: 100, color: '#667788', emoji: '🏰', type: 'tower' },
-  { id: 'tower4', name: 'Beacon Tower', x: 2200, y: 1400, width: 80, height: 100, color: '#667788', emoji: '🔦', type: 'tower' },
-  { id: 'fountain', name: 'City Fountain', x: 1100, y: 1100, width: 120, height: 120, color: '#00BBFF', emoji: '⛲', type: 'decoration' },
-  { id: 'statue', name: 'Bull Statue', x: 1800, y: 400, width: 100, height: 100, color: '#C0C0C0', emoji: '🐂', type: 'decoration' },
-  { id: 'park', name: 'City Park', x: 1400, y: 1300, width: 200, height: 140, color: '#228B22', emoji: '🌳', type: 'decoration' },
+  // ——— Stake Plaza (spawn) ———
+  { id: 'spawn-gate', name: 'Bulls Spawn Gate', x: 1930, y: 1760, width: 140, height: 90, color: '#00D4FF', emoji: '🌀', type: 'decoration' },
+  { id: 'bull-statue', name: 'Founder Bull Statue', x: 1920, y: 2150, width: 160, height: 140, color: '#C0C0C0', emoji: '🐂', type: 'decoration' },
+  { id: 'stake-pool', name: 'Stake Pool HQ', x: 1640, y: 1640, width: 200, height: 150, color: '#00D4FF', emoji: '⚙️', type: 'forge', reward: 9, cooldownMs: 15000 },
+  { id: 'rune-temple', name: 'Rune Power Temple', x: 2180, y: 1640, width: 190, height: 150, color: '#a78bfa', emoji: '🔯', type: 'forge', reward: 11, cooldownMs: 20000 },
+
+  // ——— Epoch Financial District ———
+  { id: 'ada-mint', name: 'ADA Mint', x: 2700, y: 1480, width: 210, height: 160, color: '#FFD700', emoji: '🪙', type: 'bank', reward: 14, cooldownMs: 26000 },
+  { id: 'bull-bank', name: 'Bull Reserve Bank', x: 3150, y: 1500, width: 220, height: 180, color: '#FFD700', emoji: '🏦', type: 'bank', reward: 15, cooldownMs: 30000 },
+  { id: 'dex-exchange', name: 'Bull DEX Exchange', x: 2760, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '📈', type: 'market', reward: 12, cooldownMs: 22000 },
+  { id: 'epoch-tower', name: 'Epoch Clock Tower', x: 3400, y: 1950, width: 120, height: 230, color: '#f59e0b', emoji: '🕐', type: 'tower' },
+  { id: 'nft-gallery', name: 'CNFT Gallery', x: 3180, y: 2200, width: 200, height: 150, color: '#ff6b35', emoji: '🖼️', type: 'market', reward: 10, cooldownMs: 18000 },
+
+  // ——— Plutus Tech Park ———
+  { id: 'plutus-lab', name: 'Plutus Smart Lab', x: 320, y: 1450, width: 220, height: 160, color: '#9933FF', emoji: '🔮', type: 'forge', reward: 10, cooldownMs: 20000 },
+  { id: 'validator-farm', name: 'Validator Node Farm', x: 720, y: 1420, width: 240, height: 150, color: '#38bdf8', emoji: '🖥️', type: 'forge', reward: 13, cooldownMs: 24000 },
+  { id: 'oracle-spire', name: 'Oracle Data Spire', x: 1120, y: 1500, width: 130, height: 240, color: '#c084fc', emoji: '🛰️', type: 'tower' },
+  { id: 'crystal-lab', name: 'Crystal Research Lab', x: 420, y: 1900, width: 200, height: 150, color: '#7df9ff', emoji: '🧪', type: 'forge', reward: 11, cooldownMs: 21000 },
+  { id: 'stake-factory', name: 'Stake Factory', x: 860, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '🏭', type: 'forge', reward: 12, cooldownMs: 25000 },
+
+  // ——— Hydra Harbour ———
+  { id: 'hydra-docks', name: 'Hydra Docks', x: 320, y: 2750, width: 250, height: 160, color: '#22d3ee', emoji: '⚓', type: 'market', reward: 9, cooldownMs: 16000 },
+  { id: 'ada-lighthouse', name: 'ADA Lighthouse', x: 200, y: 3350, width: 120, height: 250, color: '#e2e8f0', emoji: '🗼', type: 'tower' },
+  { id: 'fishing-wharf', name: 'Bull Fishing Wharf', x: 800, y: 3200, width: 220, height: 150, color: '#0ea5e9', emoji: '🎣', type: 'mine', reward: 7, cooldownMs: 13000 },
+  { id: 'tavern', name: 'Harbour Bull Tavern', x: 1250, y: 2850, width: 200, height: 150, color: '#FF4444', emoji: '🍺', type: 'tavern' },
+  { id: 'cargo-yard', name: 'Cargo Yard', x: 1300, y: 3350, width: 260, height: 170, color: '#fb923c', emoji: '📦', type: 'market', reward: 8, cooldownMs: 15000 },
+
+  // ——— Ouroboros Fields ———
+  { id: 'ouroboros-ring', name: 'Ouroboros Ring', x: 2020, y: 520, width: 260, height: 260, color: '#00ff88', emoji: '♾️', type: 'decoration' },
+  { id: 'delegation-barn', name: 'Delegation Barn', x: 1550, y: 320, width: 230, height: 160, color: '#84cc16', emoji: '🚜', type: 'mine', reward: 6, cooldownMs: 11000 },
+  { id: 'gem-quarry', name: 'Gem Quarry', x: 2450, y: 300, width: 220, height: 160, color: '#FF6B35', emoji: '💎', type: 'mine', reward: 6, cooldownMs: 12000 },
+  { id: 'diamond-mine', name: 'Diamond Mine', x: 2450, y: 850, width: 220, height: 160, color: '#00D4FF', emoji: '⛏️', type: 'mine', reward: 5, cooldownMs: 10000 },
+  { id: 'gold-forge', name: 'Gold Forge', x: 1550, y: 880, width: 200, height: 150, color: '#FFD700', emoji: '🔥', type: 'forge', reward: 8, cooldownMs: 15000 },
+
+  // ——— Voltaire Governance Quarter ———
+  { id: 'catalyst-hall', name: 'Catalyst Hall', x: 2300, y: 2800, width: 260, height: 180, color: '#f472b6', emoji: '🗳️', type: 'bank', reward: 13, cooldownMs: 27000 },
+  { id: 'senate', name: 'Bull Senate', x: 2800, y: 3150, width: 280, height: 190, color: '#e879f9', emoji: '🏛️', type: 'tavern' },
+  { id: 'treasury', name: 'Treasury Vault', x: 3350, y: 2800, width: 220, height: 170, color: '#FFD700', emoji: '🔐', type: 'bank', reward: 16, cooldownMs: 32000 },
+  { id: 'arena-stadium', name: 'Bull Arena Stadium', x: 2250, y: 3350, width: 320, height: 220, color: '#ff4d6d', emoji: '⚔️', type: 'decoration' },
+  { id: 'academy', name: 'Bull Academy', x: 3400, y: 3350, width: 240, height: 170, color: '#60a5fa', emoji: '🎓', type: 'market', reward: 9, cooldownMs: 17000 },
+
+  // ——— Midnight Ridge ———
+  { id: 'midnight-spire', name: 'Midnight Spire', x: 3250, y: 350, width: 150, height: 300, color: '#8b5cf6', emoji: '🌌', type: 'tower' },
+  { id: 'shadow-market', name: 'Shadow Market', x: 3000, y: 800, width: 220, height: 160, color: '#a855f7', emoji: '🕯️', type: 'market', reward: 11, cooldownMs: 19000 },
+  { id: 'observatory', name: 'Rune Observatory', x: 3550, y: 800, width: 200, height: 170, color: '#c4b5fd', emoji: '🔭', type: 'forge', reward: 10, cooldownMs: 18000 },
+
+  // ——— Genesis Wilds ———
+  { id: 'genesis-shrine', name: 'Genesis Shrine', x: 380, y: 380, width: 180, height: 160, color: '#5ce65c', emoji: '⛩️', type: 'decoration' },
+  { id: 'lumber-camp', name: 'Bull Lumber Camp', x: 760, y: 620, width: 220, height: 150, color: '#a3e635', emoji: '🪓', type: 'mine', reward: 6, cooldownMs: 11000 },
+  { id: 'wild-market', name: 'Wilds Trading Post', x: 320, y: 850, width: 210, height: 150, color: '#44FF44', emoji: '🏪', type: 'market', reward: 7, cooldownMs: 14000 },
+
+  // ——— Landmarks / decoration ———
+  { id: 'fountain', name: 'Ouroboros Fountain', x: 1900, y: 1900, width: 200, height: 200, color: '#00BBFF', emoji: '⛲', type: 'decoration' },
+  { id: 'park', name: 'Central Bull Park', x: 1450, y: 2450, width: 300, height: 220, color: '#228B22', emoji: '🌳', type: 'decoration' },
+  { id: 'tower-nw', name: 'North Watch Tower', x: 120, y: 120, width: 110, height: 180, color: '#667788', emoji: '🗼', type: 'tower' },
+  { id: 'tower-ne', name: 'East Beacon', x: 3780, y: 120, width: 110, height: 180, color: '#667788', emoji: '🔦', type: 'tower' },
+  { id: 'tower-sw', name: 'South Keep', x: 120, y: 3780, width: 110, height: 170, color: '#667788', emoji: '🏰', type: 'tower' },
+  { id: 'tower-se', name: 'Frontier Post', x: 3780, y: 3780, width: 110, height: 170, color: '#667788', emoji: '🧭', type: 'tower' },
 ];
 
-// Roads layout
-const ROADS = [
-  { x1: 0, y1: 200, x2: CITY_WIDTH, y2: 200, width: 60 },
-  { x1: 0, y1: 700, x2: CITY_WIDTH, y2: 700, width: 60 },
-  { x1: 0, y1: 1200, x2: CITY_WIDTH, y2: 1200, width: 60 },
-  { x1: 250, y1: 0, x2: 250, y2: CITY_HEIGHT, width: 60 },
-  { x1: 900, y1: 0, x2: 900, y2: CITY_HEIGHT, width: 60 },
-  { x1: 1500, y1: 0, x2: 1500, y2: CITY_HEIGHT, width: 60 },
-  { x1: 2100, y1: 0, x2: 2100, y2: CITY_HEIGHT, width: 60 },
+/** Ambient props — trees, lamps, holo-signs, water, cars. Purely visual. */
+type Prop = { kind: 'tree' | 'lamp' | 'holo' | 'crate' | 'rock'; x: number; y: number; s?: number; text?: string };
+const PROPS: Prop[] = (() => {
+  const out: Prop[] = [];
+  // deterministic pseudo-random scatter so the city looks the same for everyone
+  let seed = 1337;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  for (let i = 0; i < 150; i++) {
+    out.push({ kind: 'tree', x: 120 + rnd() * (CITY_WIDTH - 240), y: 120 + rnd() * (CITY_HEIGHT - 240), s: 0.8 + rnd() * 0.7 });
+  }
+  for (let i = 0; i < 70; i++) {
+    out.push({ kind: 'rock', x: 120 + rnd() * (CITY_WIDTH - 240), y: 120 + rnd() * (CITY_HEIGHT - 240), s: 0.6 + rnd() * 0.8 });
+  }
+  for (let i = 0; i < 40; i++) {
+    out.push({ kind: 'crate', x: 200 + rnd() * (CITY_WIDTH - 400), y: 200 + rnd() * (CITY_HEIGHT - 400), s: 0.7 + rnd() * 0.6 });
+  }
+  // street lamps along the main grid roads
+  for (let x = 200; x < CITY_WIDTH; x += 400) {
+    for (let y = 200; y < CITY_HEIGHT; y += 800) {
+      out.push({ kind: 'lamp', x, y: y - 45 });
+      out.push({ kind: 'lamp', x, y: y + 45 });
+    }
+  }
+  const signs = ['STAKE $CSB', 'EPOCH 500', 'HYDRA ONLINE', 'BULL RUN 2026', 'DELEGATE NOW', 'CNFT DROP', 'VOTE CATALYST', 'RUNE POWER'];
+  signs.forEach((t, i) => out.push({ kind: 'holo', x: 400 + (i % 4) * 950, y: 640 + Math.floor(i / 4) * 1900, text: t }));
+  return out;
+})();
+
+/** Water bodies for Hydra Harbour. */
+const WATER = [
+  { x: 60, y: 3450, w: 1100, h: 480 },
+  { x: 1180, y: 3620, w: 700, h: 320 },
 ];
+
+// Roads layout — full 4000px grid
+const ROADS = (() => {
+  const r: { x1: number; y1: number; x2: number; y2: number; width: number }[] = [];
+  for (let y = 400; y < CITY_HEIGHT; y += 800) r.push({ x1: 0, y1: y, x2: CITY_WIDTH, y2: y, width: 70 });
+  for (let x = 400; x < CITY_WIDTH; x += 800) r.push({ x1: x, y1: 0, x2: x, y2: CITY_HEIGHT, width: 70 });
+  // ring road around the spawn plaza
+  r.push({ x1: 1500, y1: 1500, x2: 2500, y2: 1500, width: 60 });
+  r.push({ x1: 1500, y1: 2500, x2: 2500, y2: 2500, width: 60 });
+  r.push({ x1: 1500, y1: 1500, x2: 1500, y2: 2500, width: 60 });
+  r.push({ x1: 2500, y1: 1500, x2: 2500, y2: 2500, width: 60 });
+  return r;
+})();
 
 export default function BullCity() {
   const navigate = useNavigate();
@@ -87,7 +177,7 @@ export default function BullCity() {
   const [userId, setUserId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [diamonds, setDiamonds] = useState<CityDiamond[]>([]);
-  const [myPosition, setMyPosition] = useState({ x: 1200, y: 800 });
+  const [myPosition, setMyPosition] = useState({ x: SPAWN_X, y: SPAWN_Y });
   const [myDirection, setMyDirection] = useState('down');
   const [myColor, setMyColor] = useState('#00D4FF');
   const [username, setUsername] = useState<string | null>(null);
@@ -97,10 +187,13 @@ export default function BullCity() {
   const [nearBuilding, setNearBuilding] = useState<Building | null>(null);
   const [workCooldowns, setWorkCooldowns] = useState<Record<string, number>>({});
   const [isWorking, setIsWorking] = useState(false);
-  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
+  const [cameraOffset, setCameraOffset] = useState({
+    x: Math.max(0, Math.min(CITY_WIDTH - 1400, SPAWN_X - 700)),
+    y: Math.max(0, Math.min(CITY_HEIGHT - 900, SPAWN_Y - 450)),
+  });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
-  const posRef = useRef({ x: 1200, y: 800 });
+  const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
 
 
@@ -154,18 +247,18 @@ export default function BullCity() {
         .update({ is_online: true, color, username: uname, last_seen: new Date().toISOString() })
         .eq('user_id', uid);
       // Start in city center
-      setMyPosition({ x: 1200, y: 800 });
-      posRef.current = { x: 1200, y: 800 };
+      setMyPosition({ x: SPAWN_X, y: SPAWN_Y });
+      posRef.current = { x: SPAWN_X, y: SPAWN_Y };
     } else {
       await supabase.from('world_players').insert({
         user_id: uid,
-        x: 1200,
-        y: 800,
+        x: SPAWN_X,
+        y: SPAWN_Y,
         color,
         username: uname
       });
-      setMyPosition({ x: 1200, y: 800 });
-      posRef.current = { x: 1200, y: 800 };
+      setMyPosition({ x: SPAWN_X, y: SPAWN_Y });
+      posRef.current = { x: SPAWN_X, y: SPAWN_Y };
     }
 
     spawnCityDiamonds();
@@ -185,9 +278,9 @@ export default function BullCity() {
       .select('*')
       .is('collected_by', null);
 
-    if (!existing || existing.length < 30) {
+    if (!existing || existing.length < 80) {
       const newItems = [];
-      for (let i = 0; i < 30 - (existing?.length || 0); i++) {
+      for (let i = 0; i < 80 - (existing?.length || 0); i++) {
         const isGold = Math.random() > 0.7;
         newItems.push({
           x: 80 + Math.random() * (CITY_WIDTH - 160),
@@ -444,60 +537,185 @@ export default function BullCity() {
       ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
       ctx.translate(-cameraOffset.x, -cameraOffset.y);
 
+      const time = Date.now() / 1000;
+      // visible window (used to cull props so the big map stays smooth)
+      const vx0 = cameraOffset.x - 120, vy0 = cameraOffset.y - 120;
+      const vx1 = cameraOffset.x + VIEWPORT_W + 120, vy1 = cameraOffset.y + VIEWPORT_H + 120;
+      const inView = (x: number, y: number) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
+
       // City background - dark with grid
       const bgGrad = ctx.createLinearGradient(0, 0, 0, CITY_HEIGHT);
-      bgGrad.addColorStop(0, '#0b1a2e');
+      bgGrad.addColorStop(0, '#081524');
       bgGrad.addColorStop(0.5, '#0d2640');
-      bgGrad.addColorStop(1, '#071420');
+      bgGrad.addColorStop(1, '#050f1c');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
+
+      /* ---------- districts ---------- */
+      DISTRICTS.forEach(d => {
+        const g = ctx.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
+        g.addColorStop(0, d.color + '22');
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.fillRect(d.x, d.y, d.w, d.h);
+        ctx.strokeStyle = d.color + '33';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([16, 12]);
+        ctx.strokeRect(d.x, d.y, d.w, d.h);
+        ctx.setLineDash([]);
+        ctx.fillStyle = d.color + 'aa';
+        ctx.font = 'bold 22px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(d.label, d.x + 22, d.y + 38);
+      });
+
+      /* ---------- water (Hydra Harbour) ---------- */
+      WATER.forEach(w => {
+        const wg = ctx.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
+        wg.addColorStop(0, 'rgba(20,120,160,0.75)');
+        wg.addColorStop(1, 'rgba(8,50,80,0.85)');
+        ctx.fillStyle = wg;
+        ctx.beginPath();
+        ctx.roundRect(w.x, w.y, w.w, w.h, 40);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120,230,255,0.35)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        // animated wave lines
+        ctx.strokeStyle = 'rgba(160,240,255,0.18)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+          const yy = w.y + 40 + i * (w.h / 9);
+          ctx.beginPath();
+          for (let xx = w.x + 20; xx < w.x + w.w - 20; xx += 24) {
+            ctx.lineTo(xx, yy + Math.sin(time * 1.6 + xx * 0.02 + i) * 5);
+          }
+          ctx.stroke();
+        }
+      });
 
       // Grid pattern
       ctx.strokeStyle = 'rgba(0, 212, 255, 0.04)';
       ctx.lineWidth = 1;
-      for (let x = 0; x < CITY_WIDTH; x += 80) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CITY_HEIGHT); ctx.stroke();
+      for (let x = Math.floor(vx0 / 100) * 100; x < vx1; x += 100) {
+        ctx.beginPath(); ctx.moveTo(x, vy0); ctx.lineTo(x, vy1); ctx.stroke();
       }
-      for (let y = 0; y < CITY_HEIGHT; y += 80) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CITY_WIDTH, y); ctx.stroke();
+      for (let y = Math.floor(vy0 / 100) * 100; y < vy1; y += 100) {
+        ctx.beginPath(); ctx.moveTo(vx0, y); ctx.lineTo(vx1, y); ctx.stroke();
       }
 
       // Roads
       ROADS.forEach(road => {
-        ctx.fillStyle = 'rgba(40, 60, 80, 0.8)';
+        ctx.fillStyle = 'rgba(30, 48, 66, 0.92)';
         if (road.x1 === road.x2) {
           // Vertical
           ctx.fillRect(road.x1 - road.width / 2, road.y1, road.width, road.y2 - road.y1);
-          // Road lines
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
+          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
           ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(road.x1 - road.width / 2, road.y1); ctx.lineTo(road.x1 - road.width / 2, road.y2);
+          ctx.moveTo(road.x1 + road.width / 2, road.y1); ctx.lineTo(road.x1 + road.width / 2, road.y2); ctx.stroke();
+          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
           ctx.setLineDash([20, 15]);
           ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x1, road.y2); ctx.stroke();
           ctx.setLineDash([]);
         } else {
           // Horizontal
           ctx.fillRect(road.x1, road.y1 - road.width / 2, road.x2 - road.x1, road.width);
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
+          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
           ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(road.x1, road.y1 - road.width / 2); ctx.lineTo(road.x2, road.y1 - road.width / 2);
+          ctx.moveTo(road.x1, road.y1 + road.width / 2); ctx.lineTo(road.x2, road.y1 + road.width / 2); ctx.stroke();
+          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
           ctx.setLineDash([20, 15]);
           ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x2, road.y1); ctx.stroke();
           ctx.setLineDash([]);
         }
       });
 
+      /* ---------- spawn plaza ---------- */
+      const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
+      const pg = ctx.createRadialGradient(SPAWN_X, SPAWN_Y, 20, SPAWN_X, SPAWN_Y, 340 * plazaPulse);
+      pg.addColorStop(0, 'rgba(0,212,255,0.22)');
+      pg.addColorStop(1, 'transparent');
+      ctx.fillStyle = pg;
+      ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,212,255,0.45)';
+      ctx.lineWidth = 4;
+      for (let r = 120; r <= 300; r += 90) {
+        ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(0,212,255,0.7)';
+      ctx.font = 'bold 26px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
+
+      /* ---------- ambient props ---------- */
+      PROPS.forEach((p, i) => {
+        if (!inView(p.x, p.y)) return;
+        const s = p.s || 1;
+        if (p.kind === 'tree') {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.beginPath(); ctx.ellipse(p.x, p.y + 14 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#3b2a18';
+          ctx.fillRect(p.x - 3 * s, p.y - 6 * s, 6 * s, 20 * s);
+          const tg = ctx.createRadialGradient(p.x - 4 * s, p.y - 22 * s, 2, p.x, p.y - 16 * s, 22 * s);
+          tg.addColorStop(0, '#7ef7a8');
+          tg.addColorStop(1, '#12633a');
+          ctx.fillStyle = tg;
+          ctx.beginPath(); ctx.arc(p.x, p.y - 18 * s, 18 * s, 0, Math.PI * 2); ctx.fill();
+        } else if (p.kind === 'rock') {
+          ctx.fillStyle = 'rgba(120,140,160,0.5)';
+          ctx.beginPath(); ctx.ellipse(p.x, p.y, 14 * s, 10 * s, 0.4, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = 'rgba(180,220,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+        } else if (p.kind === 'crate') {
+          ctx.fillStyle = 'rgba(180,120,60,0.75)';
+          ctx.fillRect(p.x - 14 * s, p.y - 14 * s, 28 * s, 28 * s);
+          ctx.strokeStyle = '#f0b96b'; ctx.lineWidth = 2;
+          ctx.strokeRect(p.x - 14 * s, p.y - 14 * s, 28 * s, 28 * s);
+          ctx.beginPath(); ctx.moveTo(p.x - 14 * s, p.y - 14 * s); ctx.lineTo(p.x + 14 * s, p.y + 14 * s); ctx.stroke();
+        } else if (p.kind === 'lamp') {
+          ctx.strokeStyle = '#5b7488'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - 46); ctx.stroke();
+          const flicker = 0.55 + Math.sin(time * 3 + i) * 0.12;
+          const lg = ctx.createRadialGradient(p.x, p.y - 50, 0, p.x, p.y - 50, 60);
+          lg.addColorStop(0, `rgba(255,215,120,${flicker * 0.5})`);
+          lg.addColorStop(1, 'transparent');
+          ctx.fillStyle = lg;
+          ctx.beginPath(); ctx.arc(p.x, p.y - 50, 60, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffe08a';
+          ctx.beginPath(); ctx.arc(p.x, p.y - 50, 6, 0, Math.PI * 2); ctx.fill();
+        } else if (p.kind === 'holo') {
+          const float = Math.sin(time * 1.2 + i) * 6;
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = 'rgba(0,212,255,0.12)';
+          ctx.strokeStyle = 'rgba(0,212,255,0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(p.x - 110, p.y - 34 + float, 220, 56, 10); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#7df9ff';
+          ctx.font = 'bold 20px Arial';
+          ctx.textAlign = 'center';
+          ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 14;
+          ctx.fillText(p.text || '', p.x, p.y + 3 + float);
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+      });
+
       // Floating particles
-      const time = Date.now() / 1000;
-      for (let i = 0; i < 30; i++) {
-        const px = (i * 83 + time * 5) % CITY_WIDTH;
-        const py = (i * 57 + Math.sin(time + i * 0.7) * 20) % CITY_HEIGHT;
-        ctx.fillStyle = 'rgba(0, 212, 255, 0.25)';
+      for (let i = 0; i < 60; i++) {
+        const px = vx0 + ((i * 137 + time * 12) % (VIEWPORT_W + 240));
+        const py = vy0 + ((i * 211 + Math.sin(time * 0.8 + i) * 40) % (VIEWPORT_H + 240));
+        ctx.fillStyle = i % 3 === 0 ? 'rgba(255,215,0,0.25)' : 'rgba(0, 212, 255, 0.28)';
         ctx.beginPath();
         ctx.arc(px, py, 2, 0, Math.PI * 2);
         ctx.fill();
       }
 
+
       // Draw buildings
       BUILDINGS.forEach(building => {
+        if (!inView(building.x + building.width / 2, building.y + building.height / 2)) return;
         const cx = building.x + building.width / 2;
         const cy = building.y + building.height / 2;
         const isNear = nearBuilding?.id === building.id;
@@ -650,21 +868,28 @@ export default function BullCity() {
       ctx.restore();
 
       // Minimap
-      const mmW = 180, mmH = 120;
+      const mmW = 170, mmH = 170;
       const mmX = VIEWPORT_W - mmW - 10, mmY = 10;
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillStyle = 'rgba(3,10,20,0.78)';
       ctx.fillRect(mmX, mmY, mmW, mmH);
       ctx.strokeStyle = '#FF9900';
       ctx.lineWidth = 2;
       ctx.strokeRect(mmX, mmY, mmW, mmH);
 
+      // Minimap districts
+      DISTRICTS.forEach(d => {
+        ctx.fillStyle = d.color + '33';
+        ctx.fillRect(mmX + (d.x / CITY_WIDTH) * mmW, mmY + (d.y / CITY_HEIGHT) * mmH, (d.w / CITY_WIDTH) * mmW, (d.h / CITY_HEIGHT) * mmH);
+      });
+
       // Minimap buildings
       BUILDINGS.forEach(b => {
         const bx = mmX + (b.x / CITY_WIDTH) * mmW;
         const by = mmY + (b.y / CITY_HEIGHT) * mmH;
-        ctx.fillStyle = b.color + '88';
-        ctx.fillRect(bx, by, Math.max(4, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
+        ctx.fillStyle = b.color + 'aa';
+        ctx.fillRect(bx, by, Math.max(3, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
       });
+
 
       // Minimap players
       players.forEach(p => {
@@ -833,7 +1058,7 @@ export default function BullCity() {
           <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
             🐂 Cardano Stake Bulls · Bull City
           </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">Roam the neon metropolis, work the buildings for 💎 and sweep up loose diamonds.</p>
+          <p className="text-cyan-200/50 text-xs md:text-sm">Explore an 8-district Cardano landscape — harbours, tech parks, governance halls and neon plazas. Work the buildings for 💎 and sweep up loose diamonds.</p>
         </div>
 
         {/* Stats */}
