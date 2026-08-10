@@ -187,7 +187,10 @@ export default function BullCity() {
   const [nearBuilding, setNearBuilding] = useState<Building | null>(null);
   const [workCooldowns, setWorkCooldowns] = useState<Record<string, number>>({});
   const [isWorking, setIsWorking] = useState(false);
-  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
+  const [cameraOffset, setCameraOffset] = useState({
+    x: Math.max(0, Math.min(CITY_WIDTH - 1400, SPAWN_X - 700)),
+    y: Math.max(0, Math.min(CITY_HEIGHT - 900, SPAWN_Y - 450)),
+  });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
   const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
@@ -275,9 +278,9 @@ export default function BullCity() {
       .select('*')
       .is('collected_by', null);
 
-    if (!existing || existing.length < 30) {
+    if (!existing || existing.length < 80) {
       const newItems = [];
-      for (let i = 0; i < 30 - (existing?.length || 0); i++) {
+      for (let i = 0; i < 80 - (existing?.length || 0); i++) {
         const isGold = Math.random() > 0.7;
         newItems.push({
           x: 80 + Math.random() * (CITY_WIDTH - 160),
