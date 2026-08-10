@@ -715,6 +715,7 @@ export default function BullCity() {
 
       // Draw buildings
       BUILDINGS.forEach(building => {
+        if (!inView(building.x + building.width / 2, building.y + building.height / 2)) return;
         const cx = building.x + building.width / 2;
         const cy = building.y + building.height / 2;
         const isNear = nearBuilding?.id === building.id;
@@ -1057,7 +1058,7 @@ export default function BullCity() {
           <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
             🐂 Cardano Stake Bulls · Bull City
           </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">Roam the neon metropolis, work the buildings for 💎 and sweep up loose diamonds.</p>
+          <p className="text-cyan-200/50 text-xs md:text-sm">Explore an 8-district Cardano landscape — harbours, tech parks, governance halls and neon plazas. Work the buildings for 💎 and sweep up loose diamonds.</p>
         </div>
 
         {/* Stats */}
