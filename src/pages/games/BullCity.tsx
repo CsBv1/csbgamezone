@@ -360,6 +360,62 @@ export default function BullCity() {
     };
   }, [gameActive, nearBuilding]);
 
+  /* ——————————————— CMKR 🦉 partner token ——————————————— */
+  const loadCmkr = useCallback(async () => {
+    const { data } = await supabase
+      .from('cmkr_earnings' as any)
+      .select('user_id, username, place_id, amount')
+      .eq('month', CMKR_MONTH);
+    const rows = (data || []) as any[];
+
+    setCmkrGlobal(rows.reduce((s, r) => s + (r.amount || 0), 0));
+
+    const mine = new Set<string>(rows.filter(r => r.user_id === userId).map(r => r.place_id));
+    cmkrMinedRef.current = mine;
+    setCmkrMined(mine);
+
+    const totals = new Map<string, { user_id: string; username: string; total: number }>();
+    rows.forEach(r => {
+      const e = totals.get(r.user_id) || { user_id: r.user_id, username: r.username || 'Bull', total: 0 };
+      e.total += r.amount || 0;
+      if (r.username) e.username = r.username;
+      totals.set(r.user_id, e);
+    });
+    setCmkrBoard([...totals.values()].sort((a, b) => b.total - a.total).slice(0, 20));
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    loadCmkr();
+    const ch = supabase
+      .channel('city-cmkr')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cmkr_earnings' }, () => loadCmkr())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId, loadCmkr]);
+
+  /** Award 1 🦉 CMKR for a place — once per place, per month, per player. */
+  const tryMineCmkr = async (building: Building): Promise<boolean> => {
+    if (!userId) return false;
+    if (cmkrMinedRef.current.has(building.id)) return false;
+    if (cmkrGlobal >= CMKR_MONTHLY_CAP) {
+      toast({ title: '🦉 Monthly cap reached', description: `All ${CMKR_MONTHLY_CAP.toLocaleString()} CMKR for this month have been mined.` });
+      return false;
+    }
+    const { error } = await supabase.from('cmkr_earnings' as any).insert({
+      user_id: userId,
+      username,
+      place_id: building.id,
+      month: CMKR_MONTH,
+      amount: 1,
+    });
+    if (error) return false;
+    cmkrMinedRef.current = new Set([...cmkrMinedRef.current, building.id]);
+    setCmkrMined(cmkrMinedRef.current);
+    loadCmkr();
+    return true;
+  };
+
   const workAtBuilding = async (building: Building) => {
     if (!userId || !building.reward || isWorking) return;
     
@@ -378,6 +434,8 @@ export default function BullCity() {
     await new Promise(r => setTimeout(r, 1500));
 
     try {
+      const gotOwl = await tryMineCmkr(building);
+
       const { data: current } = await supabase
         .from('user_diamonds' as any)
         .select('balance, total_earned')
@@ -406,15 +464,21 @@ export default function BullCity() {
           });
 
         setCollectedDiamonds(prev => prev + reward);
-        toast({ title: `${building.emoji} +${reward} 💎`, description: `Earned diamonds at ${building.name}!` });
-        audioManager.playSFX('win');
       }
+
+      if (gotOwl) {
+        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} claimed for ${CMKR_MONTH}. One owl per place, per month.` });
+      } else {
+        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name}'s 🦉 CMKR is already claimed this month.` });
+      }
+      audioManager.playSFX('win');
     } catch (error) {
       console.error('Work error:', error);
     } finally {
       setIsWorking(false);
     }
   };
+
 
   // Game loop
   useEffect(() => {
