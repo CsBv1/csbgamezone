@@ -49,6 +49,10 @@ const DB_UPDATE_INTERVAL = 200;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
+/** CMKR 🦉 — partner token. 1 owl per place, per player, per month. */
+const CMKR_MONTHLY_CAP = 1_000_000;
+const CMKR_MONTH = new Date().toISOString().slice(0, 7); // YYYY-MM
+
 /** Themed districts painted under the city grid. */
 const DISTRICTS: { name: string; x: number; y: number; w: number; h: number; color: string; label: string }[] = [
   { name: 'Stake Plaza', x: 1550, y: 1550, w: 900, h: 900, color: '#00d4ff', label: '🐂 CARDANO STAKE BULLS PLAZA' },
