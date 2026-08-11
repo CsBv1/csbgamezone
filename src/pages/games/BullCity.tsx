@@ -786,107 +786,171 @@ export default function BullCity() {
       }
 
 
-      // Draw buildings
-      BUILDINGS.forEach(building => {
+      // ——————————— Draw buildings (extruded 3D) ———————————
+      const camCX = cameraOffset.x + VIEWPORT_W / 2;
+      const camCY = cameraOffset.y + VIEWPORT_H / 2;
+      const heightFor = (b: Building) => {
+        const base: Record<string, number> = {
+          tower: 2.1, bank: 1.25, forge: 1.0, market: 0.9, mine: 0.8, tavern: 0.95, decoration: 0.45,
+        };
+        return Math.max(40, b.height * (base[b.type] ?? 0.9));
+      };
+
+      // painter's algorithm — far buildings first so near ones overlap them
+      [...BUILDINGS].sort((a, b) => (a.y + a.height) - (b.y + b.height)).forEach(building => {
         if (!inView(building.x + building.width / 2, building.y + building.height / 2)) return;
-        const cx = building.x + building.width / 2;
-        const cy = building.y + building.height / 2;
+        const bx = building.x, by = building.y, bw = building.width, bh = building.height;
+        const cx = bx + bw / 2;
         const isNear = nearBuilding?.id === building.id;
-        
-        // Building shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(building.x + 8, building.y + 8, building.width, building.height);
+        const H = heightFor(building);
 
-        // Building base
-        const bGrad = ctx.createLinearGradient(building.x, building.y, building.x, building.y + building.height);
-        bGrad.addColorStop(0, building.color + '99');
-        bGrad.addColorStop(1, building.color + '44');
-        ctx.fillStyle = bGrad;
-        ctx.fillRect(building.x, building.y, building.width, building.height);
+        // fake perspective: parallax skew away from the camera centre
+        const ox = Math.max(-0.55, Math.min(0.55, (cx - camCX) / (VIEWPORT_W * 1.1))) * H;
+        const oy = Math.max(-0.25, Math.min(0.25, ((by + bh) - camCY) / (VIEWPORT_H * 2.2))) * H;
+        const topY = by - H + oy;
 
-        // Building border
-        ctx.strokeStyle = isNear ? '#FFD700' : building.color;
-        ctx.lineWidth = isNear ? 4 : 2;
-        ctx.strokeRect(building.x, building.y, building.width, building.height);
+        const wallDark = shadeColor(building.color, -62);
+        const wallMid = shadeColor(building.color, -34);
+        const roofCol = shadeColor(building.color, 18);
 
-        // Glow effect for work buildings
-        if (building.reward && isNear) {
-          ctx.shadowColor = '#FFD700';
-          ctx.shadowBlur = 20;
-          ctx.strokeRect(building.x, building.y, building.width, building.height);
-          ctx.shadowBlur = 0;
-        }
-
-        // Roof
-        ctx.fillStyle = building.color + 'CC';
+        // ground shadow, stretched opposite to the lean
+        ctx.fillStyle = 'rgba(0,0,0,0.42)';
         ctx.beginPath();
-        ctx.moveTo(building.x - 10, building.y);
-        ctx.lineTo(cx, building.y - 30);
-        ctx.lineTo(building.x + building.width + 10, building.y);
-        ctx.closePath();
+        ctx.ellipse(cx - ox * 0.35, by + bh + 6, bw * 0.62, bh * 0.22, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = building.color;
-        ctx.lineWidth = 2;
+
+        // ——— side wall (left or right depending on which one faces the camera) ———
+        const sideX = ox > 0 ? bx : bx + bw;
+        ctx.beginPath();
+        ctx.moveTo(sideX, by);
+        ctx.lineTo(sideX + ox, topY);
+        ctx.lineTo(sideX + ox, topY + bh);
+        ctx.lineTo(sideX, by + bh);
+        ctx.closePath();
+        const sideGrad = ctx.createLinearGradient(sideX, topY, sideX, by + bh);
+        sideGrad.addColorStop(0, wallMid);
+        sideGrad.addColorStop(1, wallDark);
+        ctx.fillStyle = sideGrad;
+        ctx.fill();
+
+        // ——— front facade ———
+        ctx.beginPath();
+        ctx.moveTo(bx, by + bh);
+        ctx.lineTo(bx + bw, by + bh);
+        ctx.lineTo(bx + bw + ox, topY + bh);
+        ctx.lineTo(bx + ox, topY + bh);
+        ctx.closePath();
+        const faceGrad = ctx.createLinearGradient(bx, topY, bx, by + bh);
+        faceGrad.addColorStop(0, building.color + 'DD');
+        faceGrad.addColorStop(0.6, shadeColor(building.color, -18));
+        faceGrad.addColorStop(1, wallDark);
+        ctx.fillStyle = faceGrad;
+        ctx.fill();
+        ctx.strokeStyle = isNear ? '#FFD700' : building.color;
+        ctx.lineWidth = isNear ? 3 : 1.5;
+        if (isNear) { ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 22; }
         ctx.stroke();
-
-        // Windows
-        const windowCount = Math.floor(building.width / 40);
-        for (let w = 0; w < windowCount; w++) {
-          const wx = building.x + 20 + w * 40;
-          const wy = building.y + 30;
-          ctx.fillStyle = 'rgba(255, 255, 200, 0.6)';
-          ctx.fillRect(wx, wy, 20, 20);
-          ctx.strokeStyle = building.color;
-          ctx.lineWidth = 1;
-          ctx.strokeRect(wx, wy, 20, 20);
-          // Window cross
-          ctx.beginPath();
-          ctx.moveTo(wx + 10, wy); ctx.lineTo(wx + 10, wy + 20);
-          ctx.moveTo(wx, wy + 10); ctx.lineTo(wx + 20, wy + 10);
-          ctx.stroke();
-        }
-
-        // Door
-        ctx.fillStyle = 'rgba(100, 60, 20, 0.9)';
-        ctx.fillRect(cx - 12, building.y + building.height - 35, 24, 35);
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(cx - 12, building.y + building.height - 35, 24, 35);
-
-        // Emoji on roof
-        ctx.font = '32px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(building.emoji, cx, building.y - 5);
-
-        // Building name
-        ctx.fillStyle = '#fff';
-        ctx.font = isNear ? 'bold 14px Arial' : '12px Arial';
-        ctx.shadowColor = building.color;
-        ctx.shadowBlur = isNear ? 8 : 4;
-        ctx.fillText(building.name, cx, building.y + building.height + 18);
         ctx.shadowBlur = 0;
 
-        // Work indicator
-        if (building.reward && isNear) {
-          ctx.fillStyle = '#FFD700';
-          ctx.font = 'bold 12px Arial';
-          ctx.fillText(`⚡ PRESS E/SPACE (+${building.reward} 💎)`, cx, building.y + building.height + 35);
-
-          const cooldownLeft = workCooldowns[building.id] ? 
-            Math.max(0, (building.cooldownMs || 10000) - (Date.now() - workCooldowns[building.id])) : 0;
-          if (cooldownLeft > 0) {
-            ctx.fillStyle = '#FF6666';
-            ctx.fillText(`⏳ ${Math.ceil(cooldownLeft / 1000)}s`, cx, building.y + building.height + 50);
+        // ——— windows mapped onto the leaning facade ———
+        if (building.type !== 'decoration') {
+          const cols = Math.max(2, Math.floor(bw / 46));
+          const rows = Math.max(2, Math.floor(H / 46));
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const v0 = (r + 0.35) / rows, v1 = (r + 0.8) / rows;   // 0 = ground, 1 = roof
+              const u0 = (c + 0.28) / cols, u1 = (c + 0.78) / cols;
+              const pt = (u: number, v: number) => [bx + u * bw + ox * v, by + bh - v * H + oy * v] as const;
+              const lit = ((building.x + building.y) / 7 + r * 3 + c * 5) % 5 > 1.4;
+              const flick = 0.35 + Math.abs(Math.sin(time * 0.6 + r + c + building.x)) * 0.45;
+              ctx.beginPath();
+              const [ax, ay] = pt(u0, v0); const [bx2, by2] = pt(u1, v0);
+              const [cx2, cy2] = pt(u1, v1); const [dx2, dy2] = pt(u0, v1);
+              ctx.moveTo(ax, ay); ctx.lineTo(bx2, by2); ctx.lineTo(cx2, cy2); ctx.lineTo(dx2, dy2);
+              ctx.closePath();
+              ctx.fillStyle = lit ? `rgba(255,240,170,${flick})` : 'rgba(12,28,44,0.85)';
+              ctx.fill();
+              ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
           }
         }
 
-        // Type badge
+        // ——— door on the facade ———
+        ctx.fillStyle = 'rgba(20,14,8,0.92)';
+        ctx.beginPath();
+        ctx.roundRect(cx - 15, by + bh - 40, 30, 40, [8, 8, 0, 0]);
+        ctx.fill();
+        ctx.strokeStyle = isNear ? '#FFD700' : shadeColor(building.color, 30);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // ——— roof / top face ———
+        ctx.beginPath();
+        ctx.moveTo(bx + ox, topY);
+        ctx.lineTo(bx + bw + ox, topY);
+        ctx.lineTo(bx + bw + ox, topY + bh);
+        ctx.lineTo(bx + ox, topY + bh);
+        ctx.closePath();
+        const roofGrad = ctx.createLinearGradient(bx + ox, topY, bx + bw + ox, topY + bh);
+        roofGrad.addColorStop(0, roofCol);
+        roofGrad.addColorStop(1, shadeColor(building.color, -10));
+        ctx.fillStyle = roofGrad;
+        ctx.fill();
+        ctx.strokeStyle = shadeColor(building.color, 55);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // roof detail — vents / antenna / neon rim
+        ctx.strokeStyle = 'rgba(0,212,255,0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(bx + ox + 10, topY + 10, bw - 20, bh - 20);
+        if (building.type === 'tower') {
+          const blink = 0.4 + Math.abs(Math.sin(time * 2)) * 0.6;
+          ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(cx + ox, topY + bh / 2); ctx.lineTo(cx + ox, topY - 55); ctx.stroke();
+          ctx.fillStyle = `rgba(255,70,70,${blink})`;
+          ctx.beginPath(); ctx.arc(cx + ox, topY - 58, 6, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ——— emoji sign floating over the roof ———
+        const bob = Math.sin(time * 1.6 + building.x) * 4;
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(building.emoji, cx + ox, topY + bh / 2 + 10 + bob);
+
+        // ——— name plate at street level ———
+        ctx.fillStyle = '#fff';
+        ctx.font = isNear ? 'bold 14px Arial' : '12px Arial';
+        ctx.shadowColor = building.color;
+        ctx.shadowBlur = isNear ? 10 : 4;
+        ctx.fillText(building.name, cx, by + bh + 20);
+        ctx.shadowBlur = 0;
+
+        // ——— CMKR 🦉 availability badge ———
         if (building.reward) {
-          ctx.fillStyle = '#00FF88';
-          ctx.font = 'bold 9px Arial';
-          ctx.fillText('💰 WORK HERE', cx, building.y - 35);
+          const owlLeft = !cmkrMined.has(building.id) && cmkrGlobal < CMKR_MONTHLY_CAP;
+          ctx.font = 'bold 11px Arial';
+          ctx.fillStyle = owlLeft ? '#00FF88' : '#64748b';
+          ctx.fillText(owlLeft ? '🦉 1 CMKR AVAILABLE' : '🦉 claimed this month', cx + ox, topY - 12);
+        }
+
+        // ——— interaction prompt ———
+        if (building.reward && isNear) {
+          ctx.fillStyle = '#FFD700';
+          ctx.font = 'bold 12px Arial';
+          ctx.fillText(`⚡ PRESS E/SPACE (+${building.reward} 💎)`, cx, by + bh + 38);
+
+          const cooldownLeft = workCooldowns[building.id] ?
+            Math.max(0, (building.cooldownMs || 10000) - (Date.now() - workCooldowns[building.id])) : 0;
+          if (cooldownLeft > 0) {
+            ctx.fillStyle = '#FF6666';
+            ctx.fillText(`⏳ ${Math.ceil(cooldownLeft / 1000)}s`, cx, by + bh + 53);
+          }
         }
       });
+
 
       // Draw diamonds
       diamonds.forEach(diamond => {
