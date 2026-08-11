@@ -1262,19 +1262,60 @@ export default function BullCity() {
         </Card>
 
 
+        {/* CMKR mining board */}
+        <Card className="p-4 mt-3 bg-gradient-to-br from-[#10233a] to-[#0d1a2c] border-amber-400/30">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <h3 className="font-bold text-amber-300 flex items-center gap-2">🦉 CMKR Mining · {CMKR_MONTH}</h3>
+            <span className="text-xs text-amber-200/70">
+              {cmkrGlobal.toLocaleString()} / {CMKR_MONTHLY_CAP.toLocaleString()} CMKR minted
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-slate-800 overflow-hidden mb-3">
+            <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-200"
+              style={{ width: `${Math.min(100, (cmkrGlobal / CMKR_MONTHLY_CAP) * 100)}%` }} />
+          </div>
+          <p className="text-xs text-cyan-200/60 mb-3">
+            Every place gives exactly <span className="text-amber-300 font-semibold">1 🦉 CMKR per player, per month</span>. Mine all {BUILDINGS.filter(b => b.reward).length} places to max your month.
+            The <span className="text-amber-300 font-semibold">top 3 miners</span> each month are paid out in the Discord channel by Nick G.
+          </p>
+
+          <h4 className="text-sm font-bold text-white/90 mb-2">🏆 Monthly CMKR Leaderboard</h4>
+          {cmkrBoard.length === 0 ? (
+            <p className="text-xs text-white/50">No owls mined yet this month — be the first 🦉</p>
+          ) : (
+            <div className="space-y-1">
+              {cmkrBoard.map((r, i) => (
+                <div key={r.user_id}
+                  className={`flex items-center justify-between rounded-md px-2 py-1 text-sm ${r.user_id === userId ? 'bg-amber-400/15 border border-amber-400/40' : 'bg-slate-900/50'}`}>
+                  <span className="flex items-center gap-2 text-white/85">
+                    <span className="w-6 text-center">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</span>
+                    {r.username}
+                  </span>
+                  <span className="text-amber-300 font-bold">🦉 {r.total.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
         {/* Buildings Guide */}
         <Card className="p-4 mt-3 bg-[#0d2640] border-[#FF9900]/30">
-          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings</h3>
+          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-            {BUILDINGS.filter(b => b.reward).map(b => (
-              <div key={b.id} className="flex items-center gap-2 text-white/80">
-                <span>{b.emoji}</span>
-                <span>{b.name}</span>
-                <span className="text-[#00D4FF]">+{b.reward}💎</span>
-              </div>
-            ))}
+            {BUILDINGS.filter(b => b.reward).map(b => {
+              const done = cmkrMined.has(b.id);
+              return (
+                <div key={b.id} className={`flex items-center gap-2 rounded-md px-2 py-1 ${done ? 'bg-slate-800/40 text-white/40' : 'text-white/80'}`}>
+                  <span>{b.emoji}</span>
+                  <span className="flex-1 truncate">{b.name}</span>
+                  <span className={done ? 'text-white/30' : 'text-amber-300'}>{done ? '✓ 🦉' : '🦉 1'}</span>
+                  <span className="text-[#00D4FF] text-xs">+{b.reward}💎</span>
+                </div>
+              );
+            })}
           </div>
         </Card>
+
 
         {/* Controls */}
         <Card className="p-3 mt-3 hidden md:block bg-[#0d2640] border-[#FF9900]/30">
