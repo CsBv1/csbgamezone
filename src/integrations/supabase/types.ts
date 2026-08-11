@@ -208,6 +208,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cmkr_earnings: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          month: string
+          place_id: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month?: string
+          place_id: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month?: string
+          place_id?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       csb_battle_states: {
         Row: {
           created_at: string
