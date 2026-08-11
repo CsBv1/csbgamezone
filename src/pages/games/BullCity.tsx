@@ -187,6 +187,11 @@ export default function BullCity() {
   const [nearBuilding, setNearBuilding] = useState<Building | null>(null);
   const [workCooldowns, setWorkCooldowns] = useState<Record<string, number>>({});
   const [isWorking, setIsWorking] = useState(false);
+  // ——— CMKR 🦉 (partner token) ———
+  const [cmkrMined, setCmkrMined] = useState<Set<string>>(new Set());   // place ids mined this month by me
+  const [cmkrGlobal, setCmkrGlobal] = useState(0);                      // total minted this month (all players)
+  const [cmkrBoard, setCmkrBoard] = useState<{ user_id: string; username: string; total: number }[]>([]);
+  const cmkrMinedRef = useRef<Set<string>>(new Set());
   const [cameraOffset, setCameraOffset] = useState({
     x: Math.max(0, Math.min(CITY_WIDTH - 1400, SPAWN_X - 700)),
     y: Math.max(0, Math.min(CITY_HEIGHT - 900, SPAWN_Y - 450)),
