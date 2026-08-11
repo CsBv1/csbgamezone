@@ -1195,7 +1195,7 @@ export default function BullCity() {
           <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
             🐂 Cardano Stake Bulls · Bull City
           </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">Explore an 8-district Cardano landscape — harbours, tech parks, governance halls and neon plazas. Work the buildings for 💎 and sweep up loose diamonds.</p>
+          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape — harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at every place, once per month.</p>
         </div>
 
         {/* Stats */}
@@ -1204,10 +1204,15 @@ export default function BullCity() {
             <Users className="w-4 h-4 text-cyan-300" />
             <span className="text-white text-sm">{players.length} Online</span>
           </Card>
+          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/40">
+            <span className="text-base leading-none">🦉</span>
+            <span className="text-amber-200 text-sm font-bold">{cmkrMined.size} CMKR this month</span>
+          </Card>
           <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
             <Gem className="w-4 h-4 text-cyan-300" />
             <span className="text-white text-sm">+{collectedDiamonds} Earned</span>
           </Card>
+
           {isWorking && (
             <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/50 animate-pulse">
               <Hammer className="w-4 h-4 text-amber-300" />
