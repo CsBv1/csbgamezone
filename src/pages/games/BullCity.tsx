@@ -1121,7 +1121,7 @@ export default function BullCity() {
 
     render();
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrGlobal]);
+  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal]);
 
   const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean) => {
     const scale = 1.6;
