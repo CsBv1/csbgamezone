@@ -442,14 +442,14 @@ export default function BullCity() {
     return true;
   };
 
-  const workAtBuilding = async (building: Building) => {
+  const workAtBuilding = async (building: Building, silent = false) => {
     if (!userId || !building.reward || isWorking) return;
     
     const now = Date.now();
     const lastWork = workCooldowns[building.id] || 0;
     if (now - lastWork < (building.cooldownMs || 10000)) {
       const remaining = Math.ceil(((building.cooldownMs || 10000) - (now - lastWork)) / 1000);
-      toast({ title: "⏳ Cooldown", description: `Wait ${remaining}s to work here again` });
+      if (!silent) toast({ title: "⏳ Cooldown", description: `Wait ${remaining}s to work here again` });
       return;
     }
 
