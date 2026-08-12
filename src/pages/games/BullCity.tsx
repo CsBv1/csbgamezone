@@ -506,6 +506,23 @@ export default function BullCity() {
     }
   };
 
+  /* ——————————————— Auto-mine ——————————————— */
+  const workFnRef = useRef(workAtBuilding);
+  workFnRef.current = workAtBuilding;
+  const nearBuildingRef = useRef(nearBuilding);
+  nearBuildingRef.current = nearBuilding;
+  const isWorkingRef = useRef(isWorking);
+  isWorkingRef.current = isWorking;
+
+  useEffect(() => {
+    if (!autoMine || !gameActive) return;
+    const t = setInterval(() => {
+      const b = nearBuildingRef.current;
+      if (b?.reward && !isWorkingRef.current) workFnRef.current(b, true);
+    }, 900);
+    return () => clearInterval(t);
+  }, [autoMine, gameActive]);
+
 
   // Game loop
   useEffect(() => {
