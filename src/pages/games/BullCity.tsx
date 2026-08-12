@@ -49,9 +49,11 @@ const DB_UPDATE_INTERVAL = 200;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
-/** CMKR 🦉 — partner token. 1 owl per place, per player, per month. */
+/** CMKR 🦉 — partner token. 5 owls per place, per player, per day. */
 const CMKR_MONTHLY_CAP = 1_000_000;
 const CMKR_MONTH = new Date().toISOString().slice(0, 7); // YYYY-MM
+const CMKR_DAY = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
+const CMKR_DAILY_PER_PLACE = 5;
 
 /** Themed districts painted under the city grid. */
 const DISTRICTS: { name: string; x: number; y: number; w: number; h: number; color: string; label: string }[] = [
