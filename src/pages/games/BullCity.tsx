@@ -676,10 +676,7 @@ export default function BullCity() {
         ctx.setLineDash([16, 12]);
         ctx.strokeRect(d.x, d.y, d.w, d.h);
         ctx.setLineDash([]);
-        ctx.fillStyle = d.color + 'aa';
-        ctx.font = 'bold 22px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(d.label, d.x + 22, d.y + 38);
+        // (district label is drawn on top of the buildings later so it stays readable)
       });
 
       /* ---------- water (Hydra Harbour) ---------- */
