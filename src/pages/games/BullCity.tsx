@@ -374,15 +374,25 @@ export default function BullCity() {
   const loadCmkr = useCallback(async () => {
     const { data } = await supabase
       .from('cmkr_earnings' as any)
-      .select('user_id, username, place_id, amount')
+      .select('user_id, username, place_id, amount, day')
       .eq('month', CMKR_MONTH);
     const rows = (data || []) as any[];
 
     setCmkrGlobal(rows.reduce((s, r) => s + (r.amount || 0), 0));
 
-    const mine = new Set<string>(rows.filter(r => r.user_id === userId).map(r => r.place_id));
-    cmkrMinedRef.current = mine;
-    setCmkrMined(mine);
+    const myRows = rows.filter(r => r.user_id === userId);
+    setCmkrMyMonth(myRows.reduce((s, r) => s + (r.amount || 0), 0));
+
+    const today: Record<string, number> = {};
+    myRows.filter(r => String(r.day).slice(0, 10) === CMKR_DAY).forEach(r => {
+      today[r.place_id] = (today[r.place_id] || 0) + (r.amount || 0);
+    });
+    cmkrTodayRef.current = today;
+    setCmkrToday(today);
+
+    const maxed = new Set<string>(Object.keys(today).filter(k => today[k] >= CMKR_DAILY_PER_PLACE));
+    cmkrMinedRef.current = maxed;
+    setCmkrMined(maxed);
 
     const totals = new Map<string, { user_id: string; username: string; total: number }>();
     rows.forEach(r => {
@@ -391,7 +401,7 @@ export default function BullCity() {
       if (r.username) e.username = r.username;
       totals.set(r.user_id, e);
     });
-    setCmkrBoard([...totals.values()].sort((a, b) => b.total - a.total).slice(0, 20));
+    setCmkrBoard([...totals.values()].sort((a, b) => b.total - a.total));
   }, [userId]);
 
   useEffect(() => {
@@ -404,10 +414,10 @@ export default function BullCity() {
     return () => { supabase.removeChannel(ch); };
   }, [userId, loadCmkr]);
 
-  /** Award 1 🦉 CMKR for a place — once per place, per month, per player. */
+  /** Award 1 🦉 CMKR for a place — up to 5 per place, per day, per player. */
   const tryMineCmkr = async (building: Building): Promise<boolean> => {
     if (!userId) return false;
-    if (cmkrMinedRef.current.has(building.id)) return false;
+    if ((cmkrTodayRef.current[building.id] || 0) >= CMKR_DAILY_PER_PLACE) return false;
     if (cmkrGlobal >= CMKR_MONTHLY_CAP) {
       toast({ title: '🦉 Monthly cap reached', description: `All ${CMKR_MONTHLY_CAP.toLocaleString()} CMKR for this month have been mined.` });
       return false;
@@ -417,11 +427,17 @@ export default function BullCity() {
       username,
       place_id: building.id,
       month: CMKR_MONTH,
+      day: CMKR_DAY,
       amount: 1,
     });
     if (error) return false;
-    cmkrMinedRef.current = new Set([...cmkrMinedRef.current, building.id]);
-    setCmkrMined(cmkrMinedRef.current);
+    const next = { ...cmkrTodayRef.current, [building.id]: (cmkrTodayRef.current[building.id] || 0) + 1 };
+    cmkrTodayRef.current = next;
+    setCmkrToday(next);
+    if (next[building.id] >= CMKR_DAILY_PER_PLACE) {
+      cmkrMinedRef.current = new Set([...cmkrMinedRef.current, building.id]);
+      setCmkrMined(cmkrMinedRef.current);
+    }
     loadCmkr();
     return true;
   };
