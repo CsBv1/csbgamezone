@@ -49,9 +49,11 @@ const DB_UPDATE_INTERVAL = 200;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
-/** CMKR 🦉 — partner token. 1 owl per place, per player, per month. */
+/** CMKR 🦉 — partner token. 5 owls per place, per player, per day. */
 const CMKR_MONTHLY_CAP = 1_000_000;
 const CMKR_MONTH = new Date().toISOString().slice(0, 7); // YYYY-MM
+const CMKR_DAY = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
+const CMKR_DAILY_PER_PLACE = 5;
 
 /** Themed districts painted under the city grid. */
 const DISTRICTS: { name: string; x: number; y: number; w: number; h: number; color: string; label: string }[] = [
@@ -192,10 +194,14 @@ export default function BullCity() {
   const [workCooldowns, setWorkCooldowns] = useState<Record<string, number>>({});
   const [isWorking, setIsWorking] = useState(false);
   // ——— CMKR 🦉 (partner token) ———
-  const [cmkrMined, setCmkrMined] = useState<Set<string>>(new Set());   // place ids mined this month by me
+  const [cmkrMined, setCmkrMined] = useState<Set<string>>(new Set());   // place ids maxed out today by me
+  const [cmkrToday, setCmkrToday] = useState<Record<string, number>>({}); // place id -> owls mined today by me
+  const [cmkrMyMonth, setCmkrMyMonth] = useState(0);                    // my total owls this month
   const [cmkrGlobal, setCmkrGlobal] = useState(0);                      // total minted this month (all players)
   const [cmkrBoard, setCmkrBoard] = useState<{ user_id: string; username: string; total: number }[]>([]);
+  const [autoMine, setAutoMine] = useState(false);
   const cmkrMinedRef = useRef<Set<string>>(new Set());
+  const cmkrTodayRef = useRef<Record<string, number>>({});
   const [cameraOffset, setCameraOffset] = useState({
     x: Math.max(0, Math.min(CITY_WIDTH - 1400, SPAWN_X - 700)),
     y: Math.max(0, Math.min(CITY_HEIGHT - 900, SPAWN_Y - 450)),
@@ -368,15 +374,25 @@ export default function BullCity() {
   const loadCmkr = useCallback(async () => {
     const { data } = await supabase
       .from('cmkr_earnings' as any)
-      .select('user_id, username, place_id, amount')
+      .select('user_id, username, place_id, amount, day')
       .eq('month', CMKR_MONTH);
     const rows = (data || []) as any[];
 
     setCmkrGlobal(rows.reduce((s, r) => s + (r.amount || 0), 0));
 
-    const mine = new Set<string>(rows.filter(r => r.user_id === userId).map(r => r.place_id));
-    cmkrMinedRef.current = mine;
-    setCmkrMined(mine);
+    const myRows = rows.filter(r => r.user_id === userId);
+    setCmkrMyMonth(myRows.reduce((s, r) => s + (r.amount || 0), 0));
+
+    const today: Record<string, number> = {};
+    myRows.filter(r => String(r.day).slice(0, 10) === CMKR_DAY).forEach(r => {
+      today[r.place_id] = (today[r.place_id] || 0) + (r.amount || 0);
+    });
+    cmkrTodayRef.current = today;
+    setCmkrToday(today);
+
+    const maxed = new Set<string>(Object.keys(today).filter(k => today[k] >= CMKR_DAILY_PER_PLACE));
+    cmkrMinedRef.current = maxed;
+    setCmkrMined(maxed);
 
     const totals = new Map<string, { user_id: string; username: string; total: number }>();
     rows.forEach(r => {
@@ -385,7 +401,7 @@ export default function BullCity() {
       if (r.username) e.username = r.username;
       totals.set(r.user_id, e);
     });
-    setCmkrBoard([...totals.values()].sort((a, b) => b.total - a.total).slice(0, 20));
+    setCmkrBoard([...totals.values()].sort((a, b) => b.total - a.total));
   }, [userId]);
 
   useEffect(() => {
@@ -398,10 +414,10 @@ export default function BullCity() {
     return () => { supabase.removeChannel(ch); };
   }, [userId, loadCmkr]);
 
-  /** Award 1 🦉 CMKR for a place — once per place, per month, per player. */
+  /** Award 1 🦉 CMKR for a place — up to 5 per place, per day, per player. */
   const tryMineCmkr = async (building: Building): Promise<boolean> => {
     if (!userId) return false;
-    if (cmkrMinedRef.current.has(building.id)) return false;
+    if ((cmkrTodayRef.current[building.id] || 0) >= CMKR_DAILY_PER_PLACE) return false;
     if (cmkrGlobal >= CMKR_MONTHLY_CAP) {
       toast({ title: '🦉 Monthly cap reached', description: `All ${CMKR_MONTHLY_CAP.toLocaleString()} CMKR for this month have been mined.` });
       return false;
@@ -411,23 +427,29 @@ export default function BullCity() {
       username,
       place_id: building.id,
       month: CMKR_MONTH,
+      day: CMKR_DAY,
       amount: 1,
     });
     if (error) return false;
-    cmkrMinedRef.current = new Set([...cmkrMinedRef.current, building.id]);
-    setCmkrMined(cmkrMinedRef.current);
+    const next = { ...cmkrTodayRef.current, [building.id]: (cmkrTodayRef.current[building.id] || 0) + 1 };
+    cmkrTodayRef.current = next;
+    setCmkrToday(next);
+    if (next[building.id] >= CMKR_DAILY_PER_PLACE) {
+      cmkrMinedRef.current = new Set([...cmkrMinedRef.current, building.id]);
+      setCmkrMined(cmkrMinedRef.current);
+    }
     loadCmkr();
     return true;
   };
 
-  const workAtBuilding = async (building: Building) => {
+  const workAtBuilding = async (building: Building, silent = false) => {
     if (!userId || !building.reward || isWorking) return;
     
     const now = Date.now();
     const lastWork = workCooldowns[building.id] || 0;
     if (now - lastWork < (building.cooldownMs || 10000)) {
       const remaining = Math.ceil(((building.cooldownMs || 10000) - (now - lastWork)) / 1000);
-      toast({ title: "⏳ Cooldown", description: `Wait ${remaining}s to work here again` });
+      if (!silent) toast({ title: "⏳ Cooldown", description: `Wait ${remaining}s to work here again` });
       return;
     }
 
@@ -471,9 +493,10 @@ export default function BullCity() {
       }
 
       if (gotOwl) {
-        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} claimed for ${CMKR_MONTH}. One owl per place, per month.` });
+        const left = CMKR_DAILY_PER_PLACE - (cmkrTodayRef.current[building.id] || 0);
+        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} — ${left} of ${CMKR_DAILY_PER_PLACE} owls left here today.` });
       } else {
-        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name}'s 🦉 CMKR is already claimed this month.` });
+        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name}'s 5 daily 🦉 CMKR are done — resets tomorrow.` });
       }
       audioManager.playSFX('win');
     } catch (error) {
@@ -482,6 +505,23 @@ export default function BullCity() {
       setIsWorking(false);
     }
   };
+
+  /* ——————————————— Auto-mine ——————————————— */
+  const workFnRef = useRef(workAtBuilding);
+  workFnRef.current = workAtBuilding;
+  const nearBuildingRef = useRef(nearBuilding);
+  nearBuildingRef.current = nearBuilding;
+  const isWorkingRef = useRef(isWorking);
+  isWorkingRef.current = isWorking;
+
+  useEffect(() => {
+    if (!autoMine || !gameActive) return;
+    const t = setInterval(() => {
+      const b = nearBuildingRef.current;
+      if (b?.reward && !isWorkingRef.current) workFnRef.current(b, true);
+    }, 900);
+    return () => clearInterval(t);
+  }, [autoMine, gameActive]);
 
 
   // Game loop
@@ -636,10 +676,7 @@ export default function BullCity() {
         ctx.setLineDash([16, 12]);
         ctx.strokeRect(d.x, d.y, d.w, d.h);
         ctx.setLineDash([]);
-        ctx.fillStyle = d.color + 'aa';
-        ctx.font = 'bold 22px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(d.label, d.x + 22, d.y + 38);
+        // (district label is drawn on top of the buildings later so it stays readable)
       });
 
       /* ---------- water (Hydra Harbour) ---------- */
@@ -930,10 +967,12 @@ export default function BullCity() {
 
         // ——— CMKR 🦉 availability badge ———
         if (building.reward) {
-          const owlLeft = !cmkrMined.has(building.id) && cmkrGlobal < CMKR_MONTHLY_CAP;
+          const used = cmkrToday[building.id] || 0;
+          const left = Math.max(0, CMKR_DAILY_PER_PLACE - used);
+          const owlLeft = left > 0 && cmkrGlobal < CMKR_MONTHLY_CAP;
           ctx.font = 'bold 11px Arial';
           ctx.fillStyle = owlLeft ? '#00FF88' : '#64748b';
-          ctx.fillText(owlLeft ? '🦉 1 CMKR AVAILABLE' : '🦉 claimed this month', cx + ox, topY - 12);
+          ctx.fillText(owlLeft ? `🦉 ${left}/${CMKR_DAILY_PER_PLACE} CMKR LEFT TODAY` : '🦉 daily 5 mined', cx + ox, topY - 12);
         }
 
         // ——— interaction prompt ———
@@ -950,6 +989,30 @@ export default function BullCity() {
           }
         }
       });
+
+      /* ---------- district labels (drawn above buildings so they stay readable) ---------- */
+      DISTRICTS.forEach(d => {
+        const lx = d.x + 22, ly = d.y + 38;
+        if (!inView(d.x + d.w / 2, d.y + d.h / 2) && !inView(lx, ly)) return;
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 22px Arial';
+        const w = ctx.measureText(d.label).width;
+        ctx.fillStyle = 'rgba(4,12,22,0.72)';
+        ctx.beginPath();
+        ctx.roundRect(lx - 12, ly - 26, w + 24, 36, 10);
+        ctx.fill();
+        ctx.strokeStyle = d.color + '66';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = d.color;
+        ctx.shadowColor = d.color;
+        ctx.shadowBlur = 12;
+        ctx.fillText(d.label, lx, ly);
+        ctx.shadowBlur = 0;
+        ctx.textAlign = 'center';
+      });
+
+
 
 
       // Draw diamonds
@@ -1058,7 +1121,7 @@ export default function BullCity() {
 
     render();
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrGlobal]);
+  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal]);
 
   const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean) => {
     const scale = 1.6;
@@ -1195,7 +1258,7 @@ export default function BullCity() {
           <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
             🐂 Cardano Stake Bulls · Bull City
           </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape — harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at every place, once per month.</p>
+          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape — harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at all {BUILDINGS.filter(b => b.reward).length} places — up to 5 owls per place, every day.</p>
         </div>
 
         {/* Stats */}
@@ -1206,7 +1269,9 @@ export default function BullCity() {
           </Card>
           <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/40">
             <span className="text-base leading-none">🦉</span>
-            <span className="text-amber-200 text-sm font-bold">{cmkrMined.size} CMKR this month</span>
+            <span className="text-amber-200 text-sm font-bold">
+              {Object.values(cmkrToday).reduce((s, n) => s + n, 0)} today · {cmkrMyMonth} this month
+            </span>
           </Card>
           <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
             <Gem className="w-4 h-4 text-cyan-300" />
@@ -1247,6 +1312,19 @@ export default function BullCity() {
             </div>
           </div>
 
+          {/* auto-mine toggle — sits right above the mine button */}
+          <button
+            onClick={() => setAutoMine(a => !a)}
+            className={`absolute bottom-28 right-4 w-20 h-11 rounded-full text-[11px] font-black border-2 transition-transform active:scale-90 flex flex-col items-center justify-center leading-tight ${
+              autoMine
+                ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 border-emerald-200 text-black shadow-[0_0_24px_rgba(52,211,153,0.6)] animate-pulse'
+                : 'bg-slate-900/70 border-slate-600 text-slate-300'
+            }`}
+          >
+            <span>🤖 AUTO</span>
+            <span className="text-[9px] opacity-80">{autoMine ? 'MINING ON' : 'OFF'}</span>
+          </button>
+
           {/* work button — bottom right thumb zone */}
           <button
             onClick={() => nearBuilding && workAtBuilding(nearBuilding)}
@@ -1259,6 +1337,7 @@ export default function BullCity() {
           >
             ⚒️
           </button>
+
         </Card>
 
 
@@ -1275,15 +1354,15 @@ export default function BullCity() {
               style={{ width: `${Math.min(100, (cmkrGlobal / CMKR_MONTHLY_CAP) * 100)}%` }} />
           </div>
           <p className="text-xs text-cyan-200/60 mb-3">
-            Every place gives exactly <span className="text-amber-300 font-semibold">1 🦉 CMKR per player, per month</span>. Mine all {BUILDINGS.filter(b => b.reward).length} places to max your month.
-            The <span className="text-amber-300 font-semibold">top 3 miners</span> each month are paid out in the Discord channel by Nick G.
+            Every place gives up to <span className="text-amber-300 font-semibold">5 🦉 CMKR per player, per day</span> — mine all {BUILDINGS.filter(b => b.reward).length} places daily for up to {BUILDINGS.filter(b => b.reward).length * CMKR_DAILY_PER_PLACE} owls a day.
+            <span className="text-amber-300 font-semibold"> Everyone who mines</span> is listed below and paid out in the Discord channel by Nick G.
           </p>
 
-          <h4 className="text-sm font-bold text-white/90 mb-2">🏆 Monthly CMKR Leaderboard</h4>
+          <h4 className="text-sm font-bold text-white/90 mb-2">🏆 Monthly CMKR Leaderboard · {cmkrBoard.length} miners</h4>
           {cmkrBoard.length === 0 ? (
             <p className="text-xs text-white/50">No owls mined yet this month — be the first 🦉</p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-1 max-h-80 overflow-y-auto pr-1">
               {cmkrBoard.map((r, i) => (
                 <div key={r.user_id}
                   className={`flex items-center justify-between rounded-md px-2 py-1 text-sm ${r.user_id === userId ? 'bg-amber-400/15 border border-amber-400/40' : 'bg-slate-900/50'}`}>
@@ -1300,15 +1379,16 @@ export default function BullCity() {
 
         {/* Buildings Guide */}
         <Card className="p-4 mt-3 bg-[#0d2640] border-[#FF9900]/30">
-          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots</h3>
+          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots (5 🦉 each per day)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
             {BUILDINGS.filter(b => b.reward).map(b => {
-              const done = cmkrMined.has(b.id);
+              const used = cmkrToday[b.id] || 0;
+              const done = used >= CMKR_DAILY_PER_PLACE;
               return (
                 <div key={b.id} className={`flex items-center gap-2 rounded-md px-2 py-1 ${done ? 'bg-slate-800/40 text-white/40' : 'text-white/80'}`}>
                   <span>{b.emoji}</span>
                   <span className="flex-1 truncate">{b.name}</span>
-                  <span className={done ? 'text-white/30' : 'text-amber-300'}>{done ? '✓ 🦉' : '🦉 1'}</span>
+                  <span className={done ? 'text-white/30' : 'text-amber-300'}>{done ? '✓ 🦉' : `🦉 ${used}/${CMKR_DAILY_PER_PLACE}`}</span>
                   <span className="text-[#00D4FF] text-xs">+{b.reward}💎</span>
                 </div>
               );
