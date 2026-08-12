@@ -1354,15 +1354,15 @@ export default function BullCity() {
               style={{ width: `${Math.min(100, (cmkrGlobal / CMKR_MONTHLY_CAP) * 100)}%` }} />
           </div>
           <p className="text-xs text-cyan-200/60 mb-3">
-            Every place gives exactly <span className="text-amber-300 font-semibold">1 🦉 CMKR per player, per month</span>. Mine all {BUILDINGS.filter(b => b.reward).length} places to max your month.
-            The <span className="text-amber-300 font-semibold">top 3 miners</span> each month are paid out in the Discord channel by Nick G.
+            Every place gives up to <span className="text-amber-300 font-semibold">5 🦉 CMKR per player, per day</span> — mine all {BUILDINGS.filter(b => b.reward).length} places daily for up to {BUILDINGS.filter(b => b.reward).length * CMKR_DAILY_PER_PLACE} owls a day.
+            <span className="text-amber-300 font-semibold"> Everyone who mines</span> is listed below and paid out in the Discord channel by Nick G.
           </p>
 
-          <h4 className="text-sm font-bold text-white/90 mb-2">🏆 Monthly CMKR Leaderboard</h4>
+          <h4 className="text-sm font-bold text-white/90 mb-2">🏆 Monthly CMKR Leaderboard · {cmkrBoard.length} miners</h4>
           {cmkrBoard.length === 0 ? (
             <p className="text-xs text-white/50">No owls mined yet this month — be the first 🦉</p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-1 max-h-80 overflow-y-auto pr-1">
               {cmkrBoard.map((r, i) => (
                 <div key={r.user_id}
                   className={`flex items-center justify-between rounded-md px-2 py-1 text-sm ${r.user_id === userId ? 'bg-amber-400/15 border border-amber-400/40' : 'bg-slate-900/50'}`}>
@@ -1379,15 +1379,16 @@ export default function BullCity() {
 
         {/* Buildings Guide */}
         <Card className="p-4 mt-3 bg-[#0d2640] border-[#FF9900]/30">
-          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots</h3>
+          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots (5 🦉 each per day)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
             {BUILDINGS.filter(b => b.reward).map(b => {
-              const done = cmkrMined.has(b.id);
+              const used = cmkrToday[b.id] || 0;
+              const done = used >= CMKR_DAILY_PER_PLACE;
               return (
                 <div key={b.id} className={`flex items-center gap-2 rounded-md px-2 py-1 ${done ? 'bg-slate-800/40 text-white/40' : 'text-white/80'}`}>
                   <span>{b.emoji}</span>
                   <span className="flex-1 truncate">{b.name}</span>
-                  <span className={done ? 'text-white/30' : 'text-amber-300'}>{done ? '✓ 🦉' : '🦉 1'}</span>
+                  <span className={done ? 'text-white/30' : 'text-amber-300'}>{done ? '✓ 🦉' : `🦉 ${used}/${CMKR_DAILY_PER_PLACE}`}</span>
                   <span className="text-[#00D4FF] text-xs">+{b.reward}💎</span>
                 </div>
               );
