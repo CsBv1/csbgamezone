@@ -967,10 +967,12 @@ export default function BullCity() {
 
         // ——— CMKR 🦉 availability badge ———
         if (building.reward) {
-          const owlLeft = !cmkrMined.has(building.id) && cmkrGlobal < CMKR_MONTHLY_CAP;
+          const used = cmkrToday[building.id] || 0;
+          const left = Math.max(0, CMKR_DAILY_PER_PLACE - used);
+          const owlLeft = left > 0 && cmkrGlobal < CMKR_MONTHLY_CAP;
           ctx.font = 'bold 11px Arial';
           ctx.fillStyle = owlLeft ? '#00FF88' : '#64748b';
-          ctx.fillText(owlLeft ? '🦉 1 CMKR AVAILABLE' : '🦉 claimed this month', cx + ox, topY - 12);
+          ctx.fillText(owlLeft ? `🦉 ${left}/${CMKR_DAILY_PER_PLACE} CMKR LEFT TODAY` : '🦉 daily 5 mined', cx + ox, topY - 12);
         }
 
         // ——— interaction prompt ———
@@ -987,6 +989,30 @@ export default function BullCity() {
           }
         }
       });
+
+      /* ---------- district labels (drawn above buildings so they stay readable) ---------- */
+      DISTRICTS.forEach(d => {
+        const lx = d.x + 22, ly = d.y + 38;
+        if (!inView(d.x + d.w / 2, d.y + d.h / 2) && !inView(lx, ly)) return;
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 22px Arial';
+        const w = ctx.measureText(d.label).width;
+        ctx.fillStyle = 'rgba(4,12,22,0.72)';
+        ctx.beginPath();
+        ctx.roundRect(lx - 12, ly - 26, w + 24, 36, 10);
+        ctx.fill();
+        ctx.strokeStyle = d.color + '66';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = d.color;
+        ctx.shadowColor = d.color;
+        ctx.shadowBlur = 12;
+        ctx.fillText(d.label, lx, ly);
+        ctx.shadowBlur = 0;
+        ctx.textAlign = 'center';
+      });
+
+
 
 
       // Draw diamonds
