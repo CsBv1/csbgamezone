@@ -1312,6 +1312,19 @@ export default function BullCity() {
             </div>
           </div>
 
+          {/* auto-mine toggle — sits right above the mine button */}
+          <button
+            onClick={() => setAutoMine(a => !a)}
+            className={`absolute bottom-28 right-4 w-20 h-11 rounded-full text-[11px] font-black border-2 transition-transform active:scale-90 flex flex-col items-center justify-center leading-tight ${
+              autoMine
+                ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 border-emerald-200 text-black shadow-[0_0_24px_rgba(52,211,153,0.6)] animate-pulse'
+                : 'bg-slate-900/70 border-slate-600 text-slate-300'
+            }`}
+          >
+            <span>🤖 AUTO</span>
+            <span className="text-[9px] opacity-80">{autoMine ? 'MINING ON' : 'OFF'}</span>
+          </button>
+
           {/* work button — bottom right thumb zone */}
           <button
             onClick={() => nearBuilding && workAtBuilding(nearBuilding)}
@@ -1324,6 +1337,7 @@ export default function BullCity() {
           >
             ⚒️
           </button>
+
         </Card>
 
 
