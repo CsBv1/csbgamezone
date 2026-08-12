@@ -493,9 +493,10 @@ export default function BullCity() {
       }
 
       if (gotOwl) {
-        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} claimed for ${CMKR_MONTH}. One owl per place, per month.` });
+        const left = CMKR_DAILY_PER_PLACE - (cmkrTodayRef.current[building.id] || 0);
+        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} — ${left} of ${CMKR_DAILY_PER_PLACE} owls left here today.` });
       } else {
-        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name}'s 🦉 CMKR is already claimed this month.` });
+        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name}'s 5 daily 🦉 CMKR are done — resets tomorrow.` });
       }
       audioManager.playSFX('win');
     } catch (error) {
