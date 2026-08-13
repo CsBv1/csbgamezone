@@ -346,7 +346,13 @@ export default function BullCity() {
   useEffect(() => {
     if (!gameActive) return;
 
+    const isTyping = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', ' ', 'e'].includes(e.key)) {
         e.preventDefault();
         keysPressed.current.add(e.key.toLowerCase());
