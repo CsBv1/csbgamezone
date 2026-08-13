@@ -513,15 +513,42 @@ export default function BullCity() {
   nearBuildingRef.current = nearBuilding;
   const isWorkingRef = useRef(isWorking);
   isWorkingRef.current = isWorking;
+  const autoMineRef = useRef(autoMine);
+  autoMineRef.current = autoMine;
+  const cooldownsRef = useRef(workCooldowns);
+  cooldownsRef.current = workCooldowns;
+  /** Building the auto-miner is currently walking towards. */
+  const autoTargetRef = useRef<Building | null>(null);
+
+  /** Nearest building that still has owls left today (cooldown-aware). */
+  const pickAutoTarget = useCallback((): Building | null => {
+    const now = Date.now();
+    const p = posRef.current;
+    const open = BUILDINGS.filter(
+      (b) => b.reward && (cmkrTodayRef.current[b.id] || 0) < CMKR_DAILY_PER_PLACE
+    );
+    const ready = open.filter((b) => now - (cooldownsRef.current[b.id] || 0) >= (b.cooldownMs || 10000));
+    const pool = ready.length ? ready : open;
+    if (!pool.length) return null;
+    return pool.reduce((best, b) => {
+      const d = Math.hypot(p.x - (b.x + b.width / 2), p.y - (b.y + b.height / 2));
+      const bd = Math.hypot(p.x - (best.x + best.width / 2), p.y - (best.y + best.height / 2));
+      return d < bd ? b : best;
+    });
+  }, []);
 
   useEffect(() => {
-    if (!autoMine || !gameActive) return;
+    if (!autoMine) { autoTargetRef.current = null; return; }
+    if (!gameActive) return;
     const t = setInterval(() => {
       const b = nearBuildingRef.current;
-      if (b?.reward && !isWorkingRef.current) workFnRef.current(b, true);
+      if (b?.reward && !isWorkingRef.current && (cmkrTodayRef.current[b.id] || 0) < CMKR_DAILY_PER_PLACE) {
+        workFnRef.current(b, true);
+      }
     }, 900);
     return () => clearInterval(t);
   }, [autoMine, gameActive]);
+
 
 
   // Game loop
