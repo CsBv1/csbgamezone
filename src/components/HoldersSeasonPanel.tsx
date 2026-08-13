@@ -59,7 +59,7 @@ export function HoldersSeasonPanel() {
         const ids = topRows.map((row) => row.user_id);
         if (ids.length > 0) {
           const { data: profileData } = await supabase
-            .from("profiles")
+            .from("public_profiles" as any)
             .select("id, username")
             .in("id", ids);
 
