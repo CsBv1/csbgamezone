@@ -94,7 +94,7 @@ export default function BullSprint() {
           return {
             id: result.id,
             user_id: result.user_id,
-            username: profile?.username || 'Anonymous',
+            username: (profile as any)?.username || 'Anonymous',
             time: result.multiplier || 0,
             diamonds_won: result.diamonds_won || 0
           };

@@ -96,7 +96,7 @@ export default function ObstacleRush() {
             .single();
           return {
             ...result,
-            username: profile?.username || 'Anonymous'
+            username: (profile as any)?.username || 'Anonymous'
           };
         })
       );

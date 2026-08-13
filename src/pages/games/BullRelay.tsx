@@ -91,7 +91,7 @@ export default function BullRelay() {
             .single();
           return {
             ...result,
-            username: profile?.username || 'Anonymous'
+            username: (profile as any)?.username || 'Anonymous'
           };
         })
       );
