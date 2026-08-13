@@ -452,7 +452,12 @@ export default function BullWorldMMO() {
   /* --------------------------------- input --------------------------------- */
   useEffect(() => {
     if (!character) return;
+    const isTyping = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+    };
     const down = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
       keysDown.current.add(e.key.toLowerCase());
       if (e.key === " ") { e.preventDefault(); doAttack(); }
       const n = parseInt(e.key, 10);
