@@ -475,7 +475,7 @@ export default function BullWorldMMO() {
     window.addEventListener("blur", blur);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); window.removeEventListener("blur", blur); };
   }, [character, doAttack, useSkill, nearPortal, navigate]);
 
   /* ------------------------------- game loop -------------------------------- */
