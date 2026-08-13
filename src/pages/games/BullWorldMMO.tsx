@@ -471,6 +471,8 @@ export default function BullWorldMMO() {
       if (e.key.toLowerCase() === "m") setPanel((v) => (v === "map" ? null : "map"));
     };
     const up = (e: KeyboardEvent) => keysDown.current.delete(e.key.toLowerCase());
+    const blur = () => keysDown.current.clear();
+    window.addEventListener("blur", blur);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
