@@ -228,19 +228,8 @@ export default function CsbBattleArena() {
     loadChallengers();
   };
 
-  // Fetch an opponent's real bull image from their connected wallet
-  const fetchOpponentBullImage = async (oppUserId: string): Promise<string | undefined> => {
-    try {
-      const { data: prof } = await supabase.from('profiles').select('wallet_address').eq('id', oppUserId).maybeSingle();
-      const addr = (prof as any)?.wallet_address;
-      if (!addr) return undefined;
-      const { data } = await supabase.functions.invoke('scan-wallet-nfts', { body: { walletAddress: addr } });
-      const list = (data?.nfts || []) as Array<{ image?: string }>;
-      return list.find((n) => n.image)?.image;
-    } catch {
-      return undefined;
-    }
-  };
+  // Opponent wallet addresses are private, so proxy battles fall back to default bull art
+  const fetchOpponentBullImage = async (_oppUserId: string): Promise<string | undefined> => undefined;
 
   // AI stands in for a real player who didn't answer, using their name + bull
   const startProxyAI = async (bull: CsbBull, opp: Challenger) => {

@@ -87,14 +87,14 @@ export default function BullSprint() {
       const resultsWithUsernames = await Promise.all(
         data.map(async (result: any) => {
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('public_profiles' as any)
             .select('username')
             .eq('id', result.user_id)
             .single();
           return {
             id: result.id,
             user_id: result.user_id,
-            username: profile?.username || 'Anonymous',
+            username: (profile as any)?.username || 'Anonymous',
             time: result.multiplier || 0,
             diamonds_won: result.diamonds_won || 0
           };

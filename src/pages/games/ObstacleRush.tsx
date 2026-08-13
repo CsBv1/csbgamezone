@@ -90,13 +90,13 @@ export default function ObstacleRush() {
       const resultsWithUsernames = await Promise.all(
         data.map(async (result: any) => {
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('public_profiles' as any)
             .select('username')
             .eq('id', result.user_id)
             .single();
           return {
             ...result,
-            username: profile?.username || 'Anonymous'
+            username: (profile as any)?.username || 'Anonymous'
           };
         })
       );
