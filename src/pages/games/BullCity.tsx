@@ -513,15 +513,42 @@ export default function BullCity() {
   nearBuildingRef.current = nearBuilding;
   const isWorkingRef = useRef(isWorking);
   isWorkingRef.current = isWorking;
+  const autoMineRef = useRef(autoMine);
+  autoMineRef.current = autoMine;
+  const cooldownsRef = useRef(workCooldowns);
+  cooldownsRef.current = workCooldowns;
+  /** Building the auto-miner is currently walking towards. */
+  const autoTargetRef = useRef<Building | null>(null);
+
+  /** Nearest building that still has owls left today (cooldown-aware). */
+  const pickAutoTarget = useCallback((): Building | null => {
+    const now = Date.now();
+    const p = posRef.current;
+    const open = BUILDINGS.filter(
+      (b) => b.reward && (cmkrTodayRef.current[b.id] || 0) < CMKR_DAILY_PER_PLACE
+    );
+    const ready = open.filter((b) => now - (cooldownsRef.current[b.id] || 0) >= (b.cooldownMs || 10000));
+    const pool = ready.length ? ready : open;
+    if (!pool.length) return null;
+    return pool.reduce((best, b) => {
+      const d = Math.hypot(p.x - (b.x + b.width / 2), p.y - (b.y + b.height / 2));
+      const bd = Math.hypot(p.x - (best.x + best.width / 2), p.y - (best.y + best.height / 2));
+      return d < bd ? b : best;
+    });
+  }, []);
 
   useEffect(() => {
-    if (!autoMine || !gameActive) return;
+    if (!autoMine) { autoTargetRef.current = null; return; }
+    if (!gameActive) return;
     const t = setInterval(() => {
       const b = nearBuildingRef.current;
-      if (b?.reward && !isWorkingRef.current) workFnRef.current(b, true);
+      if (b?.reward && !isWorkingRef.current && (cmkrTodayRef.current[b.id] || 0) < CMKR_DAILY_PER_PLACE) {
+        workFnRef.current(b, true);
+      }
     }, 900);
     return () => clearInterval(t);
   }, [autoMine, gameActive]);
+
 
 
   // Game loop
@@ -538,7 +565,30 @@ export default function BullCity() {
       if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) dx += 1;
       if (joystick.current.active) { dx += joystick.current.dx; dy += joystick.current.dy; }
 
-      const mag = Math.hypot(dx, dy);
+      let mag = Math.hypot(dx, dy);
+
+      // Auto-pilot: walk to the next building that still has owls left today
+      if (mag <= 0.05 && autoMineRef.current && !isWorkingRef.current) {
+        const t = autoTargetRef.current;
+        const stillOpen =
+          t && (cmkrTodayRef.current[t.id] || 0) < CMKR_DAILY_PER_PLACE;
+        const target = stillOpen ? t! : pickAutoTarget();
+        autoTargetRef.current = target;
+        if (target) {
+          const tx = target.x + target.width / 2;
+          const ty = target.y + target.height / 2;
+          const vx = tx - posRef.current.x;
+          const vy = ty - posRef.current.y;
+          const dist = Math.hypot(vx, vy);
+          if (dist > 70) {
+            dx = vx / dist;
+            dy = vy / dist;
+            mag = 1;
+          }
+        }
+      }
+
+
       if (mag > 0.05) {
         dx = (dx / mag) * MOVE_SPEED;
         dy = (dy / mag) * MOVE_SPEED;
