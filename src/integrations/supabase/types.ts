@@ -1265,18 +1265,6 @@ export type Database = {
           id: string | null
           username: string | null
         }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          id?: string | null
-          username?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          id?: string | null
-          username?: string | null
-        }
         Relationships: []
       }
     }
@@ -1303,6 +1291,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      csb_leaderboard_rows: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          bulls_owned: number
+          csb_tokens: number
+          rank: number
+          total_diamonds: number
+          user_id: string
+          username: string
+        }[]
       }
       csb_start_battle: {
         Args: { _guest_fighter: Json; _host_fighter: Json; _room_id: string }
@@ -1333,6 +1333,15 @@ export type Database = {
           _wallet_name: string
         }
         Returns: string
+      }
+      safe_profiles: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          created_at: string
+          id: string
+          username: string
+        }[]
       }
     }
     Enums: {
