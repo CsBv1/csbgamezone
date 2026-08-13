@@ -228,9 +228,9 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 Bull World 🌍</h3>
-              <p className="text-sm text-muted-foreground mb-4">Enter a virtual world! See other players, collect diamonds, explore & play mini-games together!</p>
-              <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Bull World</Button>
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂CsB Dungeon & City🌍</h3>
+              <p className="text-sm text-muted-foreground mb-4">Enter our virtual world! See other players, MMORPG Mode — fight monsters, get EXP to level up your CsB Bulls & collect diamonds, explore & play mini-games together! & mine CMKR in City🚀</p>
+              <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Dungeon & City</Button>
             </div>
           </Card>
 
