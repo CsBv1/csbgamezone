@@ -565,7 +565,30 @@ export default function BullCity() {
       if (keysPressed.current.has('arrowright') || keysPressed.current.has('d')) dx += 1;
       if (joystick.current.active) { dx += joystick.current.dx; dy += joystick.current.dy; }
 
-      const mag = Math.hypot(dx, dy);
+      let mag = Math.hypot(dx, dy);
+
+      // Auto-pilot: walk to the next building that still has owls left today
+      if (mag <= 0.05 && autoMineRef.current && !isWorkingRef.current) {
+        const t = autoTargetRef.current;
+        const stillOpen =
+          t && (cmkrTodayRef.current[t.id] || 0) < CMKR_DAILY_PER_PLACE;
+        const target = stillOpen ? t! : pickAutoTarget();
+        autoTargetRef.current = target;
+        if (target) {
+          const tx = target.x + target.width / 2;
+          const ty = target.y + target.height / 2;
+          const vx = tx - posRef.current.x;
+          const vy = ty - posRef.current.y;
+          const dist = Math.hypot(vx, vy);
+          if (dist > 70) {
+            dx = vx / dist;
+            dy = vy / dist;
+            mag = 1;
+          }
+        }
+      }
+
+
       if (mag > 0.05) {
         dx = (dx / mag) * MOVE_SPEED;
         dy = (dy / mag) * MOVE_SPEED;
