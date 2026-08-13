@@ -452,7 +452,12 @@ export default function BullWorldMMO() {
   /* --------------------------------- input --------------------------------- */
   useEffect(() => {
     if (!character) return;
+    const isTyping = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+    };
     const down = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
       keysDown.current.add(e.key.toLowerCase());
       if (e.key === " ") { e.preventDefault(); doAttack(); }
       const n = parseInt(e.key, 10);
@@ -466,9 +471,11 @@ export default function BullWorldMMO() {
       if (e.key.toLowerCase() === "m") setPanel((v) => (v === "map" ? null : "map"));
     };
     const up = (e: KeyboardEvent) => keysDown.current.delete(e.key.toLowerCase());
+    const blur = () => keysDown.current.clear();
+    window.addEventListener("blur", blur);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); window.removeEventListener("blur", blur); };
   }, [character, doAttack, useSkill, nearPortal, navigate]);
 
   /* ------------------------------- game loop -------------------------------- */
