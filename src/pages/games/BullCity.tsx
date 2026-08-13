@@ -1312,9 +1312,9 @@ export default function BullCity() {
         {/* Title */}
         <div className="text-center mb-3">
           <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
-            🐂 Cardano Stake Bulls · Bull City
+            🐂 Cardano Stake Bulls · City
           </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape — harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at all {BUILDINGS.filter(b => b.reward).length} places — up to 5 owls per place, every day.</p>
+          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at all {BUILDINGS.filter(b => b.reward).length} places up to 5 owls per place, every day.</p>
         </div>
 
         {/* Stats */}
