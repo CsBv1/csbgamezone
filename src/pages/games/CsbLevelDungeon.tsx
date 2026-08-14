@@ -161,8 +161,15 @@ export default function CsbLevelDungeon() {
     s.explored = new Uint8Array(MAP_W * MAP_H);
     s.mobs = []; s.shots = []; s.pickups = []; s.fx = [];
     s.px = cx(rooms[0]); s.py = cy(rooms[0]);
-    const last = rooms[rooms.length - 1];
-    s.exit = { x: cx(last), y: cy(last) };
+    // Exit = the reachable room farthest from spawn (never the spawn room itself)
+    let best = rooms[rooms.length - 1], bestD = -1;
+    rooms.forEach((r, i) => {
+      if (i === 0) return;
+      const d = Math.hypot(cx(r) - s.px, cy(r) - s.py);
+      if (d > bestD) { bestD = d; best = r; }
+    });
+    s.exit = { x: cx(best), y: cy(best) };
+
     if (!keepHp) { s.hp = s.maxHp; }
 
     let id = 1;
