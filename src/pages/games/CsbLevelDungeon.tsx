@@ -127,6 +127,8 @@ export default function CsbLevelDungeon() {
     hp: 100, maxHp: 100, atk: 12, def: 2, atkCd: 0,
     level: 1, exp: 0, gainedXp: 0, gainedRune: 0, bankedXp: 0, bankedRune: 0, kills: 0, levelUps: 0,
     mobs: [] as Mob[], shots: [] as Shot[], pickups: [] as Pickup[], fx: [] as Fx[],
+    respawns: [] as { t: number; def: EnemyDef; x: number; y: number; scale: number }[],
+    nextId: 100000,
     explored: new Uint8Array(MAP_W * MAP_H),
     keys: {} as Record<string, boolean>, joy: { active: false, dx: 0, dy: 0 },
     exit: { x: 0, y: 0 }, bossAlive: false, floor: 1, running: false, t: 0, camX: 0, camY: 0,
@@ -159,7 +161,7 @@ export default function CsbLevelDungeon() {
     s.grid = grid; s.rooms = rooms; s.floor = f;
     s.biome = BIOMES[(f - 1) % BIOMES.length];
     s.explored = new Uint8Array(MAP_W * MAP_H);
-    s.mobs = []; s.shots = []; s.pickups = []; s.fx = [];
+    s.mobs = []; s.shots = []; s.pickups = []; s.fx = []; s.respawns = [];
     s.px = cx(rooms[0]); s.py = cy(rooms[0]);
     // Exit = the reachable room farthest from spawn (never the spawn room itself)
     let best = rooms[rooms.length - 1], bestD = -1;
@@ -370,12 +372,28 @@ export default function CsbLevelDungeon() {
 
         /* ---------------- abilities ---------------- */
         s.atkCd -= dt; s.dashCd -= dt; s.slamCd -= dt; s.invul -= dt;
+
+        /* --------- respawn queue (5s after a kill) --------- */
+        for (let i = s.respawns.length - 1; i >= 0; i--) {
+          const r = s.respawns[i];
+          r.t -= dt;
+          if (r.t <= 0) {
+            s.respawns.splice(i, 1);
+            s.mobs.push({
+              id: s.nextId++, x: r.x, y: r.y,
+              hp: Math.round(r.def.hp * r.scale), maxHp: Math.round(r.def.hp * r.scale),
+              def: r.def, boss: false, cd: 0, hit: 0, vx: 0, vy: 0,
+            });
+            pushFx(r.x, r.y, r.def.color, undefined, 46);
+          }
+        }
+
         if (s.attackReq && s.atkCd <= 0) {
           s.atkCd = 380;
-          pushFx(s.px + s.facing * 40, s.py, s.biome.glow, undefined, 62);
+          pushFx(s.px, s.py, s.biome.glow, undefined, 520);
           s.mobs.forEach((m) => {
             const d = Math.hypot(m.x - s.px, m.y - s.py);
-            if (d < 95) damageMob(m, s.atk * (0.9 + Math.random() * 0.35));
+            if (d < 520) damageMob(m, s.atk * (0.9 + Math.random() * 0.35));
           });
         }
         s.attackReq = false;
@@ -390,13 +408,14 @@ export default function CsbLevelDungeon() {
         s.dashReq = false;
         if (s.slamReq && s.slamCd <= 0) {
           s.slamCd = 7000;
-          pushFx(s.px, s.py, "#ff4d6d", undefined, 190);
+          pushFx(s.px, s.py, "#ff4d6d", undefined, 760);
           s.mobs.forEach((m) => {
             const d = Math.hypot(m.x - s.px, m.y - s.py);
-            if (d < 200) damageMob(m, s.atk * 2.1);
+            if (d < 760) damageMob(m, s.atk * 2.1);
           });
         }
         s.slamReq = false;
+
 
         /* ---------------- mobs ---------------- */
         s.mobs.forEach((m) => {
@@ -492,13 +511,17 @@ export default function CsbLevelDungeon() {
       s.mobs = s.mobs.filter((o) => o.id !== m.id);
       s.kills += 1;
       const scale = 1 + (s.floor - 1) * 0.18;
-      gainXp(Math.round(m.def.xp * scale));
-      s.gainedRune += Math.round(m.def.rune * scale);
+      const XP_BOOST = 3, RUNE_BOOST = 2;
+      gainXp(Math.round(m.def.xp * scale * XP_BOOST));
+      s.gainedRune += Math.round(m.def.rune * scale * RUNE_BOOST);
       pushFx(m.x, m.y, m.def.color, m.boss ? "BOSS SLAIN" : undefined, m.boss ? 200 : 60);
       if (m.boss) {
         s.bossAlive = false;
         gainXp(expForLevel(s.level) - s.exp); // boss guarantees a level
         s.pickups.push({ x: m.x, y: m.y, kind: "chest", taken: false });
+      } else {
+        // respawn this monster 5s later at its death spot
+        s.respawns.push({ t: 5000, def: m.def as EnemyDef, x: m.x, y: m.y, scale: 1 + (s.floor - 1) * 0.28 });
       }
     }
   };
