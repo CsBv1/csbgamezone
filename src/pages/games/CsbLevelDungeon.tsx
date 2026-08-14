@@ -161,7 +161,7 @@ export default function CsbLevelDungeon() {
     s.grid = grid; s.rooms = rooms; s.floor = f;
     s.biome = BIOMES[(f - 1) % BIOMES.length];
     s.explored = new Uint8Array(MAP_W * MAP_H);
-    s.mobs = []; s.shots = []; s.pickups = []; s.fx = [];
+    s.mobs = []; s.shots = []; s.pickups = []; s.fx = []; s.respawns = [];
     s.px = cx(rooms[0]); s.py = cy(rooms[0]);
     // Exit = the reachable room farthest from spawn (never the spawn room itself)
     let best = rooms[rooms.length - 1], bestD = -1;
