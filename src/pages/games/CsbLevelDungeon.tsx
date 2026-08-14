@@ -302,7 +302,7 @@ export default function CsbLevelDungeon() {
         if (s.keys["d"] || s.keys["arrowright"]) dx += 1;
         if (s.joy.active) { dx += s.joy.dx; dy += s.joy.dy; }
         const mag = Math.hypot(dx, dy) || 1;
-        const spd = 0.29 * dt;
+        const spd = 0.155 * dt;
         if (dx || dy) {
           dx /= mag; dy /= mag;
           if (dx !== 0) s.facing = dx > 0 ? 1 : -1;
@@ -666,9 +666,9 @@ export default function CsbLevelDungeon() {
             </Card>
           ) : (
             <div>
-              <h2 className="text-lg font-bold mb-3 text-center">Select your Bull</h2>
+              <h2 className="text-lg font-bold mb-3 text-center">Select your Bull · highest level first</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {heldBulls.map((b) => (
+                {[...heldBulls].sort((a, b) => (b.level || 1) - (a.level || 1)).map((b, i) => (
                   <Card key={b.nft_id} onClick={() => startRun(b)}
                     className="p-3 bg-gradient-to-br from-indigo-800/70 to-slate-900 border-2 border-cyan-400/30 cursor-pointer hover:scale-[1.03] hover:border-cyan-300 transition-all">
                     <div className="aspect-square rounded-lg bg-black/40 flex items-center justify-center mb-2 overflow-hidden ring-1 ring-cyan-300/20">
@@ -753,12 +753,6 @@ export default function CsbLevelDungeon() {
         )}
       </div>
 
-      {/* exit hint */}
-      {nearExit && (
-        <div className="absolute top-[46%] left-1/2 -translate-x-1/2 text-[11px] text-cyan-200/70 pointer-events-none">
-          {g.current.bossAlive ? "Slay the boss to open the portal" : "Reach 🌀 and press E / tap DESCEND"}
-        </div>
-      )}
 
       {/* controls */}
       <div className="absolute bottom-4 left-4">
