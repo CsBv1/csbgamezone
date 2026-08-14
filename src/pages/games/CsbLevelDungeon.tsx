@@ -511,13 +511,17 @@ export default function CsbLevelDungeon() {
       s.mobs = s.mobs.filter((o) => o.id !== m.id);
       s.kills += 1;
       const scale = 1 + (s.floor - 1) * 0.18;
-      gainXp(Math.round(m.def.xp * scale));
-      s.gainedRune += Math.round(m.def.rune * scale);
+      const XP_BOOST = 3, RUNE_BOOST = 2;
+      gainXp(Math.round(m.def.xp * scale * XP_BOOST));
+      s.gainedRune += Math.round(m.def.rune * scale * RUNE_BOOST);
       pushFx(m.x, m.y, m.def.color, m.boss ? "BOSS SLAIN" : undefined, m.boss ? 200 : 60);
       if (m.boss) {
         s.bossAlive = false;
         gainXp(expForLevel(s.level) - s.exp); // boss guarantees a level
         s.pickups.push({ x: m.x, y: m.y, kind: "chest", taken: false });
+      } else {
+        // respawn this monster 5s later at its death spot
+        s.respawns.push({ t: 5000, def: m.def as EnemyDef, x: m.x, y: m.y, scale: 1 + (s.floor - 1) * 0.28 });
       }
     }
   };
