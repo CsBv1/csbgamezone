@@ -125,7 +125,7 @@ export default function CsbLevelDungeon() {
     grid: [] as number[], rooms: [] as Rect[], biome: BIOMES[0],
     px: 0, py: 0, vx: 0, vy: 0, facing: 1, dashCd: 0, slamCd: 0, invul: 0,
     hp: 100, maxHp: 100, atk: 12, def: 2, atkCd: 0,
-    level: 1, exp: 0, gainedXp: 0, gainedRune: 0, kills: 0, levelUps: 0,
+    level: 1, exp: 0, gainedXp: 0, gainedRune: 0, bankedXp: 0, bankedRune: 0, kills: 0, levelUps: 0,
     mobs: [] as Mob[], shots: [] as Shot[], pickups: [] as Pickup[], fx: [] as Fx[],
     explored: new Uint8Array(MAP_W * MAP_H),
     keys: {} as Record<string, boolean>, joy: { active: false, dx: 0, dy: 0 },
