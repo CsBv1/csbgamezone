@@ -127,6 +127,8 @@ export default function CsbLevelDungeon() {
     hp: 100, maxHp: 100, atk: 12, def: 2, atkCd: 0,
     level: 1, exp: 0, gainedXp: 0, gainedRune: 0, bankedXp: 0, bankedRune: 0, kills: 0, levelUps: 0,
     mobs: [] as Mob[], shots: [] as Shot[], pickups: [] as Pickup[], fx: [] as Fx[],
+    respawns: [] as { t: number; def: EnemyDef; x: number; y: number; scale: number }[],
+    nextId: 100000,
     explored: new Uint8Array(MAP_W * MAP_H),
     keys: {} as Record<string, boolean>, joy: { active: false, dx: 0, dy: 0 },
     exit: { x: 0, y: 0 }, bossAlive: false, floor: 1, running: false, t: 0, camX: 0, camY: 0,
