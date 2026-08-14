@@ -359,7 +359,7 @@ export default function CsbLevelDungeon() {
         if (s.keys["d"] || s.keys["arrowright"]) dx += 1;
         if (s.joy.active) { dx += s.joy.dx; dy += s.joy.dy; }
         const mag = Math.hypot(dx, dy) || 1;
-        const spd = 0.155 * dt;
+        const spd = 0.07 * dt;
         if (dx || dy) {
           dx /= mag; dy /= mag;
           if (dx !== 0) s.facing = dx > 0 ? 1 : -1;
