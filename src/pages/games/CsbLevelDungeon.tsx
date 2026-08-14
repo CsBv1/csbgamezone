@@ -125,7 +125,7 @@ export default function CsbLevelDungeon() {
     grid: [] as number[], rooms: [] as Rect[], biome: BIOMES[0],
     px: 0, py: 0, vx: 0, vy: 0, facing: 1, dashCd: 0, slamCd: 0, invul: 0,
     hp: 100, maxHp: 100, atk: 12, def: 2, atkCd: 0,
-    level: 1, exp: 0, gainedXp: 0, gainedRune: 0, kills: 0, levelUps: 0,
+    level: 1, exp: 0, gainedXp: 0, gainedRune: 0, bankedXp: 0, bankedRune: 0, kills: 0, levelUps: 0,
     mobs: [] as Mob[], shots: [] as Shot[], pickups: [] as Pickup[], fx: [] as Fx[],
     explored: new Uint8Array(MAP_W * MAP_H),
     keys: {} as Record<string, boolean>, joy: { active: false, dx: 0, dy: 0 },
@@ -161,8 +161,15 @@ export default function CsbLevelDungeon() {
     s.explored = new Uint8Array(MAP_W * MAP_H);
     s.mobs = []; s.shots = []; s.pickups = []; s.fx = [];
     s.px = cx(rooms[0]); s.py = cy(rooms[0]);
-    const last = rooms[rooms.length - 1];
-    s.exit = { x: cx(last), y: cy(last) };
+    // Exit = the reachable room farthest from spawn (never the spawn room itself)
+    let best = rooms[rooms.length - 1], bestD = -1;
+    rooms.forEach((r, i) => {
+      if (i === 0) return;
+      const d = Math.hypot(cx(r) - s.px, cy(r) - s.py);
+      if (d > bestD) { bestD = d; best = r; }
+    });
+    s.exit = { x: cx(best), y: cy(best) };
+
     if (!keepHp) { s.hp = s.maxHp; }
 
     let id = 1;
@@ -198,25 +205,67 @@ export default function CsbLevelDungeon() {
   /* ------------------------------ persistence --------------------------- */
   const persist = useCallback(async (finalRune: number, finalXp: number, newLevel: number, newExp: number) => {
     if (!userId || !bull) return;
-    if (finalRune > 0) await addBalance(finalRune);
-    await supabase.from("csbv1_nft_power" as any)
-      .update({ level: newLevel, exp: newExp, updated_at: new Date().toISOString() })
-      .eq("user_id", userId).eq("nft_id", bull.nft_id);
-    await supabase.from("game_results").insert({
-      user_id: userId, game_name: "CsB Level Dungeon", result: "win", diamonds_won: 0,
-    });
-  }, [userId, bull, addBalance]);
+    try {
+      if (finalRune > 0) {
+        // Direct, race-safe balance write (does not depend on hook state being loaded)
+        const { data: row } = await supabase
+          .from("csbv1_players" as any)
+          .select("balance,total_earned")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (row) {
+          await supabase.from("csbv1_players" as any)
+            .update({
+              balance: ((row as any).balance || 0) + finalRune,
+              total_earned: ((row as any).total_earned || 0) + finalRune,
+            })
+            .eq("user_id", userId);
+        } else {
+          await supabase.from("csbv1_players" as any)
+            .insert({ user_id: userId, balance: finalRune, total_earned: finalRune });
+        }
+      }
+
+      // Level / EXP — update, and insert the row if this bull was never tracked
+      const { data: updated } = await supabase.from("csbv1_nft_power" as any)
+        .update({ level: newLevel, exp: Math.round(newExp), updated_at: new Date().toISOString() })
+        .eq("user_id", userId).eq("nft_id", bull.nft_id)
+        .select("id");
+      if (!updated || updated.length === 0) {
+        await supabase.from("csbv1_nft_power" as any).insert({
+          user_id: userId, nft_id: bull.nft_id, nft_name: bull.nft_name,
+          rarity: bull.rarity || "legendary", level: newLevel, exp: Math.round(newExp),
+        });
+      }
+    } catch (e) {
+      console.error("dungeon persist failed", e);
+    }
+  }, [userId, bull]);
+
+  /** Bank progress mid-run (called on each descend) so nothing is ever lost */
+  const bankProgress = useCallback(async () => {
+    const s = g.current;
+    if (s.gainedRune <= 0 && s.gainedXp <= 0) return;
+    const rune = s.gainedRune, xp = s.gainedXp;
+    s.bankedRune += rune; s.bankedXp += xp;
+    s.gainedRune = 0; s.gainedXp = 0;
+    await persist(rune, xp, s.level, s.exp);
+  }, [persist]);
 
   const endRun = useCallback((died: boolean) => {
     const s = g.current;
     s.running = false;
     const rune = died ? Math.floor(s.gainedRune * 0.5) : s.gainedRune;
     const xp = died ? Math.floor(s.gainedXp * 0.5) : s.gainedXp;
-    setRunSummary({ rune, xp, kills: s.kills, floors: s.floor, levels: s.levelUps });
+    setRunSummary({ rune: rune + s.bankedRune, xp: xp + s.bankedXp, kills: s.kills, floors: s.floor, levels: s.levelUps });
     setPhase(died ? "dead" : "cleared");
     persist(rune, xp, s.level, s.exp);
-    toast({ title: died ? "☠️ You fell in the dungeon" : "🏆 Dungeon Escape!", description: `+${rune} Rune Power · +${xp} EXP` });
-  }, [persist, toast]);
+    supabase.from("game_results").insert({
+      user_id: userId!, game_name: "CsB Level Dungeon", result: died ? "loss" : "win", diamonds_won: 0,
+    } as any).then(() => {});
+    toast({ title: died ? "☠️ You fell in the dungeon" : "🏆 Dungeon Escape!", description: `+${rune + s.bankedRune} Rune Power · +${xp + s.bankedXp} EXP` });
+  }, [persist, toast, userId]);
+
 
   /* -------------------------------- start ------------------------------- */
   const startRun = (b: HeldCsbBull) => {
@@ -228,7 +277,7 @@ export default function CsbLevelDungeon() {
     s.hp = s.maxHp;
     s.atk = Math.round((11 + s.level * 2.2) * rare);
     s.def = Math.round(1 + s.level * 0.55);
-    s.gainedRune = 0; s.gainedXp = 0; s.kills = 0; s.levelUps = 0;
+    s.gainedRune = 0; s.gainedXp = 0; s.bankedRune = 0; s.bankedXp = 0; s.kills = 0; s.levelUps = 0;
     s.dashCd = 0; s.slamCd = 0; s.invul = 0; s.atkCd = 0;
     setBull(b);
     setFloor(1);
@@ -241,6 +290,7 @@ export default function CsbLevelDungeon() {
     const s = g.current;
     const f = s.floor + 1;
     s.hp = Math.min(s.maxHp, s.hp + Math.round(s.maxHp * 0.3));
+    bankProgress();
     buildFloor(f, true);
     setFloor(f);
     pushFx(s.px, s.py - 40, "#facc15", `FLOOR ${f}`);
@@ -266,9 +316,16 @@ export default function CsbLevelDungeon() {
   const tryInteract = () => {
     const s = g.current;
     if (!s.running) return;
+    if (s.bossAlive) {
+      toast({ title: "Boss still alive", description: "Slay the boss to open the portal." });
+      return;
+    }
     const d = Math.hypot(s.px - s.exit.x, s.py - s.exit.y);
-    if (d < 90 && !s.bossAlive) nextFloor();
+    // Forgiving radius; if the floor is cleared you can descend from anywhere.
+    if (d < 140 || s.mobs.length === 0) { nextFloor(); return; }
+    toast({ title: "Too far from the portal", description: "Follow the 🌀 marker on the minimap." });
   };
+
 
   /* ------------------------------ game loop ----------------------------- */
   useEffect(() => {
@@ -302,7 +359,7 @@ export default function CsbLevelDungeon() {
         if (s.keys["d"] || s.keys["arrowright"]) dx += 1;
         if (s.joy.active) { dx += s.joy.dx; dy += s.joy.dy; }
         const mag = Math.hypot(dx, dy) || 1;
-        const spd = 0.155 * dt;
+        const spd = 0.07 * dt;
         if (dx || dy) {
           dx /= mag; dy /= mag;
           if (dx !== 0) s.facing = dx > 0 ? 1 : -1;
@@ -399,7 +456,7 @@ export default function CsbLevelDungeon() {
 
         setHud({
           hp: Math.max(0, Math.round(s.hp)), maxHp: s.maxHp, level: s.level, exp: Math.round(s.exp),
-          need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune, xp: s.gainedXp,
+          need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune + s.bankedRune, xp: s.gainedXp + s.bankedXp,
           bossHp: s.mobs.find((m) => m.boss)?.hp || 0,
           bossMax: s.mobs.find((m) => m.boss)?.maxHp || 0,
           bossName: (s.mobs.find((m) => m.boss)?.def.name) || "",
