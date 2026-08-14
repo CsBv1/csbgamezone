@@ -198,25 +198,67 @@ export default function CsbLevelDungeon() {
   /* ------------------------------ persistence --------------------------- */
   const persist = useCallback(async (finalRune: number, finalXp: number, newLevel: number, newExp: number) => {
     if (!userId || !bull) return;
-    if (finalRune > 0) await addBalance(finalRune);
-    await supabase.from("csbv1_nft_power" as any)
-      .update({ level: newLevel, exp: newExp, updated_at: new Date().toISOString() })
-      .eq("user_id", userId).eq("nft_id", bull.nft_id);
-    await supabase.from("game_results").insert({
-      user_id: userId, game_name: "CsB Level Dungeon", result: "win", diamonds_won: 0,
-    });
-  }, [userId, bull, addBalance]);
+    try {
+      if (finalRune > 0) {
+        // Direct, race-safe balance write (does not depend on hook state being loaded)
+        const { data: row } = await supabase
+          .from("csbv1_players" as any)
+          .select("balance,total_earned")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (row) {
+          await supabase.from("csbv1_players" as any)
+            .update({
+              balance: ((row as any).balance || 0) + finalRune,
+              total_earned: ((row as any).total_earned || 0) + finalRune,
+            })
+            .eq("user_id", userId);
+        } else {
+          await supabase.from("csbv1_players" as any)
+            .insert({ user_id: userId, balance: finalRune, total_earned: finalRune });
+        }
+      }
+
+      // Level / EXP — update, and insert the row if this bull was never tracked
+      const { data: updated } = await supabase.from("csbv1_nft_power" as any)
+        .update({ level: newLevel, exp: Math.round(newExp), updated_at: new Date().toISOString() })
+        .eq("user_id", userId).eq("nft_id", bull.nft_id)
+        .select("id");
+      if (!updated || updated.length === 0) {
+        await supabase.from("csbv1_nft_power" as any).insert({
+          user_id: userId, nft_id: bull.nft_id, nft_name: bull.nft_name,
+          rarity: bull.rarity || "legendary", level: newLevel, exp: Math.round(newExp),
+        });
+      }
+    } catch (e) {
+      console.error("dungeon persist failed", e);
+    }
+  }, [userId, bull]);
+
+  /** Bank progress mid-run (called on each descend) so nothing is ever lost */
+  const bankProgress = useCallback(async () => {
+    const s = g.current;
+    if (s.gainedRune <= 0 && s.gainedXp <= 0) return;
+    const rune = s.gainedRune, xp = s.gainedXp;
+    s.bankedRune += rune; s.bankedXp += xp;
+    s.gainedRune = 0; s.gainedXp = 0;
+    await persist(rune, xp, s.level, s.exp);
+  }, [persist]);
 
   const endRun = useCallback((died: boolean) => {
     const s = g.current;
     s.running = false;
     const rune = died ? Math.floor(s.gainedRune * 0.5) : s.gainedRune;
     const xp = died ? Math.floor(s.gainedXp * 0.5) : s.gainedXp;
-    setRunSummary({ rune, xp, kills: s.kills, floors: s.floor, levels: s.levelUps });
+    setRunSummary({ rune: rune + s.bankedRune, xp: xp + s.bankedXp, kills: s.kills, floors: s.floor, levels: s.levelUps });
     setPhase(died ? "dead" : "cleared");
     persist(rune, xp, s.level, s.exp);
-    toast({ title: died ? "☠️ You fell in the dungeon" : "🏆 Dungeon Escape!", description: `+${rune} Rune Power · +${xp} EXP` });
-  }, [persist, toast]);
+    supabase.from("game_results").insert({
+      user_id: userId!, game_name: "CsB Level Dungeon", result: died ? "loss" : "win", diamonds_won: 0,
+    } as any).then(() => {});
+    toast({ title: died ? "☠️ You fell in the dungeon" : "🏆 Dungeon Escape!", description: `+${rune + s.bankedRune} Rune Power · +${xp + s.bankedXp} EXP` });
+  }, [persist, toast, userId]);
+
 
   /* -------------------------------- start ------------------------------- */
   const startRun = (b: HeldCsbBull) => {
