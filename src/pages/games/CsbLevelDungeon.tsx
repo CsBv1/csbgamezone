@@ -372,12 +372,28 @@ export default function CsbLevelDungeon() {
 
         /* ---------------- abilities ---------------- */
         s.atkCd -= dt; s.dashCd -= dt; s.slamCd -= dt; s.invul -= dt;
+
+        /* --------- respawn queue (5s after a kill) --------- */
+        for (let i = s.respawns.length - 1; i >= 0; i--) {
+          const r = s.respawns[i];
+          r.t -= dt;
+          if (r.t <= 0) {
+            s.respawns.splice(i, 1);
+            s.mobs.push({
+              id: s.nextId++, x: r.x, y: r.y,
+              hp: Math.round(r.def.hp * r.scale), maxHp: Math.round(r.def.hp * r.scale),
+              def: r.def, boss: false, cd: 0, hit: 0, vx: 0, vy: 0,
+            });
+            pushFx(r.x, r.y, r.def.color, undefined, 46);
+          }
+        }
+
         if (s.attackReq && s.atkCd <= 0) {
           s.atkCd = 380;
-          pushFx(s.px + s.facing * 40, s.py, s.biome.glow, undefined, 62);
+          pushFx(s.px, s.py, s.biome.glow, undefined, 520);
           s.mobs.forEach((m) => {
             const d = Math.hypot(m.x - s.px, m.y - s.py);
-            if (d < 95) damageMob(m, s.atk * (0.9 + Math.random() * 0.35));
+            if (d < 520) damageMob(m, s.atk * (0.9 + Math.random() * 0.35));
           });
         }
         s.attackReq = false;
@@ -392,13 +408,14 @@ export default function CsbLevelDungeon() {
         s.dashReq = false;
         if (s.slamReq && s.slamCd <= 0) {
           s.slamCd = 7000;
-          pushFx(s.px, s.py, "#ff4d6d", undefined, 190);
+          pushFx(s.px, s.py, "#ff4d6d", undefined, 760);
           s.mobs.forEach((m) => {
             const d = Math.hypot(m.x - s.px, m.y - s.py);
-            if (d < 200) damageMob(m, s.atk * 2.1);
+            if (d < 760) damageMob(m, s.atk * 2.1);
           });
         }
         s.slamReq = false;
+
 
         /* ---------------- mobs ---------------- */
         s.mobs.forEach((m) => {
