@@ -674,9 +674,9 @@ export default function CsbLevelDungeon() {
     ctx.fillStyle = light;
     ctx.fillRect(0, 0, W, H);
 
-    /* minimap */
-    const MM = 132, mmx = W - MM - 12, mmy = 12, sc = MM / MAP_W;
-    ctx.fillStyle = "rgba(3,8,16,0.8)";
+    /* minimap — smaller, centred above bottom controls */
+    const MM = 96, mmx = W / 2 - MM / 2, mmy = H - MM - 28, sc = MM / MAP_W;
+    ctx.fillStyle = "rgba(3,8,16,0.85)";
     ctx.fillRect(mmx, mmy, MM, MM);
     ctx.strokeStyle = b.glow + "88"; ctx.strokeRect(mmx + 0.5, mmy + 0.5, MM, MM);
     for (let j = 0; j < MAP_H; j++) for (let i = 0; i < MAP_W; i++) {
@@ -690,7 +690,7 @@ export default function CsbLevelDungeon() {
     ctx.fillStyle = b.glow;
     ctx.fillRect(mmx + (s.px / TILE) * sc - 1, mmy + (s.py / TILE) * sc - 1, 4, 4);
     ctx.fillStyle = "#fff"; ctx.font = "bold 11px system-ui"; ctx.textAlign = "left";
-    ctx.fillText(`${b.emoji} ${b.name} · Floor ${s.floor}`, mmx, mmy + MM + 14);
+    ctx.fillText(`${b.emoji} ${b.name} · Floor ${s.floor}`, mmx, mmy - 6);
   };
 
   /* ------------------------------- joystick ----------------------------- */
