@@ -270,7 +270,7 @@ export default function CsbLevelDungeon() {
     s.hp = s.maxHp;
     s.atk = Math.round((11 + s.level * 2.2) * rare);
     s.def = Math.round(1 + s.level * 0.55);
-    s.gainedRune = 0; s.gainedXp = 0; s.kills = 0; s.levelUps = 0;
+    s.gainedRune = 0; s.gainedXp = 0; s.bankedRune = 0; s.bankedXp = 0; s.kills = 0; s.levelUps = 0;
     s.dashCd = 0; s.slamCd = 0; s.invul = 0; s.atkCd = 0;
     setBull(b);
     setFloor(1);
@@ -283,6 +283,7 @@ export default function CsbLevelDungeon() {
     const s = g.current;
     const f = s.floor + 1;
     s.hp = Math.min(s.maxHp, s.hp + Math.round(s.maxHp * 0.3));
+    bankProgress();
     buildFloor(f, true);
     setFloor(f);
     pushFx(s.px, s.py - 40, "#facc15", `FLOOR ${f}`);
@@ -308,9 +309,16 @@ export default function CsbLevelDungeon() {
   const tryInteract = () => {
     const s = g.current;
     if (!s.running) return;
+    if (s.bossAlive) {
+      toast({ title: "Boss still alive", description: "Slay the boss to open the portal." });
+      return;
+    }
     const d = Math.hypot(s.px - s.exit.x, s.py - s.exit.y);
-    if (d < 90 && !s.bossAlive) nextFloor();
+    // Forgiving radius; if the floor is cleared you can descend from anywhere.
+    if (d < 140 || s.mobs.length === 0) { nextFloor(); return; }
+    toast({ title: "Too far from the portal", description: "Follow the 🌀 marker on the minimap." });
   };
+
 
   /* ------------------------------ game loop ----------------------------- */
   useEffect(() => {
