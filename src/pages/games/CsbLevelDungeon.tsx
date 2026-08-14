@@ -456,7 +456,7 @@ export default function CsbLevelDungeon() {
 
         setHud({
           hp: Math.max(0, Math.round(s.hp)), maxHp: s.maxHp, level: s.level, exp: Math.round(s.exp),
-          need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune, xp: s.gainedXp,
+          need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune + s.bankedRune, xp: s.gainedXp + s.bankedXp,
           bossHp: s.mobs.find((m) => m.boss)?.hp || 0,
           bossMax: s.mobs.find((m) => m.boss)?.maxHp || 0,
           bossName: (s.mobs.find((m) => m.boss)?.def.name) || "",
