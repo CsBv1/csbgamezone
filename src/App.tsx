@@ -172,6 +172,7 @@ const App = () => (
           
           {/* Bull World & Multiplayer */}
           <Route path="/games/bull-world" element={<BullWorldMMO />} />
+          <Route path="/games/csb-level-dungeon" element={<CsbLevelDungeon />} />
           <Route path="/games/bull-world-classic" element={<ProtectedGameRoute><BullWorld /></ProtectedGameRoute>} />
           <Route path="/games/multiplayer-crash" element={<MultiplayerCrash />} />
           <Route path="/games/bull-stampede" element={<BullStampede />} />
