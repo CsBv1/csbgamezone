@@ -36,7 +36,10 @@ export function useWorldBoss(userId: string | null, username: string | null) {
       .order("spawned_at", { ascending: false })
       .limit(1);
     const row = (data as any)?.[0] as WorldBoss | undefined;
+    // Ignore legacy/unkillable bosses (removed templates or absurd HP pools)
+    if (row && (!BOSS_BY_KEY[row.boss_key] || row.max_hp > 20000)) { setBoss(null); return null; }
     if (row) { setBoss(row); return row; }
+
     return null;
   }, []);
 

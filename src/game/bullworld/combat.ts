@@ -159,12 +159,14 @@ export interface BossTemplate {
 }
 
 export const BOSSES: BossTemplate[] = [
-  { key: "golden-bull", name: "Golden Bull", emoji: "🐂", region: "green-meadows", level: 15, hp: 40000, attack: 45, color: "#ffd700", reward: { diamonds: 500, gold: 400, exp: 900 }, desc: "The legendary founder beast." },
-  { key: "shadow-bull", name: "Shadow Bull", emoji: "🌑", region: "dungeon-entrance", level: 30, hp: 90000, attack: 85, color: "#8b5cf6", reward: { diamonds: 1200, gold: 900, exp: 2200 }, desc: "Born from the abyss gate." },
-  { key: "crypto-dragon", name: "Crypto Dragon", emoji: "🐉", region: "sky-islands", level: 35, hp: 120000, attack: 100, color: "#38bdf8", reward: { diamonds: 1800, gold: 1300, exp: 3200 }, desc: "Hoards keys, diamonds and secrets." },
-  { key: "mountain-titan", name: "Mountain Titan", emoji: "🌋", region: "lava-mountains", level: 28, hp: 80000, attack: 78, color: "#ff6a2b", reward: { diamonds: 1000, gold: 800, exp: 2000 }, desc: "A living volcano with fists." },
-  { key: "ocean-kraken", name: "Ocean Kraken", emoji: "🦑", region: "pirate-coast", level: 22, hp: 60000, attack: 60, color: "#2dd4bf", reward: { diamonds: 750, gold: 600, exp: 1500 }, desc: "Rises when the storm peaks." },
+  { key: "ember-bull-v2", name: "Ember Bull", emoji: "🔥", region: "green-meadows", level: 12, hp: 2500, attack: 40, color: "#ff8c42", reward: { diamonds: 400, gold: 350, exp: 900 }, desc: "A smouldering herd leader. A good first boss." },
+  { key: "golden-bull-v2", name: "Golden Bull", emoji: "🐂", region: "green-meadows", level: 15, hp: 3500, attack: 45, color: "#ffd700", reward: { diamonds: 500, gold: 400, exp: 1100 }, desc: "The legendary founder beast." },
+  { key: "ocean-kraken-v2", name: "Ocean Kraken", emoji: "🦑", region: "pirate-coast", level: 22, hp: 5000, attack: 58, color: "#2dd4bf", reward: { diamonds: 750, gold: 600, exp: 1500 }, desc: "Rises when the storm peaks." },
+  { key: "mountain-titan-v2", name: "Mountain Titan", emoji: "🌋", region: "lava-mountains", level: 28, hp: 6500, attack: 72, color: "#ff6a2b", reward: { diamonds: 1000, gold: 800, exp: 2000 }, desc: "A living volcano with fists." },
+  { key: "shadow-bull-v2", name: "Shadow Bull", emoji: "🌑", region: "dungeon-entrance", level: 30, hp: 8000, attack: 82, color: "#8b5cf6", reward: { diamonds: 1200, gold: 900, exp: 2200 }, desc: "Born from the abyss gate." },
+  { key: "crypto-dragon-v2", name: "Crypto Dragon", emoji: "🐉", region: "sky-islands", level: 35, hp: 10000, attack: 95, color: "#38bdf8", reward: { diamonds: 1800, gold: 1300, exp: 3200 }, desc: "Hoards keys, diamonds and secrets." },
 ];
+
 
 export const BOSS_BY_KEY = Object.fromEntries(BOSSES.map((b) => [b.key, b]));
 
