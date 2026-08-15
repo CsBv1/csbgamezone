@@ -248,6 +248,20 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* CsB Level Tower */}
+          <Card className="group overflow-hidden bg-card border-4 border-amber-400 hover:border-amber-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+            onClick={() => navigate('/games/csb-level-tower')}>
+            <div className="h-40 bg-gradient-to-br from-slate-900 via-amber-700 to-fuchsia-700 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-amber-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🗼 NEW CLIMB</div>
+              <span className="text-6xl group-hover:scale-110 transition-transform">🗼🐂</span>
+            </div>
+            <div className="p-6 text-center">
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🗼 CsB Level Tower</h3>
+              <p className="text-sm text-muted-foreground mb-4">Pick a CsB Bull and climb upward — 5 tower zones, 7 new enemy breeds, a boss guarding every 5th tier. Ascend for EXP to level your bulls & bank Rune Power ⚡</p>
+              <Button variant="outline" size="lg" className="w-full border-amber-400 text-amber-300 hover:bg-amber-400 hover:text-black">Enter Level Tower</Button>
+            </div>
+          </Card>
+
           {/* Wheel of Fortune */}
           <Card className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
             onClick={() => navigate('/games/wheel-of-fortune')}>
