@@ -110,8 +110,6 @@ const LORE: string[] = [
   "Mithril speeds up node bootstrapping with certified snapshots.",
 ];
 
-const TITLES: { title: string; need: () => boolean }[] = [];
-
 /* ============================ MAP GENERATION ============================ */
 
 type Rect = { x: number; y: number; w: number; h: number };
