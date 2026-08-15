@@ -723,10 +723,10 @@ export default function CsbLevelTower() {
           </div>
 
           <div className="text-center">
-            <h1 className="text-3xl md:text-5xl font-black bg-gradient-to-r from-cyan-300 via-violet-300 to-amber-300 bg-clip-text text-transparent">🗺️ CsB LEVEL TOWER</h1>
+            <h1 className="text-3xl md:text-5xl font-black bg-gradient-to-r from-cyan-300 via-violet-300 to-amber-300 bg-clip-text text-transparent">🗼 CsB LEVEL TOWER</h1>
             <p className="text-sm text-muted-foreground mt-2 max-w-2xl mx-auto">
-              A brand new hand-crafted crawl beneath Bull City. 5 biomes, 7 enemy breeds, a boss every 5th floor.
-              Slay for EXP to level your CsB Bull and haul Rune Power back to the surface.
+              A vertical climb above Bull City. 5 tower zones, 7 new enemy breeds, a boss guarding every 5th tier.
+              Fight your way upward for EXP to level your CsB Bull and bank Rune Power on the way out.
             </p>
           </div>
 
@@ -819,7 +819,7 @@ export default function CsbLevelTower() {
             </div>
           </div>
           <div className="flex justify-between text-[10px] mt-1 text-muted-foreground">
-            <span>🗺️ Tier {floor}</span>
+            <span>🗼 Tier {floor}</span>
             <span>⚔️ {hud.kills}</span>
             <span className="text-violet-300">+{hud.xp} EXP</span>
             <span className="text-amber-300">+{hud.rune} RUNE</span>
