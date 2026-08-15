@@ -11,7 +11,7 @@ import { useCardanoWallet } from "@/hooks/useCardanoWallet";
 import { useNFTBonuses } from "@/hooks/useNFTBonuses";
 import { useHeldCsbBulls, type HeldCsbBull } from "@/hooks/useHeldCsbBulls";
 
-/* ============================ DUNGEON DATA ============================== */
+/* ============================ TOWER DATA ============================== */
 
 const TILE = 48;
 const MAP_W = 64;
@@ -113,7 +113,7 @@ export default function CsbLevelTower() {
 
   const [phase, setPhase] = useState<"select" | "playing" | "dead" | "cleared">("select");
   const [bull, setBull] = useState<HeldCsbBull | null>(null);
-  const [floor, setFloor] = useState(1);
+  const [floor, setTier] = useState(1);
   const [hud, setHud] = useState({ hp: 100, maxHp: 100, level: 1, exp: 0, need: 120, kills: 0, rune: 0, xp: 0, bossHp: 0, bossMax: 0, bossName: "" });
   const [runSummary, setRunSummary] = useState({ rune: 0, xp: 0, kills: 0, floors: 0, levels: 0 });
 
@@ -193,7 +193,7 @@ export default function CsbLevelTower() {
     });
 
     s.bossAlive = false;
-    if (isBossFloor) {
+    if (isBossTier) {
       const bd = BOSSES[Math.min(BOSSES.length - 1, Math.floor(f / 5) - 1)];
       const scale = 1 + (f - 5) * 0.2;
       s.mobs.push({
@@ -282,8 +282,8 @@ export default function CsbLevelTower() {
     s.gainedRune = 0; s.gainedXp = 0; s.bankedRune = 0; s.bankedXp = 0; s.kills = 0; s.levelUps = 0;
     s.dashCd = 0; s.slamCd = 0; s.invul = 0; s.atkCd = 0;
     setBull(b);
-    setFloor(1);
-    buildFloor(1, false);
+    setTier(1);
+    buildTier(1, false);
     s.running = true;
     setPhase("playing");
   };
@@ -293,8 +293,8 @@ export default function CsbLevelTower() {
     const f = s.floor + 1;
     s.hp = Math.min(s.maxHp, s.hp + Math.round(s.maxHp * 0.3));
     bankProgress();
-    buildFloor(f, true);
-    setFloor(f);
+    buildTier(f, true);
+    setTier(f);
     pushFx(s.px, s.py - 40, "#facc15", `FLOOR ${f}`);
   };
 
@@ -324,7 +324,7 @@ export default function CsbLevelTower() {
     }
     const d = Math.hypot(s.px - s.exit.x, s.py - s.exit.y);
     // Forgiving radius; if the floor is cleared you can ascend from anywhere.
-    if (d < 140 || s.mobs.length === 0) { nextFloor(); return; }
+    if (d < 140 || s.mobs.length === 0) { nextTier(); return; }
     toast({ title: "Too far from the portal", description: "Follow the 🪜 marker on the minimap." });
   };
 
