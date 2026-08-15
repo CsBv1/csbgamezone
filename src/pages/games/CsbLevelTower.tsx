@@ -20,34 +20,35 @@ const MAP_H = 64;
 type Biome = { id: string; name: string; emoji: string; floor: string; floor2: string; wall: string; wallTop: string; glow: string; fog: string };
 
 const BIOMES: Biome[] = [
-  { id: "catacombs", name: "Bull Catacombs", emoji: "💀", floor: "#1b1f2b", floor2: "#232838", wall: "#0d1017", wallTop: "#39425c", glow: "#00d4ff", fog: "rgba(4,8,16,0.90)" },
-  { id: "emberforge", name: "Ember Forge", emoji: "🔥", floor: "#2a1712", floor2: "#341c14", wall: "#150a08", wallTop: "#6b3320", glow: "#ff7a2b", fog: "rgba(18,6,2,0.90)" },
-  { id: "frostcrypt", name: "Frost Crypt", emoji: "❄️", floor: "#16222e", floor2: "#1d2c3b", wall: "#0a1119", wallTop: "#3d5a75", glow: "#9ee6ff", fog: "rgba(4,10,18,0.90)" },
-  { id: "runevault", name: "Rune Vault", emoji: "🔮", floor: "#1e1830", floor2: "#28203f", wall: "#100c1c", wallTop: "#4d3a78", glow: "#c084fc", fog: "rgba(8,4,18,0.90)" },
-  { id: "abyss", name: "The Abyss", emoji: "🕳️", floor: "#12181a", floor2: "#182123", wall: "#070b0c", wallTop: "#2c4a44", glow: "#31e6a8", fog: "rgba(2,8,8,0.92)" },
+  { id: "stonebase", name: "Stone Foundation", emoji: "🧱", floor: "#232028", floor2: "#2c2932", wall: "#131117", wallTop: "#4a4455", glow: "#f4b942", fog: "rgba(10,8,14,0.90)" },
+  { id: "skyforge", name: "Sky Forge", emoji: "⚒️", floor: "#2b2015", floor2: "#362a1c", wall: "#150f09", wallTop: "#7a5227", glow: "#ffb347", fog: "rgba(16,10,4,0.90)" },
+  { id: "stormdeck", name: "Storm Deck", emoji: "⚡", floor: "#182233", floor2: "#1f2c40", wall: "#0a101a", wallTop: "#3f5f8c", glow: "#7dd3fc", fog: "rgba(4,10,20,0.90)" },
+  { id: "arcanespire", name: "Arcane Spire", emoji: "✨", floor: "#221a33", floor2: "#2c2242", wall: "#120d1e", wallTop: "#5b3f96", glow: "#e879f9", fog: "rgba(10,4,20,0.90)" },
+  { id: "celestial", name: "Celestial Crown", emoji: "👑", floor: "#101d24", floor2: "#16272f", wall: "#060d11", wallTop: "#2f5f6b", glow: "#5eead4", fog: "rgba(2,10,12,0.92)" },
 ];
 
 type EnemyDef = { id: string; name: string; emoji: string; hp: number; dmg: number; speed: number; xp: number; rune: number; color: string; radius: number; ranged?: boolean };
 
 const ENEMIES: EnemyDef[] = [
-  { id: "crypt-rat", name: "Crypt Rat", emoji: "🐀", hp: 26, dmg: 5, speed: 1.7, xp: 9, rune: 3, color: "#8d8577", radius: 15 },
-  { id: "bone-knight", name: "Bone Knight", emoji: "💀", hp: 62, dmg: 11, speed: 1.15, xp: 20, rune: 7, color: "#d7d3c4", radius: 19 },
-  { id: "ember-imp", name: "Ember Imp", emoji: "👺", hp: 44, dmg: 9, speed: 1.5, xp: 17, rune: 6, color: "#ff7a3d", radius: 17 },
-  { id: "frost-wraith", name: "Frost Wraith", emoji: "👻", hp: 55, dmg: 13, speed: 1.35, xp: 24, rune: 9, color: "#a8e6ff", radius: 18, ranged: true },
-  { id: "rune-golem", name: "Rune Golem", emoji: "🗿", hp: 120, dmg: 17, speed: 0.8, xp: 40, rune: 15, color: "#a988ff", radius: 24 },
-  { id: "void-stalker", name: "Void Stalker", emoji: "🦂", hp: 80, dmg: 15, speed: 1.9, xp: 34, rune: 12, color: "#31e6a8", radius: 19 },
-  { id: "shade-archer", name: "Shade Archer", emoji: "🏹", hp: 48, dmg: 12, speed: 1.25, xp: 26, rune: 10, color: "#7bd3ff", radius: 17, ranged: true },
+  { id: "gargoyle-pup", name: "Gargoyle Pup", emoji: "🦇", hp: 28, dmg: 5, speed: 1.7, xp: 10, rune: 3, color: "#9aa3b5", radius: 15 },
+  { id: "forge-warden", name: "Forge Warden", emoji: "🛡️", hp: 66, dmg: 12, speed: 1.1, xp: 22, rune: 8, color: "#ffb347", radius: 19 },
+  { id: "spark-drone", name: "Spark Drone", emoji: "🤖", hp: 46, dmg: 9, speed: 1.55, xp: 18, rune: 6, color: "#7dd3fc", radius: 17, ranged: true },
+  { id: "storm-harpy", name: "Storm Harpy", emoji: "🦅", hp: 58, dmg: 14, speed: 1.45, xp: 26, rune: 10, color: "#bae6fd", radius: 18 },
+  { id: "arcane-sentry", name: "Arcane Sentry", emoji: "🔷", hp: 130, dmg: 18, speed: 0.85, xp: 44, rune: 16, color: "#e879f9", radius: 24, ranged: true },
+  { id: "sky-stalker", name: "Sky Stalker", emoji: "🕷️", hp: 84, dmg: 16, speed: 1.95, xp: 36, rune: 13, color: "#5eead4", radius: 19 },
+  { id: "seraph-blade", name: "Seraph Blade", emoji: "⚔️", hp: 52, dmg: 13, speed: 1.3, xp: 28, rune: 11, color: "#fde68a", radius: 17 },
 ];
 
 type BossDef = { id: string; name: string; emoji: string; hp: number; dmg: number; speed: number; xp: number; rune: number; color: string };
 
 const BOSSES: BossDef[] = [
-  { id: "gravelord", name: "Gravelord Mokk", emoji: "☠️", hp: 620, dmg: 22, speed: 1.05, xp: 260, rune: 120, color: "#00d4ff" },
-  { id: "forgetyrant", name: "Forge Tyrant Vulk", emoji: "🔥", hp: 880, dmg: 27, speed: 1.15, xp: 360, rune: 170, color: "#ff7a2b" },
-  { id: "frostjarl", name: "Frost Jarl Hrym", emoji: "🧊", hp: 1100, dmg: 31, speed: 1.2, xp: 460, rune: 220, color: "#9ee6ff" },
-  { id: "runearch", name: "Rune Archon", emoji: "🔮", hp: 1400, dmg: 36, speed: 1.25, xp: 600, rune: 300, color: "#c084fc" },
-  { id: "abysshorn", name: "Abyss Horn", emoji: "🐂", hp: 1800, dmg: 42, speed: 1.3, xp: 800, rune: 420, color: "#31e6a8" },
+  { id: "gatekeeper", name: "Gatekeeper Thane", emoji: "🗝️", hp: 640, dmg: 22, speed: 1.05, xp: 280, rune: 130, color: "#f4b942" },
+  { id: "forgemaster", name: "Forgemaster Ignar", emoji: "⚒️", hp: 900, dmg: 28, speed: 1.15, xp: 380, rune: 180, color: "#ffb347" },
+  { id: "stormlord", name: "Stormlord Zeyr", emoji: "🌩️", hp: 1150, dmg: 32, speed: 1.2, xp: 480, rune: 230, color: "#7dd3fc" },
+  { id: "spirewitch", name: "Spire Witch Ysal", emoji: "🔮", hp: 1450, dmg: 37, speed: 1.25, xp: 620, rune: 310, color: "#e879f9" },
+  { id: "crownbull", name: "Crown Bull Aurelis", emoji: "👑", hp: 1900, dmg: 44, speed: 1.3, xp: 840, rune: 440, color: "#5eead4" },
 ];
+
 
 const RARITY_MULT: Record<string, number> = { common: 1, rare: 1.15, epic: 1.3, legendary: 1.5 };
 
