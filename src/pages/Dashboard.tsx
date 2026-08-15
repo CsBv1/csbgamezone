@@ -262,6 +262,20 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Charles Hoskinson Ranch */}
+          <Card className="group overflow-hidden bg-card border-4 border-emerald-400 hover:border-emerald-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+            onClick={() => navigate('/games/csb-ranch')}>
+            <div className="h-40 bg-gradient-to-br from-emerald-900 via-lime-700 to-amber-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-emerald-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌾 NEW WORLD</div>
+              <span className="text-6xl group-hover:scale-110 transition-transform">🐂🌾</span>
+            </div>
+            <div className="p-6 text-center">
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂🌾 Charles Hoskinson Ranch</h3>
+              <p className="text-sm text-muted-foreground mb-4">Select your Bull and enter a fan-made Cardano ranch world — 11 areas, farming, mining, lore & Cardano Quests. Finish them all to unlock the Ranch Dungeon and face THE CHAOS ENGINE ⚙️</p>
+              <Button variant="outline" size="lg" className="w-full border-emerald-400 text-emerald-300 hover:bg-emerald-400 hover:text-black">Enter the Ranch</Button>
+            </div>
+          </Card>
+
           {/* Wheel of Fortune */}
           <Card className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
             onClick={() => navigate('/games/wheel-of-fortune')}>
