@@ -1418,7 +1418,7 @@ export default function BullCity() {
           {cmkrBoard.length === 0 ? (
             <p className="text-xs text-white/50">No owls mined yet this month — be the first 🦉</p>
           ) : (
-            <div className="space-y-1 max-h-80 overflow-y-auto pr-1">
+            <div className="space-y-1">
               {cmkrBoard.map((r, i) => (
                 <div key={r.user_id}
                   className={`flex items-center justify-between rounded-md px-2 py-1 text-sm ${r.user_id === userId ? 'bg-amber-400/15 border border-amber-400/40' : 'bg-slate-900/50'}`}>
