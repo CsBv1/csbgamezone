@@ -159,6 +159,11 @@ export default function CsbAscension() {
     greed: 1, ultRate: 1, range: 1, arc: false,
     atkCd: 0, dashCd: 0, dashMax: 1800, invul: 0, ult: 0, comboStep: 0, comboTimer: 0,
     combo: 0, comboDecay: 0, hitStop: 0, shake: 0,
+    vx: 0, vy: 0, dashT: 0, dashVX: 0, dashVY: 0, lastTrail: 0,
+    trail: [] as { x: number; y: number; life: number; max: number }[],
+    atkAnim: 0, atkAnimMax: 1, atkAng: 0, atkArc: 0, atkReach: 0, atkFinisher: false,
+    atkBuf: 0, dashBuf: 0, ultBuf: 0, hudT: 0, walkT: 0,
+
     level: 1, exp: 0, gainedXp: 0, gainedRune: 0, bankedXp: 0, bankedRune: 0, kills: 0, levelUps: 0, bestCombo: 0,
     mobs: [] as Mob[], shots: [] as Shot[], orbs: [] as Orb[], fx: [] as Fx[], parts: [] as Particle[],
     nextId: 1, keys: {} as Record<string, boolean>, joy: { active: false, dx: 0, dy: 0 },
