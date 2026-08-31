@@ -541,22 +541,40 @@ export default function CsbAscension() {
       s.t += dt;
 
       if (s.running && !s.paused) {
-        /* ---- movement ---- */
+        /* ---- movement: analog input, acceleration, momentum ---- */
         let dx = 0, dy = 0;
         if (s.keys["w"] || s.keys["arrowup"]) dy -= 1;
         if (s.keys["s"] || s.keys["arrowdown"]) dy += 1;
         if (s.keys["a"] || s.keys["arrowleft"]) dx -= 1;
         if (s.keys["d"] || s.keys["arrowright"]) dx += 1;
         if (s.joy.active) { dx += s.joy.dx; dy += s.joy.dy; }
-        const mag = Math.hypot(dx, dy);
-        if (mag > 0.08) {
-          dx /= mag; dy /= mag;
-          s.aimX = dx; s.aimY = dy;
-          s.facing = dx !== 0 ? (dx > 0 ? 1 : -1) : s.facing;
-          const sp = 0.34 * dt * s.spdMult;
-          if (collide(s.px + dx * sp, s.py)) s.px += dx * sp;
-          if (collide(s.px, s.py + dy * sp)) s.py += dy * sp;
+        let mag = Math.hypot(dx, dy);
+        if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }
+        const moving = mag > 0.12;
+        if (moving) {
+          const nx = dx / mag, ny = dy / mag;
+          // smooth aim turning so the bull rotates instead of snapping
+          const turn = Math.min(1, dt * 0.022);
+          s.aimX += (nx - s.aimX) * turn; s.aimY += (ny - s.aimY) * turn;
+          const am = Math.hypot(s.aimX, s.aimY) || 1;
+          s.aimX /= am; s.aimY /= am;
+          s.facing = nx !== 0 ? (nx > 0 ? 1 : -1) : s.facing;
+          s.walkT += dt * (0.008 + mag * 0.004);
         }
+        const maxSp = 0.30 * s.spdMult;
+        const accel = Math.min(1, dt * (moving ? 0.014 : 0.022));
+        s.vx += (dx * maxSp - s.vx) * accel;
+        s.vy += (dy * maxSp - s.vy) * accel;
+        if (s.dashT > 0) {
+          s.dashT -= dt;
+          s.vx = s.dashVX; s.vy = s.dashVY;
+          if (s.t - s.lastTrail > 26) { s.lastTrail = s.t; s.trail.push({ x: s.px, y: s.py, life: 320, max: 320 }); }
+        }
+        const mvx = s.vx * dt, mvy = s.vy * dt;
+        if (collide(s.px + mvx, s.py)) s.px += mvx; else s.vx *= -0.15;
+        if (collide(s.px, s.py + mvy)) s.py += mvy; else s.vy *= -0.15;
+        s.trail = s.trail.filter((tr) => { tr.life -= rawDt; return tr.life > 0; });
+
 
         s.atkCd -= dt; s.dashCd -= dt; s.invul -= dt; s.comboTimer -= dt;
         s.comboDecay -= dt;
