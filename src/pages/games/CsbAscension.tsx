@@ -940,33 +940,45 @@ export default function CsbAscension() {
         const a = f.life / f.max;
         ctx.globalAlpha = a;
         if (f.r) {
-          ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - a * 0.55), 0, Math.PI * 2);
-          ctx.strokeStyle = f.color; ctx.lineWidth = 4; ctx.stroke();
+          const ease = 1 - Math.pow(a, 2);            // fast expand, soft fade
+          ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.35 + ease * 0.65), 0, Math.PI * 2);
+          ctx.strokeStyle = f.color; ctx.lineWidth = 2 + a * 5; ctx.stroke();
         }
         if (f.text) {
+          const pop = 1 + (1 - a) * 0.25;             // numbers punch out then settle
+          ctx.save();
+          ctx.translate(f.x, f.y); ctx.scale(pop, pop);
           ctx.font = "bold 20px sans-serif"; ctx.fillStyle = f.color;
           ctx.shadowColor = "#000"; ctx.shadowBlur = 6;
-          ctx.fillText(f.text, f.x, f.y); ctx.shadowBlur = 0;
+          ctx.fillText(f.text, 0, 0); ctx.shadowBlur = 0;
+          ctx.restore();
         }
         ctx.globalAlpha = 1;
       });
 
       ctx.restore();
 
-      // vignette
-      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
-      vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.65)");
+      // vignette (tightens on low health)
+      const hurt = 1 - Math.max(0, Math.min(1, s.hp / s.maxHp));
+      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.35 - hurt * 0.12), W / 2, H / 2, Math.max(W, H) * 0.75);
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, hurt > 0.6 ? `rgba(80,0,16,${0.65 + hurt * 0.2})` : "rgba(0,0,0,0.65)");
       ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
-      /* ---- HUD sync ---- */
-      const boss = s.mobs.find((m) => m.boss);
-      setHud({
-        hp: Math.round(s.hp), maxHp: Math.round(s.maxHp), level: s.level, exp: Math.round(s.exp),
-        need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune + s.bankedRune, xp: s.gainedXp + s.bankedXp,
-        ring: s.ring, ringName: rd.name, ringEmoji: rd.emoji, wave: Math.min(s.wave, s.waves + 1), waves: s.waves,
-        left: s.mobs.length, combo: s.combo, ult: Math.round(s.ult),
-        bossHp: boss ? Math.round(boss.hp) : 0, bossMax: boss ? boss.maxHp : 0, bossName: boss ? `${boss.def.emoji} ${boss.def.name}` : "",
-      });
+      /* ---- HUD sync (throttled — keeps the canvas at full frame rate) ---- */
+      s.hudT -= rawDt;
+      if (s.hudT <= 0) {
+        s.hudT = 80;
+        const boss = s.mobs.find((m) => m.boss);
+        setHud({
+          hp: Math.round(s.hp), maxHp: Math.round(s.maxHp), level: s.level, exp: Math.round(s.exp),
+          need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune + s.bankedRune, xp: s.gainedXp + s.bankedXp,
+          ring: s.ring, ringName: rd.name, ringEmoji: rd.emoji, wave: Math.min(s.wave, s.waves + 1), waves: s.waves,
+          left: s.mobs.length, combo: s.combo, ult: Math.round(s.ult),
+          bossHp: boss ? Math.round(boss.hp) : 0, bossMax: boss ? boss.maxHp : 0, bossName: boss ? `${boss.def.emoji} ${boss.def.name}` : "",
+        });
+      }
+
 
       raf = requestAnimationFrame(loop);
     };
