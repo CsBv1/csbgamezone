@@ -1160,17 +1160,18 @@ export default function CsbAscension() {
 
       <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="border-sky-400/60 text-sky-300"
-            onTouchStart={(e) => { e.preventDefault(); g.current.dashReq = true; }}
-            onClick={() => { g.current.dashReq = true; }}><Zap className="w-4 h-4" /></Button>
+          <Button size="sm" variant="outline" className="border-sky-400/60 text-sky-300 touch-none active:scale-90 transition-transform"
+            onPointerDown={(e) => { e.preventDefault(); g.current.dashReq = true; }}><Zap className="w-4 h-4" /></Button>
           <Button size="sm" variant="outline"
-            className={`border-amber-400/60 text-amber-300 ${hud.ult >= 100 ? "animate-pulse bg-amber-400/20" : "opacity-60"}`}
-            onTouchStart={(e) => { e.preventDefault(); g.current.ultReq = true; }}
-            onClick={() => { g.current.ultReq = true; }}><Shield className="w-4 h-4" /></Button>
+            className={`border-amber-400/60 text-amber-300 touch-none active:scale-90 transition-transform ${hud.ult >= 100 ? "animate-pulse bg-amber-400/20" : "opacity-60"}`}
+            onPointerDown={(e) => { e.preventDefault(); g.current.ultReq = true; }}><Shield className="w-4 h-4" /></Button>
         </div>
-        <Button className="w-20 h-20 rounded-full bg-sky-500 hover:bg-sky-400 text-black text-2xl shadow-[0_0_25px_rgba(56,189,248,0.6)]"
-          onTouchStart={(e) => { e.preventDefault(); g.current.attackReq = true; }}
-          onClick={() => { g.current.attackReq = true; }}>⚔️</Button>
+        <Button className="w-20 h-20 rounded-full bg-sky-500 hover:bg-sky-400 text-black text-2xl touch-none select-none shadow-[0_0_25px_rgba(56,189,248,0.6)] active:scale-90 active:shadow-[0_0_45px_rgba(56,189,248,0.9)] transition-transform duration-75"
+          onPointerDown={(e) => { e.preventDefault(); g.current.attackReq = true; g.current.keys["j"] = true; }}
+          onPointerUp={() => { g.current.keys["j"] = false; }}
+          onPointerLeave={() => { g.current.keys["j"] = false; }}
+          onPointerCancel={() => { g.current.keys["j"] = false; }}>⚔️</Button>
+
         <div className="text-[10px] text-sky-200/80 text-right max-w-[190px] pointer-events-none">
           WASD move · SPACE/J attack (3-hit combo) · SHIFT/K dodge · Q/L Bull Nova
         </div>
