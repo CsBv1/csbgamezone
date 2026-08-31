@@ -448,8 +448,11 @@ export default function CsbAscension() {
     s.gainedRune = 0; s.gainedXp = 0; s.bankedRune = 0; s.bankedXp = 0;
     s.kills = 0; s.levelUps = 0; s.combo = 0; s.bestCombo = 0; s.ult = 0;
     s.atkCd = 0; s.dashCd = 0; s.dashMax = 1800; s.invul = 0; s.comboStep = 0;
+    s.vx = 0; s.vy = 0; s.dashT = 0; s.trail = []; s.atkAnim = 0;
+    s.atkBuf = 0; s.dashBuf = 0; s.ultBuf = 0; s.hitStop = 0; s.shake = 0;
     s.orbs = []; s.gearRef = { horn: null, hide: null, relic: null };
     s.paused = false;
+
     setGear({ horn: null, hide: null, relic: null });
     setOwnedBoons([]);
     setBoonPick(null);
