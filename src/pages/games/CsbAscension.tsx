@@ -817,26 +817,37 @@ export default function CsbAscension() {
 
       // enemies (depth sorted)
       [...s.mobs].sort((a, b) => a.y - b.y).forEach((m) => {
-        const r = m.boss ? 46 : (m.def as EnemyDef).radius * (m.small ? 0.7 : 1);
+        const baseR = m.boss ? 46 : (m.def as EnemyDef).radius * (m.small ? 0.7 : 1);
+        const hitT = Math.max(0, m.hit) / 200;
+        const r = baseR * (1 + hitT * 0.22);          // impact pop
+        const lean = Math.min(0.4, Math.hypot(m.vx, m.vy) * 0.05);
         ctx.fillStyle = "rgba(0,0,0,0.4)";
-        ctx.beginPath(); ctx.ellipse(m.x, m.y + r * 0.7, r, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(m.x, m.y + baseR * 0.7, baseR, baseR * 0.4, 0, 0, Math.PI * 2); ctx.fill();
         if (m.affix) {
           ctx.beginPath(); ctx.arc(m.x, m.y, r + 12, 0, Math.PI * 2);
           ctx.strokeStyle = m.affix.color; ctx.globalAlpha = 0.6 + Math.sin(s.t / 200) * 0.25;
           ctx.lineWidth = 3; ctx.stroke(); ctx.globalAlpha = 1;
         }
-        ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = m.hit > 0 ? "#ffffff" : m.def.color;
-        ctx.shadowColor = m.def.color; ctx.shadowBlur = m.boss ? 34 : 14; ctx.fill(); ctx.shadowBlur = 0;
-        ctx.font = `${Math.round(r * 1.5)}px serif`; ctx.fillText(m.def.emoji, m.x, m.y + 2);
-        // hp bar
-        const bw = r * 2.4;
-        ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(m.x - bw / 2, m.y - r - 16, bw, 6);
-        ctx.fillStyle = m.boss ? "#f43f5e" : "#34d399";
-        ctx.fillRect(m.x - bw / 2, m.y - r - 16, bw * Math.max(0, m.hp / m.maxHp), 6);
+        ctx.save();
+        ctx.translate(m.x, m.y);
+        // squash toward the direction of knockback / travel
+        ctx.rotate(Math.atan2(m.vy, m.vx));
+        ctx.scale(1 + lean, 1 - lean * 0.6);
+        ctx.rotate(-Math.atan2(m.vy, m.vx));
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = hitT > 0 ? `rgba(255,255,255,${0.35 + hitT * 0.65})` : m.def.color;
+        ctx.shadowColor = hitT > 0 ? "#ffffff" : m.def.color; ctx.shadowBlur = m.boss ? 34 : 14 + hitT * 26;
+        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.font = `${Math.round(r * 1.5)}px serif`; ctx.fillText(m.def.emoji, 0, 2);
+        ctx.restore();
+        // hp bar (smooth, with impact flash)
+        const bw = baseR * 2.4;
+        ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(m.x - bw / 2, m.y - baseR - 16, bw, 6);
+        ctx.fillStyle = hitT > 0 ? "#ffffff" : m.boss ? "#f43f5e" : "#34d399";
+        ctx.fillRect(m.x - bw / 2, m.y - baseR - 16, bw * Math.max(0, m.hp / m.maxHp), 6);
         if (m.affix) {
           ctx.font = "bold 11px sans-serif"; ctx.fillStyle = m.affix.color;
-          ctx.fillText(m.affix.label, m.x, m.y - r - 26);
+          ctx.fillText(m.affix.label, m.x, m.y - baseR - 26);
         }
       });
 
@@ -847,31 +858,74 @@ export default function CsbAscension() {
         ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
       });
 
+      // dash afterimages
+      s.trail.forEach((tr) => {
+        const a = tr.life / tr.max;
+        ctx.globalAlpha = a * 0.4;
+        ctx.beginPath(); ctx.arc(tr.x, tr.y, 26 * (0.6 + a * 0.4), 0, Math.PI * 2);
+        ctx.fillStyle = rd.glow; ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
       // player
       const pr = 26;
+      const speed = Math.hypot(s.vx, s.vy);
+      const atkT = s.atkAnim / s.atkAnimMax;                 // 1 -> 0
+      const bob = Math.sin(s.walkT) * Math.min(4, speed * 12);
+      const squash = 1 + Math.min(0.18, speed * 0.35) - atkT * 0.12;
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.beginPath(); ctx.ellipse(s.px, s.py + 22, pr, pr * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+
+      // swing arc — sweeps through the strike
+      if (s.atkAnim > 0) {
+        const prog = 1 - atkT;
+        ctx.save();
+        ctx.translate(s.px, s.py);
+        ctx.globalAlpha = atkT * 0.85;
+        ctx.strokeStyle = s.atkFinisher ? "#fbbf24" : rd.glow;
+        ctx.lineCap = "round";
+        ctx.lineWidth = s.atkFinisher ? 16 : 11;
+        ctx.shadowColor = ctx.strokeStyle as string; ctx.shadowBlur = 24;
+        const half = s.atkArc / 2;
+        const sweep = s.atkFinisher ? Math.PI * 2 : Math.min(s.atkArc, 0.35 + prog * s.atkArc);
+        const start = s.atkFinisher ? prog * Math.PI * 2 : s.atkAng - half + prog * (s.atkArc - sweep + 0.001);
+        ctx.beginPath();
+        ctx.arc(0, 0, s.atkReach * (0.55 + prog * 0.45), start, start + sweep);
+        ctx.stroke();
+        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
       ctx.save();
+      ctx.translate(s.px, s.py + bob);
+      ctx.rotate(Math.atan2(s.vy, s.vx));
+      ctx.scale(squash, 2 - squash);
+      ctx.rotate(-Math.atan2(s.vy, s.vx));
       if (s.invul > 0) ctx.globalAlpha = 0.55 + Math.sin(s.t / 60) * 0.3;
-      ctx.beginPath(); ctx.arc(s.px, s.py, pr + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = rd.glow; ctx.lineWidth = 3; ctx.shadowColor = rd.glow; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(0, 0, pr + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = rd.glow; ctx.lineWidth = 3; ctx.shadowColor = rd.glow;
+      ctx.shadowBlur = 20 + atkT * 25; ctx.stroke(); ctx.shadowBlur = 0;
       const img = bullImgRef.current;
       if (img) {
         ctx.save();
-        ctx.beginPath(); ctx.arc(s.px, s.py, pr, 0, Math.PI * 2); ctx.clip();
-        ctx.drawImage(img, s.px - pr, s.py - pr, pr * 2, pr * 2);
+        ctx.beginPath(); ctx.arc(0, 0, pr, 0, Math.PI * 2); ctx.clip();
+        ctx.drawImage(img, -pr, -pr, pr * 2, pr * 2);
         ctx.restore();
       } else {
-        ctx.beginPath(); ctx.arc(s.px, s.py, pr, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(0, 0, pr, 0, Math.PI * 2);
         ctx.fillStyle = "#0f172a"; ctx.fill();
-        ctx.font = "30px serif"; ctx.fillText("🐂", s.px, s.py + 2);
+        ctx.font = "30px serif"; ctx.fillText("🐂", 0, 2);
       }
       ctx.restore();
-      // aim indicator
+      // aim indicator (pulses when the dodge is ready)
+      const dashReady = s.dashCd <= 0;
       ctx.beginPath();
       ctx.moveTo(s.px + s.aimX * 34, s.py + s.aimY * 34);
-      ctx.lineTo(s.px + s.aimX * 54, s.py + s.aimY * 54);
-      ctx.strokeStyle = rd.glow; ctx.lineWidth = 4; ctx.globalAlpha = 0.7; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.lineTo(s.px + s.aimX * (54 + atkT * 16), s.py + s.aimY * (54 + atkT * 16));
+      ctx.strokeStyle = dashReady ? rd.glow : "#94a3b8"; ctx.lineWidth = 4;
+      ctx.globalAlpha = dashReady ? 0.75 + Math.sin(s.t / 240) * 0.2 : 0.4;
+      ctx.lineCap = "round"; ctx.stroke(); ctx.globalAlpha = 1;
+
 
       // particles
       s.parts.forEach((p) => {
