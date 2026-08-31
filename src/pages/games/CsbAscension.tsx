@@ -159,6 +159,11 @@ export default function CsbAscension() {
     greed: 1, ultRate: 1, range: 1, arc: false,
     atkCd: 0, dashCd: 0, dashMax: 1800, invul: 0, ult: 0, comboStep: 0, comboTimer: 0,
     combo: 0, comboDecay: 0, hitStop: 0, shake: 0,
+    vx: 0, vy: 0, dashT: 0, dashVX: 0, dashVY: 0, lastTrail: 0,
+    trail: [] as { x: number; y: number; life: number; max: number }[],
+    atkAnim: 0, atkAnimMax: 1, atkAng: 0, atkArc: 0, atkReach: 0, atkFinisher: false,
+    atkBuf: 0, dashBuf: 0, ultBuf: 0, hudT: 0, walkT: 0,
+
     level: 1, exp: 0, gainedXp: 0, gainedRune: 0, bankedXp: 0, bankedRune: 0, kills: 0, levelUps: 0, bestCombo: 0,
     mobs: [] as Mob[], shots: [] as Shot[], orbs: [] as Orb[], fx: [] as Fx[], parts: [] as Particle[],
     nextId: 1, keys: {} as Record<string, boolean>, joy: { active: false, dx: 0, dy: 0 },
@@ -388,11 +393,19 @@ export default function CsbAscension() {
     if (m.affix?.id === "shielded") dmg *= 0.6;
     dmg = Math.max(1, Math.round(dmg));
     m.hp -= dmg;
-    m.hit = 160;
-    s.hitStop = Math.max(s.hitStop, source === "ult" ? 60 : 26);
-    s.shake = Math.max(s.shake, isCrit ? 9 : 4);
-    pushFx(m.x + (Math.random() * 20 - 10), m.y - 24, isCrit ? "#fbbf24" : "#ffffff", `${dmg}${isCrit ? "!" : ""}`);
-    burst(m.x, m.y, m.def.color, 5, 0.3);
+    m.hit = 200;
+    s.hitStop = Math.max(s.hitStop, source === "ult" ? 70 : isCrit ? 46 : 24);
+    s.shake = Math.max(s.shake, isCrit ? 11 : 5);
+    // impact sparks fly away from the player
+    const d = Math.hypot(m.x - s.px, m.y - s.py) || 1;
+    const ux = (m.x - s.px) / d, uy = (m.y - s.py) / d;
+    if (!m.boss) { m.vx += ux * (isCrit ? 2.6 : 1.5); m.vy += uy * (isCrit ? 2.6 : 1.5); }
+    for (let i = 0; i < (isCrit ? 12 : 7); i++) {
+      const a = Math.atan2(uy, ux) + (Math.random() - 0.5) * 1.5, sp = 0.25 + Math.random() * 0.45;
+      s.parts.push({ x: m.x - ux * 10, y: m.y - uy * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 400, max: 400, color: isCrit ? "#fbbf24" : "#ffffff", size: 2 + Math.random() * 2.5 });
+    }
+    s.fx.push({ x: m.x + (Math.random() * 18 - 9), y: m.y - 24, life: isCrit ? 760 : 560, max: isCrit ? 760 : 560, color: isCrit ? "#fbbf24" : "#ffffff", text: `${dmg}${isCrit ? "!" : ""}`, vy: -0.055 });
+    pushFx(m.x, m.y, isCrit ? "#fbbf24" : "#e2e8f0", undefined, isCrit ? 54 : 34);
     if (s.leech > 0) s.hp = Math.min(s.maxHp, s.hp + dmg * s.leech);
     s.combo += 1; s.comboDecay = 2400;
     if (s.combo > s.bestCombo) s.bestCombo = s.combo;
@@ -400,20 +413,25 @@ export default function CsbAscension() {
     if (m.hp <= 0) { killMob(m); s.mobs = s.mobs.filter((x) => x !== m); }
   };
 
+
   const hitPlayer = (raw: number) => {
     const s = g.current;
     if (s.invul > 0) return;
     const dmg = Math.max(1, Math.round(raw - s.def));
     s.hp -= dmg;
-    s.invul = 420;
+    s.invul = 460;
     s.combo = 0;
-    s.shake = Math.max(s.shake, 14);
-    pushFx(s.px, s.py - 40, "#f43f5e", `-${dmg}`);
+    s.shake = Math.max(s.shake, 16);
+    s.hitStop = Math.max(s.hitStop, 40);
+    burst(s.px, s.py, "#f43f5e", 14, 0.4);
+    s.fx.push({ x: s.px, y: s.py - 40, life: 700, max: 700, color: "#f43f5e", text: `-${dmg}`, vy: -0.05 });
+    pushFx(s.px, s.py, "#f43f5e", undefined, 70);
     if (s.thorn > 0) {
       s.mobs.forEach((m) => { if (Math.hypot(m.x - s.px, m.y - s.py) < 200) damageMob(m, dmg * s.thorn); });
     }
     if (s.hp <= 0) { s.hp = 0; endRun(true); }
   };
+
 
   /* -------------------------------- start -------------------------------- */
   const startRun = (b: HeldCsbBull) => {
@@ -430,8 +448,11 @@ export default function CsbAscension() {
     s.gainedRune = 0; s.gainedXp = 0; s.bankedRune = 0; s.bankedXp = 0;
     s.kills = 0; s.levelUps = 0; s.combo = 0; s.bestCombo = 0; s.ult = 0;
     s.atkCd = 0; s.dashCd = 0; s.dashMax = 1800; s.invul = 0; s.comboStep = 0;
+    s.vx = 0; s.vy = 0; s.dashT = 0; s.trail = []; s.atkAnim = 0;
+    s.atkBuf = 0; s.dashBuf = 0; s.ultBuf = 0; s.hitStop = 0; s.shake = 0;
     s.orbs = []; s.gearRef = { horn: null, hide: null, relic: null };
     s.paused = false;
+
     setGear({ horn: null, hide: null, relic: null });
     setOwnedBoons([]);
     setBoonPick(null);
@@ -520,38 +541,69 @@ export default function CsbAscension() {
       s.t += dt;
 
       if (s.running && !s.paused) {
-        /* ---- movement ---- */
+        /* ---- movement: analog input, acceleration, momentum ---- */
         let dx = 0, dy = 0;
         if (s.keys["w"] || s.keys["arrowup"]) dy -= 1;
         if (s.keys["s"] || s.keys["arrowdown"]) dy += 1;
         if (s.keys["a"] || s.keys["arrowleft"]) dx -= 1;
         if (s.keys["d"] || s.keys["arrowright"]) dx += 1;
         if (s.joy.active) { dx += s.joy.dx; dy += s.joy.dy; }
-        const mag = Math.hypot(dx, dy);
-        if (mag > 0.08) {
-          dx /= mag; dy /= mag;
-          s.aimX = dx; s.aimY = dy;
-          s.facing = dx !== 0 ? (dx > 0 ? 1 : -1) : s.facing;
-          const sp = 0.34 * dt * s.spdMult;
-          if (collide(s.px + dx * sp, s.py)) s.px += dx * sp;
-          if (collide(s.px, s.py + dy * sp)) s.py += dy * sp;
+        let mag = Math.hypot(dx, dy);
+        if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }
+        const moving = mag > 0.12;
+        if (moving) {
+          const nx = dx / mag, ny = dy / mag;
+          // smooth aim turning so the bull rotates instead of snapping
+          const turn = Math.min(1, dt * 0.022);
+          s.aimX += (nx - s.aimX) * turn; s.aimY += (ny - s.aimY) * turn;
+          const am = Math.hypot(s.aimX, s.aimY) || 1;
+          s.aimX /= am; s.aimY /= am;
+          s.facing = nx !== 0 ? (nx > 0 ? 1 : -1) : s.facing;
+          s.walkT += dt * (0.008 + mag * 0.004);
         }
+        const maxSp = 0.30 * s.spdMult;
+        const accel = Math.min(1, dt * (moving ? 0.014 : 0.022));
+        s.vx += (dx * maxSp - s.vx) * accel;
+        s.vy += (dy * maxSp - s.vy) * accel;
+        if (s.dashT > 0) {
+          s.dashT -= dt;
+          s.vx = s.dashVX; s.vy = s.dashVY;
+          if (s.t - s.lastTrail > 26) { s.lastTrail = s.t; s.trail.push({ x: s.px, y: s.py, life: 320, max: 320 }); }
+        }
+        const mvx = s.vx * dt, mvy = s.vy * dt;
+        if (collide(s.px + mvx, s.py)) s.px += mvx; else s.vx *= -0.15;
+        if (collide(s.px, s.py + mvy)) s.py += mvy; else s.vy *= -0.15;
+        s.trail = s.trail.filter((tr) => { tr.life -= rawDt; return tr.life > 0; });
+
 
         s.atkCd -= dt; s.dashCd -= dt; s.invul -= dt; s.comboTimer -= dt;
-        s.comboDecay -= dt;
+        s.comboDecay -= dt; s.atkAnim = Math.max(0, s.atkAnim - dt);
         if (s.comboDecay <= 0 && s.combo > 0) s.combo = 0;
-        if (s.shake > 0) s.shake = Math.max(0, s.shake - dt * 0.05);
+        if (s.shake > 0) s.shake = Math.max(0, s.shake * Math.pow(0.986, dt) - dt * 0.012);
+
+        /* ---- buffered inputs (nothing gets dropped) ---- */
+        s.atkBuf -= dt; s.dashBuf -= dt; s.ultBuf -= dt;
+        if (s.attackReq) { s.atkBuf = 190; s.attackReq = false; }
+        if (s.dashReq) { s.dashBuf = 190; s.dashReq = false; }
+        if (s.ultReq) { s.ultBuf = 260; s.ultReq = false; }
+        if (s.keys[" "] || s.keys["j"]) s.atkBuf = Math.max(s.atkBuf, 60); // hold to keep swinging
 
         /* ---- melee combo ---- */
-        if (s.attackReq && s.atkCd <= 0) {
+        if (s.atkBuf > 0 && s.atkCd <= 0) {
+          s.atkBuf = 0;
           s.comboStep = s.comboTimer > 0 ? (s.comboStep + 1) % 3 : 0;
           s.comboTimer = 900;
           const finisher = s.comboStep === 2;
-          s.atkCd = finisher ? 520 : 300;
+          s.atkCd = finisher ? 480 : 250;
           const reach = (finisher ? 300 : 230) * s.range;
           const arcW = finisher ? Math.PI * 2 : Math.PI * 0.95;
           const baseAng = Math.atan2(s.aimY, s.aimX);
-          pushFx(s.px, s.py, ringDef().glow, undefined, reach);
+          // swing animation + forward lunge for weight
+          s.atkAnim = finisher ? 320 : 200; s.atkAnimMax = s.atkAnim;
+          s.atkAng = baseAng; s.atkArc = arcW; s.atkReach = reach; s.atkFinisher = finisher;
+          s.vx += Math.cos(baseAng) * (finisher ? 0.26 : 0.13);
+          s.vy += Math.sin(baseAng) * (finisher ? 0.26 : 0.13);
+          if (finisher) pushFx(s.px, s.py, ringDef().glow, undefined, reach);
           const hits: Mob[] = [];
           s.mobs.forEach((m) => {
             const d = Math.hypot(m.x - s.px, m.y - s.py);
@@ -571,33 +623,36 @@ export default function CsbAscension() {
               m.vx += ((m.x - s.px) / d) * 3.4; m.vy += ((m.y - s.py) / d) * 3.4;
             }
           });
+          if (!hits.length) s.hitStop = 0; // whiffs stay snappy
           if (s.arc && hits.length) {
             const near = s.mobs.filter((m) => !hits.includes(m)).sort((a, b) => Math.hypot(a.x - s.px, a.y - s.py) - Math.hypot(b.x - s.px, b.y - s.py))[0];
             if (near) { damageMob(near, s.atk * 0.7, "arc"); pushFx(near.x, near.y, "#67e8f9", undefined, 60); }
           }
-          if (finisher) s.shake = Math.max(s.shake, 16);
+          if (finisher) s.shake = Math.max(s.shake, 18);
         }
-        s.attackReq = false;
 
-        /* ---- dodge ---- */
-        if (s.dashReq && s.dashCd <= 0) {
-          s.dashCd = s.dashMax; s.invul = 520;
-          for (let i = 0; i < 20; i++) {
-            const nx = s.px + s.aimX * 16, ny = s.py + s.aimY * 16;
-            if (collide(nx, ny)) { s.px = nx; s.py = ny; burst(s.px, s.py, ringDef().glow, 2, 0.15); } else break;
-          }
+        /* ---- dodge: real burst of speed + afterimages ---- */
+        if (s.dashBuf > 0 && s.dashCd <= 0) {
+          s.dashBuf = 0;
+          s.dashCd = s.dashMax; s.invul = 540;
+          s.dashT = 190;
+          s.dashVX = s.aimX * 1.5 * s.spdMult; s.dashVY = s.aimY * 1.5 * s.spdMult;
+          s.trail = [];
+          s.lastTrail = 0;
+          burst(s.px, s.py, ringDef().glow, 14, 0.35);
+          pushFx(s.px, s.py, ringDef().glow, undefined, 90);
         }
-        s.dashReq = false;
 
         /* ---- ultimate ---- */
-        if (s.ultReq && s.ult >= 100) {
+        if (s.ultBuf > 0 && s.ult >= 100) {
+          s.ultBuf = 0;
           s.ult = 0; s.invul = Math.max(s.invul, 700); s.shake = 30;
           pushFx(s.px, s.py, "#fbbf24", "BULL NOVA", 900);
           burst(s.px, s.py, "#fbbf24", 70, 0.9);
           [...s.mobs].forEach((m) => { if (Math.hypot(m.x - s.px, m.y - s.py) < 900) damageMob(m, s.atk * 4.5, "ult"); });
           s.shots = s.shots.filter((p) => p.friendly);
         }
-        s.ultReq = false;
+
 
         /* ---- enemies ---- */
         s.mobs.forEach((m) => {
@@ -762,26 +817,37 @@ export default function CsbAscension() {
 
       // enemies (depth sorted)
       [...s.mobs].sort((a, b) => a.y - b.y).forEach((m) => {
-        const r = m.boss ? 46 : (m.def as EnemyDef).radius * (m.small ? 0.7 : 1);
+        const baseR = m.boss ? 46 : (m.def as EnemyDef).radius * (m.small ? 0.7 : 1);
+        const hitT = Math.max(0, m.hit) / 200;
+        const r = baseR * (1 + hitT * 0.22);          // impact pop
+        const lean = Math.min(0.4, Math.hypot(m.vx, m.vy) * 0.05);
         ctx.fillStyle = "rgba(0,0,0,0.4)";
-        ctx.beginPath(); ctx.ellipse(m.x, m.y + r * 0.7, r, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(m.x, m.y + baseR * 0.7, baseR, baseR * 0.4, 0, 0, Math.PI * 2); ctx.fill();
         if (m.affix) {
           ctx.beginPath(); ctx.arc(m.x, m.y, r + 12, 0, Math.PI * 2);
           ctx.strokeStyle = m.affix.color; ctx.globalAlpha = 0.6 + Math.sin(s.t / 200) * 0.25;
           ctx.lineWidth = 3; ctx.stroke(); ctx.globalAlpha = 1;
         }
-        ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = m.hit > 0 ? "#ffffff" : m.def.color;
-        ctx.shadowColor = m.def.color; ctx.shadowBlur = m.boss ? 34 : 14; ctx.fill(); ctx.shadowBlur = 0;
-        ctx.font = `${Math.round(r * 1.5)}px serif`; ctx.fillText(m.def.emoji, m.x, m.y + 2);
-        // hp bar
-        const bw = r * 2.4;
-        ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(m.x - bw / 2, m.y - r - 16, bw, 6);
-        ctx.fillStyle = m.boss ? "#f43f5e" : "#34d399";
-        ctx.fillRect(m.x - bw / 2, m.y - r - 16, bw * Math.max(0, m.hp / m.maxHp), 6);
+        ctx.save();
+        ctx.translate(m.x, m.y);
+        // squash toward the direction of knockback / travel
+        ctx.rotate(Math.atan2(m.vy, m.vx));
+        ctx.scale(1 + lean, 1 - lean * 0.6);
+        ctx.rotate(-Math.atan2(m.vy, m.vx));
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = hitT > 0 ? `rgba(255,255,255,${0.35 + hitT * 0.65})` : m.def.color;
+        ctx.shadowColor = hitT > 0 ? "#ffffff" : m.def.color; ctx.shadowBlur = m.boss ? 34 : 14 + hitT * 26;
+        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.font = `${Math.round(r * 1.5)}px serif`; ctx.fillText(m.def.emoji, 0, 2);
+        ctx.restore();
+        // hp bar (smooth, with impact flash)
+        const bw = baseR * 2.4;
+        ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(m.x - bw / 2, m.y - baseR - 16, bw, 6);
+        ctx.fillStyle = hitT > 0 ? "#ffffff" : m.boss ? "#f43f5e" : "#34d399";
+        ctx.fillRect(m.x - bw / 2, m.y - baseR - 16, bw * Math.max(0, m.hp / m.maxHp), 6);
         if (m.affix) {
           ctx.font = "bold 11px sans-serif"; ctx.fillStyle = m.affix.color;
-          ctx.fillText(m.affix.label, m.x, m.y - r - 26);
+          ctx.fillText(m.affix.label, m.x, m.y - baseR - 26);
         }
       });
 
@@ -792,31 +858,74 @@ export default function CsbAscension() {
         ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
       });
 
+      // dash afterimages
+      s.trail.forEach((tr) => {
+        const a = tr.life / tr.max;
+        ctx.globalAlpha = a * 0.4;
+        ctx.beginPath(); ctx.arc(tr.x, tr.y, 26 * (0.6 + a * 0.4), 0, Math.PI * 2);
+        ctx.fillStyle = rd.glow; ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
       // player
       const pr = 26;
+      const speed = Math.hypot(s.vx, s.vy);
+      const atkT = s.atkAnim / s.atkAnimMax;                 // 1 -> 0
+      const bob = Math.sin(s.walkT) * Math.min(4, speed * 12);
+      const squash = 1 + Math.min(0.18, speed * 0.35) - atkT * 0.12;
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.beginPath(); ctx.ellipse(s.px, s.py + 22, pr, pr * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+
+      // swing arc — sweeps through the strike
+      if (s.atkAnim > 0) {
+        const prog = 1 - atkT;
+        ctx.save();
+        ctx.translate(s.px, s.py);
+        ctx.globalAlpha = atkT * 0.85;
+        ctx.strokeStyle = s.atkFinisher ? "#fbbf24" : rd.glow;
+        ctx.lineCap = "round";
+        ctx.lineWidth = s.atkFinisher ? 16 : 11;
+        ctx.shadowColor = ctx.strokeStyle as string; ctx.shadowBlur = 24;
+        const half = s.atkArc / 2;
+        const sweep = s.atkFinisher ? Math.PI * 2 : Math.min(s.atkArc, 0.35 + prog * s.atkArc);
+        const start = s.atkFinisher ? prog * Math.PI * 2 : s.atkAng - half + prog * (s.atkArc - sweep + 0.001);
+        ctx.beginPath();
+        ctx.arc(0, 0, s.atkReach * (0.55 + prog * 0.45), start, start + sweep);
+        ctx.stroke();
+        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
       ctx.save();
+      ctx.translate(s.px, s.py + bob);
+      ctx.rotate(Math.atan2(s.vy, s.vx));
+      ctx.scale(squash, 2 - squash);
+      ctx.rotate(-Math.atan2(s.vy, s.vx));
       if (s.invul > 0) ctx.globalAlpha = 0.55 + Math.sin(s.t / 60) * 0.3;
-      ctx.beginPath(); ctx.arc(s.px, s.py, pr + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = rd.glow; ctx.lineWidth = 3; ctx.shadowColor = rd.glow; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(0, 0, pr + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = rd.glow; ctx.lineWidth = 3; ctx.shadowColor = rd.glow;
+      ctx.shadowBlur = 20 + atkT * 25; ctx.stroke(); ctx.shadowBlur = 0;
       const img = bullImgRef.current;
       if (img) {
         ctx.save();
-        ctx.beginPath(); ctx.arc(s.px, s.py, pr, 0, Math.PI * 2); ctx.clip();
-        ctx.drawImage(img, s.px - pr, s.py - pr, pr * 2, pr * 2);
+        ctx.beginPath(); ctx.arc(0, 0, pr, 0, Math.PI * 2); ctx.clip();
+        ctx.drawImage(img, -pr, -pr, pr * 2, pr * 2);
         ctx.restore();
       } else {
-        ctx.beginPath(); ctx.arc(s.px, s.py, pr, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(0, 0, pr, 0, Math.PI * 2);
         ctx.fillStyle = "#0f172a"; ctx.fill();
-        ctx.font = "30px serif"; ctx.fillText("🐂", s.px, s.py + 2);
+        ctx.font = "30px serif"; ctx.fillText("🐂", 0, 2);
       }
       ctx.restore();
-      // aim indicator
+      // aim indicator (pulses when the dodge is ready)
+      const dashReady = s.dashCd <= 0;
       ctx.beginPath();
       ctx.moveTo(s.px + s.aimX * 34, s.py + s.aimY * 34);
-      ctx.lineTo(s.px + s.aimX * 54, s.py + s.aimY * 54);
-      ctx.strokeStyle = rd.glow; ctx.lineWidth = 4; ctx.globalAlpha = 0.7; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.lineTo(s.px + s.aimX * (54 + atkT * 16), s.py + s.aimY * (54 + atkT * 16));
+      ctx.strokeStyle = dashReady ? rd.glow : "#94a3b8"; ctx.lineWidth = 4;
+      ctx.globalAlpha = dashReady ? 0.75 + Math.sin(s.t / 240) * 0.2 : 0.4;
+      ctx.lineCap = "round"; ctx.stroke(); ctx.globalAlpha = 1;
+
 
       // particles
       s.parts.forEach((p) => {
@@ -831,33 +940,45 @@ export default function CsbAscension() {
         const a = f.life / f.max;
         ctx.globalAlpha = a;
         if (f.r) {
-          ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 - a * 0.55), 0, Math.PI * 2);
-          ctx.strokeStyle = f.color; ctx.lineWidth = 4; ctx.stroke();
+          const ease = 1 - Math.pow(a, 2);            // fast expand, soft fade
+          ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.35 + ease * 0.65), 0, Math.PI * 2);
+          ctx.strokeStyle = f.color; ctx.lineWidth = 2 + a * 5; ctx.stroke();
         }
         if (f.text) {
+          const pop = 1 + (1 - a) * 0.25;             // numbers punch out then settle
+          ctx.save();
+          ctx.translate(f.x, f.y); ctx.scale(pop, pop);
           ctx.font = "bold 20px sans-serif"; ctx.fillStyle = f.color;
           ctx.shadowColor = "#000"; ctx.shadowBlur = 6;
-          ctx.fillText(f.text, f.x, f.y); ctx.shadowBlur = 0;
+          ctx.fillText(f.text, 0, 0); ctx.shadowBlur = 0;
+          ctx.restore();
         }
         ctx.globalAlpha = 1;
       });
 
       ctx.restore();
 
-      // vignette
-      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
-      vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.65)");
+      // vignette (tightens on low health)
+      const hurt = 1 - Math.max(0, Math.min(1, s.hp / s.maxHp));
+      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.35 - hurt * 0.12), W / 2, H / 2, Math.max(W, H) * 0.75);
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, hurt > 0.6 ? `rgba(80,0,16,${0.65 + hurt * 0.2})` : "rgba(0,0,0,0.65)");
       ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
-      /* ---- HUD sync ---- */
-      const boss = s.mobs.find((m) => m.boss);
-      setHud({
-        hp: Math.round(s.hp), maxHp: Math.round(s.maxHp), level: s.level, exp: Math.round(s.exp),
-        need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune + s.bankedRune, xp: s.gainedXp + s.bankedXp,
-        ring: s.ring, ringName: rd.name, ringEmoji: rd.emoji, wave: Math.min(s.wave, s.waves + 1), waves: s.waves,
-        left: s.mobs.length, combo: s.combo, ult: Math.round(s.ult),
-        bossHp: boss ? Math.round(boss.hp) : 0, bossMax: boss ? boss.maxHp : 0, bossName: boss ? `${boss.def.emoji} ${boss.def.name}` : "",
-      });
+      /* ---- HUD sync (throttled — keeps the canvas at full frame rate) ---- */
+      s.hudT -= rawDt;
+      if (s.hudT <= 0) {
+        s.hudT = 80;
+        const boss = s.mobs.find((m) => m.boss);
+        setHud({
+          hp: Math.round(s.hp), maxHp: Math.round(s.maxHp), level: s.level, exp: Math.round(s.exp),
+          need: expForLevel(s.level), kills: s.kills, rune: s.gainedRune + s.bankedRune, xp: s.gainedXp + s.bankedXp,
+          ring: s.ring, ringName: rd.name, ringEmoji: rd.emoji, wave: Math.min(s.wave, s.waves + 1), waves: s.waves,
+          left: s.mobs.length, combo: s.combo, ult: Math.round(s.ult),
+          bossHp: boss ? Math.round(boss.hp) : 0, bossMax: boss ? boss.maxHp : 0, bossName: boss ? `${boss.def.emoji} ${boss.def.name}` : "",
+        });
+      }
+
 
       raf = requestAnimationFrame(loop);
     };
@@ -1039,17 +1160,18 @@ export default function CsbAscension() {
 
       <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="border-sky-400/60 text-sky-300"
-            onTouchStart={(e) => { e.preventDefault(); g.current.dashReq = true; }}
-            onClick={() => { g.current.dashReq = true; }}><Zap className="w-4 h-4" /></Button>
+          <Button size="sm" variant="outline" className="border-sky-400/60 text-sky-300 touch-none active:scale-90 transition-transform"
+            onPointerDown={(e) => { e.preventDefault(); g.current.dashReq = true; }}><Zap className="w-4 h-4" /></Button>
           <Button size="sm" variant="outline"
-            className={`border-amber-400/60 text-amber-300 ${hud.ult >= 100 ? "animate-pulse bg-amber-400/20" : "opacity-60"}`}
-            onTouchStart={(e) => { e.preventDefault(); g.current.ultReq = true; }}
-            onClick={() => { g.current.ultReq = true; }}><Shield className="w-4 h-4" /></Button>
+            className={`border-amber-400/60 text-amber-300 touch-none active:scale-90 transition-transform ${hud.ult >= 100 ? "animate-pulse bg-amber-400/20" : "opacity-60"}`}
+            onPointerDown={(e) => { e.preventDefault(); g.current.ultReq = true; }}><Shield className="w-4 h-4" /></Button>
         </div>
-        <Button className="w-20 h-20 rounded-full bg-sky-500 hover:bg-sky-400 text-black text-2xl shadow-[0_0_25px_rgba(56,189,248,0.6)]"
-          onTouchStart={(e) => { e.preventDefault(); g.current.attackReq = true; }}
-          onClick={() => { g.current.attackReq = true; }}>⚔️</Button>
+        <Button className="w-20 h-20 rounded-full bg-sky-500 hover:bg-sky-400 text-black text-2xl touch-none select-none shadow-[0_0_25px_rgba(56,189,248,0.6)] active:scale-90 active:shadow-[0_0_45px_rgba(56,189,248,0.9)] transition-transform duration-75"
+          onPointerDown={(e) => { e.preventDefault(); g.current.attackReq = true; g.current.keys["j"] = true; }}
+          onPointerUp={() => { g.current.keys["j"] = false; }}
+          onPointerLeave={() => { g.current.keys["j"] = false; }}
+          onPointerCancel={() => { g.current.keys["j"] = false; }}>⚔️</Button>
+
         <div className="text-[10px] text-sky-200/80 text-right max-w-[190px] pointer-events-none">
           WASD move · SPACE/J attack (3-hit combo) · SHIFT/K dodge · Q/L Bull Nova
         </div>
