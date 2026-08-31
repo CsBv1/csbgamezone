@@ -36,6 +36,7 @@ import BullWorldMMO from "./pages/games/BullWorldMMO";
 import CsbLevelDungeon from "./pages/games/CsbLevelDungeon";
 import CsbLevelTower from "./pages/games/CsbLevelTower";
 import CsbRanch from "./pages/games/CsbRanch";
+import CsbAscension from "./pages/games/CsbAscension";
 import MultiplayerCrash from "./pages/games/MultiplayerCrash";
 import BullStampede from "./pages/games/BullStampede";
 import HoldersArena from "./pages/games/HoldersArena";
@@ -177,6 +178,7 @@ const App = () => (
           <Route path="/games/csb-level-dungeon" element={<CsbLevelDungeon />} />
           <Route path="/games/csb-level-tower" element={<CsbLevelTower />} />
           <Route path="/games/csb-ranch" element={<CsbRanch />} />
+          <Route path="/games/csb-ascension" element={<CsbAscension />} />
           <Route path="/games/bull-world-classic" element={<ProtectedGameRoute><BullWorld /></ProtectedGameRoute>} />
           <Route path="/games/multiplayer-crash" element={<MultiplayerCrash />} />
           <Route path="/games/bull-stampede" element={<BullStampede />} />
