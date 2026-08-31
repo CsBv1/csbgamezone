@@ -393,17 +393,26 @@ export default function CsbAscension() {
     if (m.affix?.id === "shielded") dmg *= 0.6;
     dmg = Math.max(1, Math.round(dmg));
     m.hp -= dmg;
-    m.hit = 160;
-    s.hitStop = Math.max(s.hitStop, source === "ult" ? 60 : 26);
-    s.shake = Math.max(s.shake, isCrit ? 9 : 4);
-    pushFx(m.x + (Math.random() * 20 - 10), m.y - 24, isCrit ? "#fbbf24" : "#ffffff", `${dmg}${isCrit ? "!" : ""}`);
-    burst(m.x, m.y, m.def.color, 5, 0.3);
+    m.hit = 200;
+    s.hitStop = Math.max(s.hitStop, source === "ult" ? 70 : isCrit ? 46 : 24);
+    s.shake = Math.max(s.shake, isCrit ? 11 : 5);
+    // impact sparks fly away from the player
+    const d = Math.hypot(m.x - s.px, m.y - s.py) || 1;
+    const ux = (m.x - s.px) / d, uy = (m.y - s.py) / d;
+    if (!m.boss) { m.vx += ux * (isCrit ? 2.6 : 1.5); m.vy += uy * (isCrit ? 2.6 : 1.5); }
+    for (let i = 0; i < (isCrit ? 12 : 7); i++) {
+      const a = Math.atan2(uy, ux) + (Math.random() - 0.5) * 1.5, sp = 0.25 + Math.random() * 0.45;
+      s.parts.push({ x: m.x - ux * 10, y: m.y - uy * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 400, max: 400, color: isCrit ? "#fbbf24" : "#ffffff", size: 2 + Math.random() * 2.5 });
+    }
+    s.fx.push({ x: m.x + (Math.random() * 18 - 9), y: m.y - 24, life: isCrit ? 760 : 560, max: isCrit ? 760 : 560, color: isCrit ? "#fbbf24" : "#ffffff", text: `${dmg}${isCrit ? "!" : ""}`, vy: -0.055 });
+    pushFx(m.x, m.y, isCrit ? "#fbbf24" : "#e2e8f0", undefined, isCrit ? 54 : 34);
     if (s.leech > 0) s.hp = Math.min(s.maxHp, s.hp + dmg * s.leech);
     s.combo += 1; s.comboDecay = 2400;
     if (s.combo > s.bestCombo) s.bestCombo = s.combo;
     s.ult = Math.min(100, s.ult + dmg * 0.05 * s.ultRate);
     if (m.hp <= 0) { killMob(m); s.mobs = s.mobs.filter((x) => x !== m); }
   };
+
 
   const hitPlayer = (raw: number) => {
     const s = g.current;
