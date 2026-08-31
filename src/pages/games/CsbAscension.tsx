@@ -419,15 +419,19 @@ export default function CsbAscension() {
     if (s.invul > 0) return;
     const dmg = Math.max(1, Math.round(raw - s.def));
     s.hp -= dmg;
-    s.invul = 420;
+    s.invul = 460;
     s.combo = 0;
-    s.shake = Math.max(s.shake, 14);
-    pushFx(s.px, s.py - 40, "#f43f5e", `-${dmg}`);
+    s.shake = Math.max(s.shake, 16);
+    s.hitStop = Math.max(s.hitStop, 40);
+    burst(s.px, s.py, "#f43f5e", 14, 0.4);
+    s.fx.push({ x: s.px, y: s.py - 40, life: 700, max: 700, color: "#f43f5e", text: `-${dmg}`, vy: -0.05 });
+    pushFx(s.px, s.py, "#f43f5e", undefined, 70);
     if (s.thorn > 0) {
       s.mobs.forEach((m) => { if (Math.hypot(m.x - s.px, m.y - s.py) < 200) damageMob(m, dmg * s.thorn); });
     }
     if (s.hp <= 0) { s.hp = 0; endRun(true); }
   };
+
 
   /* -------------------------------- start -------------------------------- */
   const startRun = (b: HeldCsbBull) => {
