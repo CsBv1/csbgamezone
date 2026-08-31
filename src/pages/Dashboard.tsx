@@ -276,6 +276,22 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* CsB Ascension — Sky Citadel */}
+          <Card className="group overflow-hidden bg-card border-4 border-sky-400 hover:border-sky-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+            onClick={() => navigate('/games/csb-ascension')}>
+            <div className="h-40 bg-gradient-to-br from-slate-900 via-sky-800 to-purple-700 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-sky-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚔️ FLAGSHIP</div>
+              <span className="text-6xl group-hover:scale-110 transition-transform">🏛️🐂</span>
+            </div>
+            <div className="p-6 text-center">
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🏛️ CsB Ascension — Sky Citadel</h3>
+              <p className="text-sm text-muted-foreground mb-4">Our most advanced bull game yet — arena roguelite with 3-hit combos, dodge i-frames, elite affixes, gear loot with rarities, boon drafts on level up and a charged Bull Nova ultimate. 5 rings, 5 bosses, EXP & Rune Power ⚡</p>
+              <Button variant="outline" size="lg" className="w-full border-sky-400 text-sky-300 hover:bg-sky-400 hover:text-black">Ascend the Citadel</Button>
+            </div>
+          </Card>
+
+
+
           {/* Wheel of Fortune */}
           <Card className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
             onClick={() => navigate('/games/wheel-of-fortune')}>
