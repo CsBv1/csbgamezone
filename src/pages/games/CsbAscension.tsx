@@ -577,20 +577,33 @@ export default function CsbAscension() {
 
 
         s.atkCd -= dt; s.dashCd -= dt; s.invul -= dt; s.comboTimer -= dt;
-        s.comboDecay -= dt;
+        s.comboDecay -= dt; s.atkAnim = Math.max(0, s.atkAnim - dt);
         if (s.comboDecay <= 0 && s.combo > 0) s.combo = 0;
-        if (s.shake > 0) s.shake = Math.max(0, s.shake - dt * 0.05);
+        if (s.shake > 0) s.shake = Math.max(0, s.shake * Math.pow(0.986, dt) - dt * 0.012);
+
+        /* ---- buffered inputs (nothing gets dropped) ---- */
+        s.atkBuf -= dt; s.dashBuf -= dt; s.ultBuf -= dt;
+        if (s.attackReq) { s.atkBuf = 190; s.attackReq = false; }
+        if (s.dashReq) { s.dashBuf = 190; s.dashReq = false; }
+        if (s.ultReq) { s.ultBuf = 260; s.ultReq = false; }
+        if (s.keys[" "] || s.keys["j"]) s.atkBuf = Math.max(s.atkBuf, 60); // hold to keep swinging
 
         /* ---- melee combo ---- */
-        if (s.attackReq && s.atkCd <= 0) {
+        if (s.atkBuf > 0 && s.atkCd <= 0) {
+          s.atkBuf = 0;
           s.comboStep = s.comboTimer > 0 ? (s.comboStep + 1) % 3 : 0;
           s.comboTimer = 900;
           const finisher = s.comboStep === 2;
-          s.atkCd = finisher ? 520 : 300;
+          s.atkCd = finisher ? 480 : 250;
           const reach = (finisher ? 300 : 230) * s.range;
           const arcW = finisher ? Math.PI * 2 : Math.PI * 0.95;
           const baseAng = Math.atan2(s.aimY, s.aimX);
-          pushFx(s.px, s.py, ringDef().glow, undefined, reach);
+          // swing animation + forward lunge for weight
+          s.atkAnim = finisher ? 320 : 200; s.atkAnimMax = s.atkAnim;
+          s.atkAng = baseAng; s.atkArc = arcW; s.atkReach = reach; s.atkFinisher = finisher;
+          s.vx += Math.cos(baseAng) * (finisher ? 0.26 : 0.13);
+          s.vy += Math.sin(baseAng) * (finisher ? 0.26 : 0.13);
+          if (finisher) pushFx(s.px, s.py, ringDef().glow, undefined, reach);
           const hits: Mob[] = [];
           s.mobs.forEach((m) => {
             const d = Math.hypot(m.x - s.px, m.y - s.py);
@@ -610,33 +623,36 @@ export default function CsbAscension() {
               m.vx += ((m.x - s.px) / d) * 3.4; m.vy += ((m.y - s.py) / d) * 3.4;
             }
           });
+          if (!hits.length) s.hitStop = 0; // whiffs stay snappy
           if (s.arc && hits.length) {
             const near = s.mobs.filter((m) => !hits.includes(m)).sort((a, b) => Math.hypot(a.x - s.px, a.y - s.py) - Math.hypot(b.x - s.px, b.y - s.py))[0];
             if (near) { damageMob(near, s.atk * 0.7, "arc"); pushFx(near.x, near.y, "#67e8f9", undefined, 60); }
           }
-          if (finisher) s.shake = Math.max(s.shake, 16);
+          if (finisher) s.shake = Math.max(s.shake, 18);
         }
-        s.attackReq = false;
 
-        /* ---- dodge ---- */
-        if (s.dashReq && s.dashCd <= 0) {
-          s.dashCd = s.dashMax; s.invul = 520;
-          for (let i = 0; i < 20; i++) {
-            const nx = s.px + s.aimX * 16, ny = s.py + s.aimY * 16;
-            if (collide(nx, ny)) { s.px = nx; s.py = ny; burst(s.px, s.py, ringDef().glow, 2, 0.15); } else break;
-          }
+        /* ---- dodge: real burst of speed + afterimages ---- */
+        if (s.dashBuf > 0 && s.dashCd <= 0) {
+          s.dashBuf = 0;
+          s.dashCd = s.dashMax; s.invul = 540;
+          s.dashT = 190;
+          s.dashVX = s.aimX * 1.5 * s.spdMult; s.dashVY = s.aimY * 1.5 * s.spdMult;
+          s.trail = [];
+          s.lastTrail = 0;
+          burst(s.px, s.py, ringDef().glow, 14, 0.35);
+          pushFx(s.px, s.py, ringDef().glow, undefined, 90);
         }
-        s.dashReq = false;
 
         /* ---- ultimate ---- */
-        if (s.ultReq && s.ult >= 100) {
+        if (s.ultBuf > 0 && s.ult >= 100) {
+          s.ultBuf = 0;
           s.ult = 0; s.invul = Math.max(s.invul, 700); s.shake = 30;
           pushFx(s.px, s.py, "#fbbf24", "BULL NOVA", 900);
           burst(s.px, s.py, "#fbbf24", 70, 0.9);
           [...s.mobs].forEach((m) => { if (Math.hypot(m.x - s.px, m.y - s.py) < 900) damageMob(m, s.atk * 4.5, "ult"); });
           s.shots = s.shots.filter((p) => p.friendly);
         }
-        s.ultReq = false;
+
 
         /* ---- enemies ---- */
         s.mobs.forEach((m) => {
