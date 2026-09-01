@@ -68,7 +68,7 @@ const CsbNftPower = () => {
     });
     setNfts(merged);
   };
-  useEffect(() => { load(); }, [userId, bullsOwned, walletNfts.length]);
+  useEffect(() => { load(); }, [userId, bullsOwned, walletNfts]);
 
   const upgradeNft = async (nft: NftRow) => {
     if (!userId || !player) return;

@@ -33,14 +33,15 @@ function cacheKey(walletAddress: string) {
 }
 
 function readArtworkCache(walletAddress: string): NFTBonus | null {
-  const memory = artworkCache.get(walletAddress);
+  const normalizedAddress = walletAddress.toLowerCase();
+  const memory = artworkCache.get(normalizedAddress);
   if (memory) return memory;
   try {
     const raw = localStorage.getItem(cacheKey(walletAddress));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as NFTBonus;
     if (!Array.isArray(parsed.nfts)) return null;
-    artworkCache.set(walletAddress, parsed);
+    artworkCache.set(normalizedAddress, parsed);
     return parsed;
   } catch {
     return null;
@@ -48,7 +49,7 @@ function readArtworkCache(walletAddress: string): NFTBonus | null {
 }
 
 function writeArtworkCache(walletAddress: string, bonus: NFTBonus) {
-  artworkCache.set(walletAddress, bonus);
+  artworkCache.set(walletAddress.toLowerCase(), bonus);
   try {
     localStorage.setItem(cacheKey(walletAddress), JSON.stringify(bonus));
   } catch {
@@ -147,6 +148,7 @@ export function useNFTBonuses(walletAddress: string | null) {
       return;
     }
 
+    setHasScanned(false);
     const cachedArtwork = readArtworkCache(walletAddress);
     if (cachedArtwork) setNftBonus(cachedArtwork);
 
