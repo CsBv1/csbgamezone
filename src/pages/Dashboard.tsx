@@ -284,7 +284,7 @@ const Dashboard = () => {
               <span className="text-6xl group-hover:scale-110 transition-transform">🏛️🐂</span>
             </div>
             <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🏛️ CsB Ascension — Sky Citadel</h3>
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🏛️ CsB Ascension Sky Citadel</h3>
               <p className="text-sm text-muted-foreground mb-4">Our most advanced bull game yet — arena roguelite with 3-hit combos, dodge i-frames, elite affixes, gear loot with rarities, boon drafts on level up and a charged Bull Nova ultimate. 5 rings, 5 bosses, EXP & Rune Power ⚡</p>
               <Button variant="outline" size="lg" className="w-full border-sky-400 text-sky-300 hover:bg-sky-400 hover:text-black">Ascend the Citadel</Button>
             </div>
