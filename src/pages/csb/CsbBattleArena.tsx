@@ -174,7 +174,7 @@ export default function CsbBattleArena() {
       if (prof?.username) setUsername(prof.username);
     };
     loadBulls();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
 
   useEffect(() => {

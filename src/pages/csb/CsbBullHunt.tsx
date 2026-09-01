@@ -48,7 +48,7 @@ export default function CsbBullHunt() {
       setBulls(merged);
     };
     load();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
