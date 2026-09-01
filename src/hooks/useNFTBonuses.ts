@@ -106,7 +106,8 @@ export function useNFTBonuses(walletAddress: string | null) {
             csbTokens: Number((data as any).csb_tokens) || 0,
             nfts: [],
           });
-          setHasScanned(true);
+          // Do NOT mark as scanned: cached rows carry no NFT artwork,
+          // so we still need a live scan to render bull images.
         }
       }
     };

@@ -998,7 +998,7 @@ export default function CsbAscension() {
           <Button variant="ghost" onClick={() => navigate("/")}><ArrowLeft className="w-4 h-4 mr-2" /> Back to Game Zone</Button>
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-fuchsia-300 to-amber-300">
-              🐂⚡ CsB Ascension — Sky Citadel
+              🐂⚡ CsB Ascension Sky Citadel
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
               A wave-based arena roguelite. Fight through floating rings of the Citadel — 3 waves then a Ring Boss.
