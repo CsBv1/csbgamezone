@@ -48,7 +48,7 @@ export default function CsbDiceDuel() {
       setBulls(merged);
     };
     load();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   useEffect(() => () => { if (rollRef.current) clearInterval(rollRef.current); }, []);
 

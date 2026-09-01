@@ -53,7 +53,7 @@ export default function CsbBossRaid() {
       setBulls(merged);
     };
     load();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   useEffect(() => () => { if (tickRef.current) clearInterval(tickRef.current); }, []);
 

@@ -41,7 +41,7 @@ export default function CsbBullVault() {
         return { ...r, image: match?.image, nft_name: `Bull #${num}` };
       }));
     })();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   const buildBoard = (bull: CsbBull) => {
     const rare = RARITY_BASE[bull.rarity] || 1;

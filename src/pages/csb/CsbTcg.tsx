@@ -122,7 +122,7 @@ export default function CsbTcg() {
       if (prof?.username) setUsername(prof.username);
     };
     load();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   // Arrived from the Battle Arena with an opponent already in mind
   const autoOppRef = useRef(false);

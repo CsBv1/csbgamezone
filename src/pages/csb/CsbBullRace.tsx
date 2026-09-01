@@ -51,7 +51,7 @@ export default function CsbBullRace() {
       setBulls(merged);
     };
     load();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   useEffect(() => () => { if (tickRef.current) clearInterval(tickRef.current); }, []);
 

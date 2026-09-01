@@ -55,7 +55,7 @@ export default function CsbBullExpedition() {
         return { ...r, image: match?.image, nft_name: `Bull #${num}` };
       }));
     })();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   const start = (bull: CsbBull) => {
     setSelected(bull);

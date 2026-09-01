@@ -49,7 +49,7 @@ export default function CsbBullSiege() {
         return { ...r, image: match?.image, nft_name: `Bull #${num}` };
       }));
     })();
-  }, [userId, walletNfts.length]);
+  }, [userId, walletNfts]);
 
   useEffect(() => () => { clearInterval(tickRef.current); clearInterval(spawnRef.current); }, []);
 
