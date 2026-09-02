@@ -121,6 +121,12 @@ export default function CsbLevelTower() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bullImgRef = useRef<HTMLImageElement | null>(null);
 
+  useEffect(() => {
+    if (!bull) return;
+    const refreshed = heldBulls.find((item) => item.nft_id.toLowerCase() === bull.nft_id.toLowerCase());
+    if (refreshed?.image && refreshed.image !== bull.image) setBull(refreshed);
+  }, [heldBulls, bull]);
+
   /* ------------------------------ game state ---------------------------- */
   const g = useRef({
     grid: [] as number[], rooms: [] as Rect[], biome: BIOMES[0],

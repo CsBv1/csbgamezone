@@ -10,6 +10,21 @@ export interface HeldCsbBull {
   image?: string;
 }
 
+function normalizeAssetId(value: unknown) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/^csb_/, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function normalizeName(value: unknown) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function bullNumber(value: unknown) {
+  return String(value || "").match(/(?:#|bull\s*)?(\d+)\s*$/i)?.[1];
+}
+
 /**
  * Returns CSB bulls from csbv1_nft_power filtered to those CURRENTLY in the wallet.
  * Renames to "Bull #N" and attaches wallet image.
@@ -39,9 +54,9 @@ export function useHeldCsbBulls(
         .eq("user_id", userId)
         .order("nft_id");
 
-      const existingIds = new Set(((existingData || []) as any[]).map((row) => String(row.nft_id).toLowerCase()));
+      const existingIds = new Set(((existingData || []) as any[]).map((row) => normalizeAssetId(row.nft_id)));
       const missing = walletNfts
-        .filter((nft) => nft.assetNameHex && !existingIds.has(`csb_${nft.assetNameHex}`.toLowerCase()))
+        .filter((nft) => nft.assetNameHex && !existingIds.has(normalizeAssetId(nft.assetNameHex)))
         .map((nft) => ({
           user_id: userId,
           nft_id: `csb_${nft.assetNameHex}`,
@@ -58,19 +73,30 @@ export function useHeldCsbBulls(
         : { data: existingData };
       const rows = ((data || []) as any[]).filter((r) => r.nft_id?.startsWith("csb_"));
       const heldIds = new Set(
-        walletNfts.filter((w) => w.assetNameHex).map((w) => `csb_${w.assetNameHex}`.toLowerCase())
+        walletNfts.filter((w) => w.assetNameHex).map((w) => normalizeAssetId(w.assetNameHex))
       );
-      const filtered = heldIds.size > 0 ? rows.filter((r) => heldIds.has(String(r.nft_id).toLowerCase())) : rows;
+      const walletNames = new Set(walletNfts.map((w) => normalizeName(w.name)).filter(Boolean));
+      const walletNumbers = new Set(walletNfts.map((w) => bullNumber(w.name)).filter(Boolean));
+      const filtered = heldIds.size > 0
+        ? rows.filter((r) => (
+          heldIds.has(normalizeAssetId(r.nft_id))
+          || walletNames.has(normalizeName(r.nft_name))
+          || walletNumbers.has(bullNumber(r.nft_name) || "")
+        ))
+        : rows;
       const merged: HeldCsbBull[] = filtered.map((r, idx) => {
-        const match = walletNfts?.find(
-          (w) => w.assetNameHex && String(r.nft_id).toLowerCase() === `csb_${w.assetNameHex}`.toLowerCase()
-        );
+        const rowNumber = bullNumber(r.nft_name);
+        const match = walletNfts.find((w) => (
+          (w.assetNameHex && normalizeAssetId(r.nft_id) === normalizeAssetId(w.assetNameHex))
+          || (w.name && normalizeName(r.nft_name) === normalizeName(w.name))
+          || (rowNumber && rowNumber === bullNumber(w.name))
+        )) || (filtered.length === walletNfts.length ? walletNfts[idx] : undefined);
         const num = (r.nft_name || "").match(/(\d+)\s*$/)?.[1] || String(idx + 1);
         return { ...r, rarity: "legendary", image: match?.image, nft_name: `Bull #${num}` };
       });
       setBulls((current) => merged.map((bull) => ({
         ...bull,
-        image: bull.image || current.find((item) => item.nft_id === bull.nft_id)?.image,
+        image: bull.image || current.find((item) => normalizeAssetId(item.nft_id) === normalizeAssetId(bull.nft_id))?.image,
       })));
     })();
   }, [userId, walletSignature]);
