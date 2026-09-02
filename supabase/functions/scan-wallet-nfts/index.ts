@@ -12,6 +12,17 @@ const CSB_TOKEN_ASSET_NAME = "435342";
 
 // Simple bonus: 10% per bull owned
 const BONUS_PER_BULL = 10;
+const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+
+function normalizeArtworkUrl(value: unknown): string | undefined {
+  if (Array.isArray(value)) value = value.join("");
+  if (typeof value !== "string") return undefined;
+  const url = value.trim();
+  if (!url) return undefined;
+
+  const ipfsPath = url.match(/^(?:ipfs:\/\/|https?:\/\/(?:ipfs\.io|dweb\.link|gateway\.pinata\.cloud|nftstorage\.link)\/ipfs\/)(.+)$/i)?.[1];
+  return ipfsPath ? `${IPFS_GATEWAY}${ipfsPath}` : url;
+}
 
 // Bech32 encoding implementation for Cardano addresses
 const BECH32_ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
@@ -416,11 +427,7 @@ serve(async (req) => {
                 // Some assets store under hex name
                 img = m?.minting_tx_metadata?.["721"]?.[CSB_POLICY_ID]?.[nft.assetNameHex]?.image;
               }
-              if (Array.isArray(img)) img = img.join("");
-              if (typeof img === "string") {
-                if (img.startsWith("ipfs://")) img = `https://ipfs.io/ipfs/${img.slice(7)}`;
-                nft.image = img;
-              }
+               nft.image = normalizeArtworkUrl(img);
             }
           }
         }
