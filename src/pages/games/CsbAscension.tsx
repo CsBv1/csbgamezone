@@ -152,6 +152,12 @@ export default function CsbAscension() {
   const joyRef = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
 
+  useEffect(() => {
+    if (!bull) return;
+    const refreshed = heldBulls.find((item) => item.nft_id.toLowerCase() === bull.nft_id.toLowerCase());
+    if (refreshed?.image && refreshed.image !== bull.image) setBull(refreshed);
+  }, [heldBulls, bull]);
+
   const g = useRef({
     ring: 1, wave: 1, waves: 3, pillars: [] as Pillar[],
     px: 0, py: 0, aimX: 1, aimY: 0, facing: 1,
