@@ -28,6 +28,27 @@ const EMPTY_BONUS: NFTBonus = {
 const artworkCache = new Map<string, NFTBonus>();
 const scansInFlight = new Map<string, Promise<NFTBonus>>();
 
+const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+
+function normalizeArtworkUrl(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const url = value.trim();
+  if (!url) return undefined;
+
+  const ipfsPath = url.match(/^(?:ipfs:\/\/|https?:\/\/(?:ipfs\.io|dweb\.link|gateway\.pinata\.cloud|nftstorage\.link)\/ipfs\/)(.+)$/i)?.[1];
+  return ipfsPath ? `${IPFS_GATEWAY}${ipfsPath}` : url;
+}
+
+function normalizeBonusArtwork(bonus: NFTBonus): NFTBonus {
+  return {
+    ...bonus,
+    nfts: bonus.nfts.map((nft) => ({
+      ...nft,
+      image: normalizeArtworkUrl(nft.image),
+    })),
+  };
+}
+
 function cacheKey(walletAddress: string) {
   return `csb_wallet_art_${walletAddress.toLowerCase()}`;
 }
@@ -41,17 +62,19 @@ function readArtworkCache(walletAddress: string): NFTBonus | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as NFTBonus;
     if (!Array.isArray(parsed.nfts)) return null;
-    artworkCache.set(normalizedAddress, parsed);
-    return parsed;
+    const normalized = normalizeBonusArtwork(parsed);
+    artworkCache.set(normalizedAddress, normalized);
+    return normalized;
   } catch {
     return null;
   }
 }
 
 function writeArtworkCache(walletAddress: string, bonus: NFTBonus) {
-  artworkCache.set(walletAddress.toLowerCase(), bonus);
+  const normalized = normalizeBonusArtwork(bonus);
+  artworkCache.set(walletAddress.toLowerCase(), normalized);
   try {
-    localStorage.setItem(cacheKey(walletAddress), JSON.stringify(bonus));
+    localStorage.setItem(cacheKey(walletAddress), JSON.stringify(normalized));
   } catch {
     // Memory caching still keeps artwork available when storage is unavailable.
   }
@@ -77,13 +100,13 @@ export function useNFTBonuses(walletAddress: string | null) {
             body: { walletAddress },
           });
           if (error) throw error;
-          return {
+          return normalizeBonusArtwork({
             bullsOwned: data?.bullsOwned || 0,
             rarityBonus: data?.rarityBonus || 0,
             highestRarity: data?.highestRarity || "none",
             csbTokens: data?.csbTokens || 0,
             nfts: data?.nfts || [],
-          } satisfies NFTBonus;
+          } satisfies NFTBonus);
         })();
         scansInFlight.set(walletAddress, request);
       }
