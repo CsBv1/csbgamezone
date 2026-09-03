@@ -1719,6 +1719,8 @@ export default function BullCity() {
           >
             ⚒️
           </button>
+      </div>
+
 
         {/* CMKR / info drawer — keeps the map fullscreen while mining stays one tap away */}
         {showPanel && (
