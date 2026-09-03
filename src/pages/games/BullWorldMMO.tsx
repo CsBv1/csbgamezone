@@ -884,7 +884,11 @@ export default function BullWorldMMO() {
         loading={bullsLoading && selectableBulls.length === 0}
 
         onBack={() => (selecting ? setSelecting(false) : navigate("/dashboard"))}
-        onPick={async (b) => { await chooseBull(b); setSelecting(false); }}
+        onPick={async (b) => {
+          await chooseBull(b);
+          try { sessionStorage.setItem("csbHubBull", JSON.stringify({ nft_id: b.nft_id, name: b.name, image: b.image || null, level: b.level || 1 })); } catch {}
+          setSelecting(false);
+        }}
       />
     );
   }
