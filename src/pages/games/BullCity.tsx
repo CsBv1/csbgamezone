@@ -438,6 +438,15 @@ export default function BullCity() {
   const bullArt = useRef<HTMLImageElement | null>(null);
   const otherArt = useRef<Record<string, HTMLImageElement>>({});
 
+  /* keep the render mirrors fresh on every commit */
+  playersRef.current = players;
+  diamondsRef.current = diamonds;
+  myBullRef.current = myBull;
+  myColorRef.current = myColor;
+  dirRef.current = myDirection;
+  usernameRef.current = username;
+
+
   /* keep the picked bull in sync once artwork resolves */
   useEffect(() => {
     if (!myBull?.nft_id) return;
