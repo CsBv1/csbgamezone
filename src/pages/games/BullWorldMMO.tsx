@@ -138,6 +138,14 @@ export default function BullWorldMMO() {
     return [...list].sort((a: any, b: any) => (b.level || 1) - (a.level || 1));
   }, [heldBulls, bulls]);
 
+  /* repair legacy characters that were saved before artwork existed — never show the emoji for a real NFT */
+  useEffect(() => {
+    if (!character || character.bull_image || !character.bull_nft_id) return;
+    const match = (heldBulls || []).find((b: any) => String(b.nft_id).toLowerCase() === String(character.bull_nft_id).toLowerCase());
+    const img = match?.image || (() => { try { return JSON.parse(sessionStorage.getItem("csbHubBull") || "null")?.image; } catch { return null; } })();
+    if (img) patch({ bull_image: img }, true);
+  }, [character?.bull_image, character?.bull_nft_id, heldBulls, patch]);
+
 
   /* ------------------------------ mutable refs --------------------------- */
   const p = useRef({
@@ -884,7 +892,11 @@ export default function BullWorldMMO() {
         loading={bullsLoading && selectableBulls.length === 0}
 
         onBack={() => (selecting ? setSelecting(false) : navigate("/dashboard"))}
-        onPick={async (b) => { await chooseBull(b); setSelecting(false); }}
+        onPick={async (b) => {
+          await chooseBull(b);
+          try { sessionStorage.setItem("csbHubBull", JSON.stringify({ nft_id: b.nft_id, name: b.name, image: b.image || null, level: b.level || 1 })); } catch {}
+          setSelecting(false);
+        }}
       />
     );
   }
