@@ -216,21 +216,34 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* Bull World — moved up */}
+          {/* Bull City — own entry with bull selector */}
           <Card className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-cyan-400 hover:border-cyan-300'}`}
-            onClick={() => navigate('/games/bull-world')}>
+            onClick={() => navigate('/games/bull-city')}>
             <div className="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌍 MULTIPLAYER WORLD</div>
-              <div className="absolute top-10 right-2 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">🔑 KEY REQUIRED</div>
+              <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌍 MULTIPLAYER CITY</div>
               <div className="flex items-center gap-6">
                 <Globe className="w-24 h-24 text-white group-hover:scale-110 transition-transform animate-pulse" />
                 <Users className="w-16 h-16 text-cyan-300 group-hover:scale-110 transition-transform" />
               </div>
             </div>
             <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂CsB Dungeon & City🌍</h3>
-              <p className="text-sm text-muted-foreground mb-4">Enter our virtual world! See other players, MMORPG Mode — fight monsters, get EXP to level up your CsB Bulls & collect diamonds, explore & play mini-games together! & mine CMKR in City🚀</p>
-              <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Dungeon & City</Button>
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 CsB Bull City 🌍</h3>
+              <p className="text-sm text-muted-foreground mb-4">Select your Bull and enter the multiplayer Cardano metropolis — explore 8 districts, meet other players & mine CMKR in all 24 buildings 🚀</p>
+              <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Bull City</Button>
+            </div>
+          </Card>
+
+          {/* Bull World Dungeon — own entry with bull selector */}
+          <Card className="group overflow-hidden bg-card border-4 border-indigo-400 hover:border-indigo-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
+            onClick={() => navigate('/games/bull-world')}>
+            <div className="h-40 bg-gradient-to-br from-slate-900 via-indigo-800 to-cyan-700 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-2 right-2 bg-indigo-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚔️ MMORPG WORLD</div>
+              <span className="text-6xl group-hover:scale-110 transition-transform">🐂⚔️</span>
+            </div>
+            <div className="p-6 text-center">
+              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 CsB Dungeon 🌍</h3>
+              <p className="text-sm text-muted-foreground mb-4">Select your Bull and enter the open world — 15 regions, real-time combat, world bosses, EXP to level up your CsB Bulls & collect diamonds together!</p>
+              <Button variant="outline" size="lg" className="w-full border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black">Enter Dungeon</Button>
             </div>
           </Card>
 
