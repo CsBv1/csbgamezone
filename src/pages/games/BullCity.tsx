@@ -1175,6 +1175,14 @@ export default function BullCity() {
 
       ctx.restore();
 
+      // Cinematic post-pass: neon bloom tint + vignette
+      const bloom = ctx.createRadialGradient(VIEWPORT_W / 2, VIEWPORT_H / 2, VIEWPORT_H * 0.15, VIEWPORT_W / 2, VIEWPORT_H / 2, VIEWPORT_H * 0.85);
+      bloom.addColorStop(0, 'rgba(34,211,238,0.05)');
+      bloom.addColorStop(1, 'rgba(2,6,16,0.55)');
+      ctx.fillStyle = bloom;
+      ctx.fillRect(0, 0, VIEWPORT_W, VIEWPORT_H);
+
+
       // Minimap
       const mmW = 170, mmH = 170;
       const mmX = VIEWPORT_W - mmW - 10, mmY = 10;
