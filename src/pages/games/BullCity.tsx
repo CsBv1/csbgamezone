@@ -1231,8 +1231,40 @@ export default function BullCity() {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal]);
 
-  const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean) => {
+  const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean, art?: HTMLImageElement | null) => {
     const scale = 1.6;
+
+    /* real CNFT artwork avatar */
+    if (art) {
+      const R = isMe ? 40 : 34;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + R * 0.85, R * 0.75, R * 0.28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      ctx.drawImage(art, x - R, y - R, R * 2, R * 2);
+      ctx.restore();
+      ctx.strokeStyle = isMe ? '#FFD700' : (color || '#00D4FF');
+      ctx.lineWidth = 3;
+      ctx.shadowColor = isMe ? '#FFD700' : (color || '#00D4FF');
+      ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.font = isMe ? 'bold 13px Arial' : '11px Arial';
+      ctx.textAlign = 'center';
+      const label = name || 'Player';
+      const lw = ctx.measureText(label).width + 14;
+      const ny = y - R - 16;
+      ctx.fillStyle = isMe ? 'rgba(255, 153, 0, 0.9)' : 'rgba(30, 41, 59, 0.9)';
+      ctx.strokeStyle = isMe ? '#FF9900' : '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x - lw / 2, ny - 7, lw, 18, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = isMe ? '#000' : '#fff';
+      ctx.fillText(label, x, ny + 5);
+      return;
+    }
     
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath();
