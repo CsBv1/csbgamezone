@@ -407,6 +407,8 @@ export default function BullCity() {
   const [cmkrGlobal, setCmkrGlobal] = useState(0);                      // total minted this month (all players)
   const [cmkrBoard, setCmkrBoard] = useState<{ user_id: string; username: string; total: number }[]>([]);
   const [autoMine, setAutoMine] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+
   const cmkrMinedRef = useRef<Set<string>>(new Set());
   const cmkrTodayRef = useRef<Record<string, number>>({});
   const viewRef = useRef({ w: VIEWPORT_W, h: VIEWPORT_H });
