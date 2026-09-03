@@ -53,8 +53,8 @@ const PLAYER_SIZE = 45;
 const MOVE_SPEED = 7;
 const DB_UPDATE_INTERVAL = 200;
 /** Bigger, cinematic viewport (16:9). */
-const VIEWPORT_W = 1760;
-const VIEWPORT_H = 990;
+const VIEWPORT_W = 1920;
+const VIEWPORT_H = 1080;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
@@ -225,6 +225,11 @@ export default function BullCity() {
   const { connectedWallet } = useCardanoWallet();
   const { nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
   const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
+  /* highest level first in the selection screen */
+  const sortedBulls = useMemo(
+    () => [...(heldBulls || [])].sort((a, b) => (b.level || 1) - (a.level || 1)),
+    [heldBulls],
+  );
   const bullArt = useRef<HTMLImageElement | null>(null);
   const otherArt = useRef<Record<string, HTMLImageElement>>({});
 
@@ -1395,7 +1400,7 @@ export default function BullCity() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#071427] to-slate-950 p-4 md:p-8">
         <div className="max-w-5xl mx-auto space-y-6">
-          <Button variant="ghost" onClick={() => navigate('/games/bull-world')} className="gap-2 text-cyan-300">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="gap-2 text-cyan-300">
             <ArrowLeft className="w-4 h-4" /> Back
           </Button>
           <div className="text-center space-y-2">
@@ -1405,7 +1410,7 @@ export default function BullCity() {
             <p className="text-cyan-200/60 text-sm">Select the Bull that walks the city. Your CNFT is your avatar.</p>
           </div>
 
-          {heldBulls.length === 0 ? (
+          {sortedBulls.length === 0 ? (
             <div className="text-center py-10 space-y-4">
               <Sparkles className="w-10 h-10 mx-auto animate-spin text-cyan-400" />
               <p className="text-cyan-200/60 text-sm">Scanning your wallet for Cardano Stake Bulls…</p>
@@ -1413,7 +1418,7 @@ export default function BullCity() {
           ) : null}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {heldBulls.map((b: HeldCsbBull) => (
+            {sortedBulls.map((b: HeldCsbBull) => (
               <Card key={b.nft_id}
                 onClick={() => enterCityWithBull({ nft_id: b.nft_id, name: b.nft_name, image: b.image, level: b.level })}
                 className="cursor-pointer p-3 bg-slate-900/80 border-2 border-cyan-500/40 hover:border-cyan-300 hover:scale-105 transition-all shadow-[0_0_20px_rgba(6,182,212,0.25)]">
@@ -1444,8 +1449,8 @@ export default function BullCity() {
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/games/bull-world'); }}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Bull World
+          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/dashboard'); }}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
           </Button>
           <CreditBar />
         </div>
