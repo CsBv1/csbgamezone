@@ -8,6 +8,12 @@ import { ArrowLeft, Gem, Users, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight, H
 import { WorldChat } from "@/components/WorldChat";
 import { useToast } from "@/hooks/use-toast";
 import { audioManager } from "@/hooks/useAudioManager";
+import { useCardanoWallet } from "@/hooks/useCardanoWallet";
+import { useNFTBonuses } from "@/hooks/useNFTBonuses";
+import { useHeldCsbBulls, type HeldCsbBull } from "@/hooks/useHeldCsbBulls";
+import { Sparkles } from "lucide-react";
+
+type CityBull = { nft_id: string | null; name: string; image?: string | null; level: number };
 
 interface Player {
   id: string;
