@@ -1412,8 +1412,12 @@ export default function BullCity() {
     };
 
     render();
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal, myBull]);
+    return () => {
+      window.removeEventListener('resize', resize);
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [gameActive, userId]);
+
 
   const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean, art?: HTMLImageElement | null) => {
     const scale = 1.6;
