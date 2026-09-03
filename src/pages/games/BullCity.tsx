@@ -212,18 +212,55 @@ export default function BullCity() {
   const cmkrMinedRef = useRef<Set<string>>(new Set());
   const cmkrTodayRef = useRef<Record<string, number>>({});
   const [cameraOffset, setCameraOffset] = useState({
-    x: Math.max(0, Math.min(CITY_WIDTH - 1400, SPAWN_X - 700)),
-    y: Math.max(0, Math.min(CITY_HEIGHT - 900, SPAWN_Y - 450)),
+    x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, SPAWN_X - VIEWPORT_W / 2)),
+    y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, SPAWN_Y - VIEWPORT_H / 2)),
   });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
   const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
 
+  /* ——— Bull selection: your CNFT becomes your city avatar ——— */
+  const [myBull, setMyBull] = useState<CityBull | null>(null);
+  const { connectedWallet } = useCardanoWallet();
+  const { nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
+  const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
+  const bullArt = useRef<HTMLImageElement | null>(null);
+  const otherArt = useRef<Record<string, HTMLImageElement>>({});
 
-  // Canvas viewport size
-  const VIEWPORT_W = 1400;
-  const VIEWPORT_H = 900;
+  /* keep the picked bull in sync once artwork resolves */
+  useEffect(() => {
+    if (!myBull?.nft_id) return;
+    const fresh = heldBulls.find((b) => b.nft_id.toLowerCase() === String(myBull.nft_id).toLowerCase());
+    if (fresh?.image && fresh.image !== myBull.image) setMyBull({ ...myBull, image: fresh.image, level: fresh.level });
+  }, [heldBulls, myBull]);
+
+  /* load my bull artwork for canvas rendering */
+  useEffect(() => {
+    bullArt.current = null;
+    if (!myBull?.image) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { bullArt.current = img; };
+    img.src = myBull.image;
+  }, [myBull?.image]);
+
+  /* pull other players' bull artwork so the city shows real CNFTs */
+  useEffect(() => {
+    if (!gameActive) return;
+    const ids = players.map((p) => p.user_id).filter((id) => id && id !== userId && !otherArt.current[id]);
+    if (!ids.length) return;
+    (async () => {
+      const { data } = await supabase.from("bw_characters" as any).select("user_id,bull_image").in("user_id", ids);
+      ((data || []) as any[]).forEach((row) => {
+        if (!row.bull_image || otherArt.current[row.user_id]) return;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => { otherArt.current[row.user_id] = img; };
+        img.src = row.bull_image;
+      });
+    })();
+  }, [players, gameActive, userId]);
 
   useEffect(() => {
     const init = async () => {
