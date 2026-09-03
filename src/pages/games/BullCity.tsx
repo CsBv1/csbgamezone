@@ -184,6 +184,204 @@ const ROADS = (() => {
   return r;
 })();
 
+/* ============================================================================
+   Cached ground layer — the whole city floor (terrain, districts, water,
+   roads, plaza) is painted ONCE into an offscreen canvas and then blitted per
+   frame. This is the single biggest performance win for the 4000×4000 map.
+   ========================================================================== */
+const GROUND_SCALE = 0.5;
+let groundLayer: HTMLCanvasElement | null = null;
+
+function buildGroundLayer(): HTMLCanvasElement {
+  if (groundLayer) return groundLayer;
+  const c = document.createElement('canvas');
+  c.width = Math.round(CITY_WIDTH * GROUND_SCALE);
+  c.height = Math.round(CITY_HEIGHT * GROUND_SCALE);
+  const x = c.getContext('2d')!;
+  x.scale(GROUND_SCALE, GROUND_SCALE);
+
+  /* --- base terrain --- */
+  const bg = x.createLinearGradient(0, 0, CITY_WIDTH, CITY_HEIGHT);
+  bg.addColorStop(0, '#0a1a2b');
+  bg.addColorStop(0.45, '#0f2a44');
+  bg.addColorStop(1, '#07131f');
+  x.fillStyle = bg;
+  x.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
+
+  /* --- paved plates: gives the floor real texture instead of a flat grid --- */
+  let s = 90210;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const PLATE = 160;
+  for (let py = 0; py < CITY_HEIGHT; py += PLATE) {
+    for (let px = 0; px < CITY_WIDTH; px += PLATE) {
+      const t = rnd();
+      x.fillStyle = `rgba(${18 + t * 14 | 0},${34 + t * 20 | 0},${52 + t * 26 | 0},0.55)`;
+      x.fillRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
+      x.strokeStyle = 'rgba(120,200,255,0.05)';
+      x.lineWidth = 1;
+      x.strokeRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
+      if (t > 0.86) {
+        x.fillStyle = 'rgba(0,212,255,0.05)';
+        x.fillRect(px + 20, py + 20, PLATE - 40, PLATE - 40);
+      }
+    }
+  }
+
+  /* --- district tinting --- */
+  DISTRICTS.forEach(d => {
+    const g = x.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
+    g.addColorStop(0, d.color + '2e');
+    g.addColorStop(1, 'transparent');
+    x.fillStyle = g;
+    x.fillRect(d.x, d.y, d.w, d.h);
+    x.strokeStyle = d.color + '33';
+    x.lineWidth = 3;
+    x.setLineDash([18, 14]);
+    x.strokeRect(d.x, d.y, d.w, d.h);
+    x.setLineDash([]);
+  });
+
+  /* --- water --- */
+  WATER.forEach(w => {
+    const wg = x.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
+    wg.addColorStop(0, 'rgba(22,132,176,0.8)');
+    wg.addColorStop(1, 'rgba(8,50,80,0.9)');
+    x.fillStyle = wg;
+    x.beginPath(); x.roundRect(w.x, w.y, w.w, w.h, 40); x.fill();
+    x.strokeStyle = 'rgba(120,230,255,0.35)'; x.lineWidth = 3; x.stroke();
+  });
+
+  /* --- roads: asphalt, kerbs, lane dashes, crosswalks --- */
+  ROADS.forEach(road => {
+    const vertical = road.x1 === road.x2;
+    const w = road.width;
+    const rx = vertical ? road.x1 - w / 2 : road.x1;
+    const ry = vertical ? road.y1 : road.y1 - w / 2;
+    const rw = vertical ? w : road.x2 - road.x1;
+    const rh = vertical ? road.y2 - road.y1 : w;
+
+    // kerb / sidewalk
+    x.fillStyle = 'rgba(96,120,146,0.55)';
+    x.fillRect(rx - 10, ry - 10, rw + 20, rh + 20);
+    // asphalt
+    const ag = vertical
+      ? x.createLinearGradient(rx, 0, rx + rw, 0)
+      : x.createLinearGradient(0, ry, 0, ry + rh);
+    ag.addColorStop(0, '#232f3d');
+    ag.addColorStop(0.5, '#2e3d4e');
+    ag.addColorStop(1, '#232f3d');
+    x.fillStyle = ag;
+    x.fillRect(rx, ry, rw, rh);
+    // neon kerb glow
+    x.strokeStyle = 'rgba(0,212,255,0.22)';
+    x.lineWidth = 2;
+    x.strokeRect(rx, ry, rw, rh);
+    // centre lane dashes
+    x.strokeStyle = 'rgba(255,205,60,0.5)';
+    x.lineWidth = 4;
+    x.setLineDash([40, 34]);
+    x.beginPath();
+    if (vertical) { x.moveTo(road.x1, road.y1); x.lineTo(road.x1, road.y2); }
+    else { x.moveTo(road.x1, road.y1); x.lineTo(road.x2, road.y1); }
+    x.stroke();
+    x.setLineDash([]);
+    // crosswalks every 800px
+    x.fillStyle = 'rgba(220,240,255,0.28)';
+    if (vertical) {
+      for (let y = road.y1 + 400; y < road.y2; y += 800)
+        for (let i = 0; i < 5; i++) x.fillRect(rx + 4 + i * (w / 5), y, w / 8, 26);
+    } else {
+      for (let xx = road.x1 + 400; xx < road.x2; xx += 800)
+        for (let i = 0; i < 5; i++) x.fillRect(xx, ry + 4 + i * (w / 5), 26, w / 8);
+    }
+  });
+
+  /* --- spawn plaza floor --- */
+  const pg = x.createRadialGradient(SPAWN_X, SPAWN_Y, 30, SPAWN_X, SPAWN_Y, 340);
+  pg.addColorStop(0, 'rgba(0,212,255,0.20)');
+  pg.addColorStop(1, 'transparent');
+  x.fillStyle = pg;
+  x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, 340, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = 'rgba(0,212,255,0.4)';
+  x.lineWidth = 4;
+  for (let r = 120; r <= 300; r += 90) { x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); x.stroke(); }
+
+  groundLayer = c;
+  return c;
+}
+
+/** Traffic — deterministic cars that drive the road grid. */
+const CAR_COLORS = ['#ff5a5a', '#ffd84d', '#57e0ff', '#8b5cf6', '#34d399', '#f97316', '#e2e8f0'];
+const CARS = (() => {
+  let s = 24681;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  return ROADS.flatMap((road, ri) => {
+    const n = 4;
+    return Array.from({ length: n }, (_, i) => ({
+      ri,
+      t: rnd(),
+      speed: 0.012 + rnd() * 0.022,
+      dir: i % 2 === 0 ? 1 : -1,
+      lane: i % 2 === 0 ? 1 : -1,
+      color: CAR_COLORS[Math.floor(rnd() * CAR_COLORS.length)],
+    }));
+  });
+})();
+
+function drawTraffic(ctx: CanvasRenderingContext2D, time: number, inView: (x: number, y: number) => boolean) {
+  CARS.forEach(car => {
+    const road = ROADS[car.ri];
+    const vertical = road.x1 === road.x2;
+    const len = vertical ? road.y2 - road.y1 : road.x2 - road.x1;
+    let prog = (car.t + time * car.speed * (car.dir > 0 ? 1 : -1)) % 1;
+    if (prog < 0) prog += 1;
+    const along = prog * len;
+    const off = car.lane * (road.width * 0.22);
+    const cx = vertical ? road.x1 + off : road.x1 + along;
+    const cy = vertical ? road.y1 + along : road.y1 + off;
+    if (!inView(cx, cy)) return;
+
+    const L = 34, W = 18;
+    ctx.save();
+    ctx.translate(cx, cy);
+    if (vertical) ctx.rotate(Math.PI / 2);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(0, 7, L * 0.55, W * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+    // body
+    const bg = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
+    bg.addColorStop(0, car.color);
+    bg.addColorStop(1, 'rgba(10,16,26,0.95)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.roundRect(-L / 2, -W / 2, L, W, 6); ctx.fill();
+    // cabin
+    ctx.fillStyle = 'rgba(180,235,255,0.55)';
+    ctx.beginPath(); ctx.roundRect(-L * 0.16, -W * 0.34, L * 0.42, W * 0.68, 3); ctx.fill();
+    // head / tail lights
+    const facing = car.dir > 0 ? 1 : -1;
+    ctx.fillStyle = 'rgba(255,245,190,0.95)';
+    ctx.beginPath(); ctx.arc((L / 2 - 3) * facing, -W * 0.28, 2.6, 0, Math.PI * 2);
+    ctx.arc((L / 2 - 3) * facing, W * 0.28, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,80,80,0.9)';
+    ctx.beginPath(); ctx.arc((-L / 2 + 3) * facing, -W * 0.28, 2.2, 0, Math.PI * 2);
+    ctx.arc((-L / 2 + 3) * facing, W * 0.28, 2.2, 0, Math.PI * 2); ctx.fill();
+    // headlight cone
+    const cone = ctx.createLinearGradient((L / 2) * facing, 0, (L / 2 + 70) * facing, 0);
+    cone.addColorStop(0, 'rgba(255,240,180,0.22)');
+    cone.addColorStop(1, 'transparent');
+    ctx.fillStyle = cone;
+    ctx.beginPath();
+    ctx.moveTo((L / 2) * facing, -W * 0.34);
+    ctx.lineTo((L / 2 + 70) * facing, -W * 1.1);
+    ctx.lineTo((L / 2 + 70) * facing, W * 1.1);
+    ctx.lineTo((L / 2) * facing, W * 0.34);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  });
+}
+
+
+
 export default function BullCity() {
   const navigate = useNavigate();
   const { toast } = useToast();
