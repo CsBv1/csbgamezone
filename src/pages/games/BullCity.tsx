@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditBar } from "@/components/CreditBar";
@@ -224,6 +224,7 @@ export default function BullCity() {
   const [myBull, setMyBull] = useState<CityBull | null>(null);
   const { connectedWallet } = useCardanoWallet();
   const { nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
+  const minimapCache = useRef<HTMLCanvasElement | null>(null);
   const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
   /* highest level first in the selection screen */
   const sortedBulls = useMemo(
@@ -1197,19 +1198,23 @@ export default function BullCity() {
       ctx.lineWidth = 2;
       ctx.strokeRect(mmX, mmY, mmW, mmH);
 
-      // Minimap districts
-      DISTRICTS.forEach(d => {
-        ctx.fillStyle = d.color + '33';
-        ctx.fillRect(mmX + (d.x / CITY_WIDTH) * mmW, mmY + (d.y / CITY_HEIGHT) * mmH, (d.w / CITY_WIDTH) * mmW, (d.h / CITY_HEIGHT) * mmH);
-      });
-
-      // Minimap buildings
-      BUILDINGS.forEach(b => {
-        const bx = mmX + (b.x / CITY_WIDTH) * mmW;
-        const by = mmY + (b.y / CITY_HEIGHT) * mmH;
-        ctx.fillStyle = b.color + 'aa';
-        ctx.fillRect(bx, by, Math.max(3, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
-      });
+      // Minimap static layer (districts + buildings) — rendered once, then blitted
+      if (!minimapCache.current) {
+        const mc = document.createElement('canvas');
+        mc.width = mmW; mc.height = mmH;
+        const mctx = mc.getContext('2d')!;
+        DISTRICTS.forEach(d => {
+          mctx.fillStyle = d.color + '33';
+          mctx.fillRect((d.x / CITY_WIDTH) * mmW, (d.y / CITY_HEIGHT) * mmH, (d.w / CITY_WIDTH) * mmW, (d.h / CITY_HEIGHT) * mmH);
+        });
+        BUILDINGS.forEach(b => {
+          mctx.fillStyle = b.color + 'aa';
+          mctx.fillRect((b.x / CITY_WIDTH) * mmW, (b.y / CITY_HEIGHT) * mmH,
+            Math.max(3, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
+        });
+        minimapCache.current = mc;
+      }
+      ctx.drawImage(minimapCache.current, mmX, mmY);
 
 
       // Minimap players
