@@ -277,12 +277,20 @@ export default function BullCity() {
         supabase.from('user_colors').select('color_value').eq('user_id', user.id).eq('active', true).single()
       ]);
 
-      setUsername((profileResult.data as any)?.username || 'Player');
-      if ((colorsResult.data as any)?.color_value) {
-        setMyColor((colorsResult.data as any).color_value);
+      const uname = (profileResult.data as any)?.username || 'Player';
+      const color = (colorsResult.data as any)?.color_value || '#00D4FF';
+      setUsername(uname);
+      setMyColor(color);
+
+      // If a bull was already picked for the Dungeon & City hub, enter straight in — no second selector
+      let hubBull: CityBull | null = null;
+      try { const raw = sessionStorage.getItem('csbHubBull'); if (raw) hubBull = JSON.parse(raw); } catch { /* ignore */ }
+      if (hubBull) {
+        setMyBull(hubBull);
+        await joinCity(user.id, uname, color);
+        setGameActive(true);
       }
 
-      // Free entry — the player first picks the Bull that becomes their avatar
       setIsLoading(false);
     };
     init();
