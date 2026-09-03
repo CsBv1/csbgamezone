@@ -138,6 +138,14 @@ export default function BullWorldMMO() {
     return [...list].sort((a: any, b: any) => (b.level || 1) - (a.level || 1));
   }, [heldBulls, bulls]);
 
+  /* repair legacy characters that were saved before artwork existed — never show the emoji for a real NFT */
+  useEffect(() => {
+    if (!character || character.bull_image || !character.bull_nft_id) return;
+    const match = (heldBulls || []).find((b: any) => String(b.nft_id).toLowerCase() === String(character.bull_nft_id).toLowerCase());
+    const img = match?.image || (() => { try { return JSON.parse(sessionStorage.getItem("csbHubBull") || "null")?.image; } catch { return null; } })();
+    if (img) patch({ bull_image: img }, true);
+  }, [character?.bull_image, character?.bull_nft_id, heldBulls, patch]);
+
 
   /* ------------------------------ mutable refs --------------------------- */
   const p = useRef({
