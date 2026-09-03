@@ -1794,14 +1794,17 @@ export default function BullCity() {
 
 
         {/* Controls */}
-        <Card className="p-3 mt-3 hidden md:block bg-[#0d2640] border-[#FF9900]/30">
+        <Card className="p-3 hidden md:block bg-[#0d2640] border-[#FF9900]/30">
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-sm text-white/80">
             <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#FF9900]">WASD</kbd> Move</div>
             <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#FF9900]">E</kbd> Work</div>
             <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#FF9900]">SPACE</kbd> Interact</div>
           </div>
         </Card>
-      </div>
+        </div>
+        </div>
+        )}
+
 
       {/* Chat */}
       {userId && (
