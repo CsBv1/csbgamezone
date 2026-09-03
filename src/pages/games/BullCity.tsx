@@ -409,14 +409,20 @@ export default function BullCity() {
   const [autoMine, setAutoMine] = useState(false);
   const cmkrMinedRef = useRef<Set<string>>(new Set());
   const cmkrTodayRef = useRef<Record<string, number>>({});
-  const [cameraOffset, setCameraOffset] = useState({
-    x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, SPAWN_X - VIEWPORT_W / 2)),
-    y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, SPAWN_Y - VIEWPORT_H / 2)),
-  });
+  const viewRef = useRef({ w: VIEWPORT_W, h: VIEWPORT_H });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
   const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
+
+  /* render mirrors — the draw loop reads refs so it never restarts on state change */
+  const playersRef = useRef<Player[]>([]);
+  const diamondsRef = useRef<CityDiamond[]>([]);
+  const myBullRef = useRef<CityBull | null>(null);
+  const myColorRef = useRef('#00D4FF');
+  const dirRef = useRef('down');
+  const usernameRef = useRef<string | null>(null);
+
 
   /* ——— Bull selection: your CNFT becomes your city avatar ——— */
   const [myBull, setMyBull] = useState<CityBull | null>(null);
