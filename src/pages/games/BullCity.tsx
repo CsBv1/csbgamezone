@@ -868,11 +868,8 @@ export default function BullCity() {
         setMyPosition({ x: newX, y: newY });
         setMyDirection(newDirection);
 
-        // Update camera
-        setCameraOffset({
-          x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, newX - VIEWPORT_W / 2)),
-          y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, newY - VIEWPORT_H / 2))
-        });
+        /* camera is derived inside the render loop from posRef — no state churn */
+
 
         const now = Date.now();
         if (now - lastDbUpdate.current > DB_UPDATE_INTERVAL) {
