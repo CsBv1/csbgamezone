@@ -52,6 +52,9 @@ const CITY_HEIGHT = 4000;
 const PLAYER_SIZE = 45;
 const MOVE_SPEED = 7;
 const DB_UPDATE_INTERVAL = 200;
+/** Bigger, cinematic viewport (16:9). */
+const VIEWPORT_W = 1760;
+const VIEWPORT_H = 990;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
