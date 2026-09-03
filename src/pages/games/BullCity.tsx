@@ -8,6 +8,12 @@ import { ArrowLeft, Gem, Users, ArrowUp, ArrowDown, ArrowLeftIcon, ArrowRight, H
 import { WorldChat } from "@/components/WorldChat";
 import { useToast } from "@/hooks/use-toast";
 import { audioManager } from "@/hooks/useAudioManager";
+import { useCardanoWallet } from "@/hooks/useCardanoWallet";
+import { useNFTBonuses } from "@/hooks/useNFTBonuses";
+import { useHeldCsbBulls, type HeldCsbBull } from "@/hooks/useHeldCsbBulls";
+import { Sparkles } from "lucide-react";
+
+type CityBull = { nft_id: string | null; name: string; image?: string | null; level: number };
 
 interface Player {
   id: string;
@@ -46,6 +52,9 @@ const CITY_HEIGHT = 4000;
 const PLAYER_SIZE = 45;
 const MOVE_SPEED = 7;
 const DB_UPDATE_INTERVAL = 200;
+/** Bigger, cinematic viewport (16:9). */
+const VIEWPORT_W = 1760;
+const VIEWPORT_H = 990;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
@@ -203,18 +212,55 @@ export default function BullCity() {
   const cmkrMinedRef = useRef<Set<string>>(new Set());
   const cmkrTodayRef = useRef<Record<string, number>>({});
   const [cameraOffset, setCameraOffset] = useState({
-    x: Math.max(0, Math.min(CITY_WIDTH - 1400, SPAWN_X - 700)),
-    y: Math.max(0, Math.min(CITY_HEIGHT - 900, SPAWN_Y - 450)),
+    x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, SPAWN_X - VIEWPORT_W / 2)),
+    y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, SPAWN_Y - VIEWPORT_H / 2)),
   });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
   const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
 
+  /* ——— Bull selection: your CNFT becomes your city avatar ——— */
+  const [myBull, setMyBull] = useState<CityBull | null>(null);
+  const { connectedWallet } = useCardanoWallet();
+  const { nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
+  const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
+  const bullArt = useRef<HTMLImageElement | null>(null);
+  const otherArt = useRef<Record<string, HTMLImageElement>>({});
 
-  // Canvas viewport size
-  const VIEWPORT_W = 1400;
-  const VIEWPORT_H = 900;
+  /* keep the picked bull in sync once artwork resolves */
+  useEffect(() => {
+    if (!myBull?.nft_id) return;
+    const fresh = heldBulls.find((b) => b.nft_id.toLowerCase() === String(myBull.nft_id).toLowerCase());
+    if (fresh?.image && fresh.image !== myBull.image) setMyBull({ ...myBull, image: fresh.image, level: fresh.level });
+  }, [heldBulls, myBull]);
+
+  /* load my bull artwork for canvas rendering */
+  useEffect(() => {
+    bullArt.current = null;
+    if (!myBull?.image) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => { bullArt.current = img; };
+    img.src = myBull.image;
+  }, [myBull?.image]);
+
+  /* pull other players' bull artwork so the city shows real CNFTs */
+  useEffect(() => {
+    if (!gameActive) return;
+    const ids = players.map((p) => p.user_id).filter((id) => id && id !== userId && !otherArt.current[id]);
+    if (!ids.length) return;
+    (async () => {
+      const { data } = await supabase.from("bw_characters" as any).select("user_id,bull_image").in("user_id", ids);
+      ((data || []) as any[]).forEach((row) => {
+        if (!row.bull_image || otherArt.current[row.user_id]) return;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => { otherArt.current[row.user_id] = img; };
+        img.src = row.bull_image;
+      });
+    })();
+  }, [players, gameActive, userId]);
 
   useEffect(() => {
     const init = async () => {
@@ -236,9 +282,7 @@ export default function BullCity() {
         setMyColor((colorsResult.data as any).color_value);
       }
 
-      // Free entry from Bull World
-      await joinCity(user.id, (profileResult.data as any)?.username, (colorsResult.data as any)?.color_value || '#00D4FF');
-      setGameActive(true);
+      // Free entry — the player first picks the Bull that becomes their avatar
       setIsLoading(false);
     };
     init();
@@ -248,6 +292,14 @@ export default function BullCity() {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, []);
+
+  /** Enter the city with the chosen bull. */
+  const enterCityWithBull = async (bull: CityBull) => {
+    if (!userId) return;
+    setMyBull(bull);
+    await joinCity(userId, username, myColor);
+    setGameActive(true);
+  };
 
   const joinCity = async (uid: string, uname: string | null, color: string) => {
     const { data: existing } = await supabase
@@ -1099,11 +1151,11 @@ export default function BullCity() {
       // Draw other players
       players.forEach(player => {
         if (player.user_id === userId) return;
-        drawBull(ctx, player.x, player.y, player.color, player.direction, player.username, false);
+        drawBull(ctx, player.x, player.y, player.color, player.direction, player.username, false, otherArt.current[player.user_id] || null);
       });
 
       // Draw current player
-      drawBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, username, true);
+      drawBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, myBull?.name || username, true, bullArt.current);
 
       // Working animation
       if (isWorking) {
@@ -1122,6 +1174,14 @@ export default function BullCity() {
       ctx.strokeRect(4, 4, CITY_WIDTH - 8, CITY_HEIGHT - 8);
 
       ctx.restore();
+
+      // Cinematic post-pass: neon bloom tint + vignette
+      const bloom = ctx.createRadialGradient(VIEWPORT_W / 2, VIEWPORT_H / 2, VIEWPORT_H * 0.15, VIEWPORT_W / 2, VIEWPORT_H / 2, VIEWPORT_H * 0.85);
+      bloom.addColorStop(0, 'rgba(34,211,238,0.05)');
+      bloom.addColorStop(1, 'rgba(2,6,16,0.55)');
+      ctx.fillStyle = bloom;
+      ctx.fillRect(0, 0, VIEWPORT_W, VIEWPORT_H);
+
 
       // Minimap
       const mmW = 170, mmH = 170;
@@ -1177,10 +1237,42 @@ export default function BullCity() {
 
     render();
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal]);
+  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal, myBull]);
 
-  const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean) => {
+  const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean, art?: HTMLImageElement | null) => {
     const scale = 1.6;
+
+    /* real CNFT artwork avatar */
+    if (art) {
+      const R = isMe ? 40 : 34;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + R * 0.85, R * 0.75, R * 0.28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      ctx.drawImage(art, x - R, y - R, R * 2, R * 2);
+      ctx.restore();
+      ctx.strokeStyle = isMe ? '#FFD700' : (color || '#00D4FF');
+      ctx.lineWidth = 3;
+      ctx.shadowColor = isMe ? '#FFD700' : (color || '#00D4FF');
+      ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.font = isMe ? 'bold 13px Arial' : '11px Arial';
+      ctx.textAlign = 'center';
+      const label = name || 'Player';
+      const lw = ctx.measureText(label).width + 14;
+      const ny = y - R - 16;
+      ctx.fillStyle = isMe ? 'rgba(255, 153, 0, 0.9)' : 'rgba(30, 41, 59, 0.9)';
+      ctx.strokeStyle = isMe ? '#FF9900' : '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x - lw / 2, ny - 7, lw, 18, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = isMe ? '#000' : '#fff';
+      ctx.fillText(label, x, ny + 5);
+      return;
+    }
     
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath();
@@ -1298,9 +1390,58 @@ export default function BullCity() {
     );
   }
 
+  /* ——— Bull selection gate ——— */
+  if (!gameActive || !myBull) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#071427] to-slate-950 p-4 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <Button variant="ghost" onClick={() => navigate('/games/bull-world')} className="gap-2 text-cyan-300">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </Button>
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-cyan-300 via-sky-200 to-amber-300 bg-clip-text text-transparent">
+              ENTER BULL CITY
+            </h1>
+            <p className="text-cyan-200/60 text-sm">Select the Bull that walks the city. Your CNFT is your avatar.</p>
+          </div>
+
+          {heldBulls.length === 0 ? (
+            <div className="text-center py-10 space-y-4">
+              <Sparkles className="w-10 h-10 mx-auto animate-spin text-cyan-400" />
+              <p className="text-cyan-200/60 text-sm">Scanning your wallet for Cardano Stake Bulls…</p>
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {heldBulls.map((b: HeldCsbBull) => (
+              <Card key={b.nft_id}
+                onClick={() => enterCityWithBull({ nft_id: b.nft_id, name: b.nft_name, image: b.image, level: b.level })}
+                className="cursor-pointer p-3 bg-slate-900/80 border-2 border-cyan-500/40 hover:border-cyan-300 hover:scale-105 transition-all shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+                <div className="aspect-square rounded-lg overflow-hidden bg-slate-800 flex items-center justify-center mb-2">
+                  {b.image
+                    ? <img src={b.image} alt={`${b.nft_name} Cardano Stake Bull NFT city avatar`} loading="lazy" className="w-full h-full object-cover" />
+                    : <span className="text-5xl">🐂</span>}
+                </div>
+                <div className="font-bold text-sm text-cyan-300">{b.nft_name}</div>
+                <div className="text-xs text-amber-300">Lv {b.level} · Legendary</div>
+              </Card>
+            ))}
+            <Card onClick={() => enterCityWithBull({ nft_id: null, name: username || 'Guest Bull', level: 1 })}
+              className="cursor-pointer p-3 bg-slate-900/80 border-2 border-slate-600 hover:border-slate-300 hover:scale-105 transition-all">
+              <div className="aspect-square rounded-lg bg-slate-800 flex items-center justify-center mb-2 text-5xl grayscale">🐂</div>
+              <div className="font-bold text-sm text-slate-300">Guest Bull</div>
+              <div className="text-xs text-slate-500">Lv 1 · No NFT needed</div>
+            </Card>
+          </div>
+          <p className="text-center text-xs text-cyan-200/40">Free entry — mine 🦉 CMKR at every place, 5 owls per place each day.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#050b18] via-[#071427] to-[#050b18] p-3 md:p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/games/bull-world'); }}>
@@ -1349,7 +1490,7 @@ export default function BullCity() {
             width={VIEWPORT_W}
             height={VIEWPORT_H}
             className="w-full rounded-lg"
-            style={{ maxHeight: '60vh' }}
+            style={{ maxHeight: '82vh' }}
           />
 
           {/* joystick — analog, identical feel to the dungeon */}
