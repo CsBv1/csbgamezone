@@ -1151,11 +1151,11 @@ export default function BullCity() {
       // Draw other players
       players.forEach(player => {
         if (player.user_id === userId) return;
-        drawBull(ctx, player.x, player.y, player.color, player.direction, player.username, false);
+        drawBull(ctx, player.x, player.y, player.color, player.direction, player.username, false, otherArt.current[player.user_id] || null);
       });
 
       // Draw current player
-      drawBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, username, true);
+      drawBull(ctx, myPosition.x, myPosition.y, myColor, myDirection, myBull?.name || username, true, bullArt.current);
 
       // Working animation
       if (isWorking) {
