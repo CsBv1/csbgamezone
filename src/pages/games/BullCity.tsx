@@ -282,9 +282,7 @@ export default function BullCity() {
         setMyColor((colorsResult.data as any).color_value);
       }
 
-      // Free entry from Bull World
-      await joinCity(user.id, (profileResult.data as any)?.username, (colorsResult.data as any)?.color_value || '#00D4FF');
-      setGameActive(true);
+      // Free entry — the player first picks the Bull that becomes their avatar
       setIsLoading(false);
     };
     init();
@@ -294,6 +292,14 @@ export default function BullCity() {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, []);
+
+  /** Enter the city with the chosen bull. */
+  const enterCityWithBull = async (bull: CityBull) => {
+    if (!userId) return;
+    setMyBull(bull);
+    await joinCity(userId, username, myColor);
+    setGameActive(true);
+  };
 
   const joinCity = async (uid: string, uname: string | null, color: string) => {
     const { data: existing } = await supabase
