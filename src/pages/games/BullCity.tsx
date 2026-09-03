@@ -1632,58 +1632,51 @@ export default function BullCity() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050b18] via-[#071427] to-[#050b18] p-3 md:p-4">
-      <div className="max-w-[1800px] mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/dashboard'); }}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+    <div className="fixed inset-0 overflow-hidden bg-[#050b18]">
+      {/* Fullscreen city map */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+
+      {/* Top HUD overlay */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-start justify-between gap-2 p-2 pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <Button size="sm" variant="ghost" className="bg-slate-950/70 backdrop-blur text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/dashboard'); }}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
           </Button>
-          <CreditBar />
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-3">
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
+          <span className="hidden md:inline rounded-full bg-slate-950/70 backdrop-blur px-3 py-1.5 border border-cyan-500/30 text-sm font-black bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent">
             🐂 Cardano Stake Bulls · City
-          </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at all {BUILDINGS.filter(b => b.reward).length} places up to 5 owls per place, every day.</p>
+          </span>
         </div>
 
-        {/* Stats */}
-        <div className="flex justify-center gap-2 md:gap-3 mb-3 flex-wrap">
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
+        <div className="flex flex-wrap justify-end gap-2 pointer-events-auto">
+          <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-cyan-500/30">
             <Users className="w-4 h-4 text-cyan-300" />
-            <span className="text-white text-sm">{players.length} Online</span>
+            <span className="text-white text-xs">{players.length}</span>
           </Card>
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/40">
+          <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-amber-400/40">
             <span className="text-base leading-none">🦉</span>
-            <span className="text-amber-200 text-sm font-bold">
-              {Object.values(cmkrToday).reduce((s, n) => s + n, 0)} today · {cmkrMyMonth} this month
+            <span className="text-amber-200 text-xs font-bold">
+              {Object.values(cmkrToday).reduce((s, n) => s + n, 0)} · {cmkrMyMonth}
             </span>
           </Card>
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
+          <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-cyan-500/30">
             <Gem className="w-4 h-4 text-cyan-300" />
-            <span className="text-white text-sm">+{collectedDiamonds} Earned</span>
+            <span className="text-white text-xs">+{collectedDiamonds}</span>
           </Card>
-
           {isWorking && (
-            <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/50 animate-pulse">
+            <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-amber-400/50 animate-pulse">
               <Hammer className="w-4 h-4 text-amber-300" />
-              <span className="text-amber-300 text-sm font-bold">Working...</span>
+              <span className="text-amber-300 text-xs font-bold">Working…</span>
             </Card>
           )}
+          <Button size="sm" onClick={() => setShowPanel(true)} className="bg-amber-500/90 hover:bg-amber-400 text-black font-black text-xs">
+            🦉 CMKR
+          </Button>
         </div>
+      </div>
 
-        {/* Game Canvas + on-screen controls */}
-        <Card className="relative p-2 mb-3 overflow-hidden bg-slate-900/70 border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-          <canvas
-            ref={canvasRef}
-            width={VIEWPORT_W}
-            height={VIEWPORT_H}
-            className="w-full rounded-lg"
-            style={{ maxHeight: '82vh' }}
-          />
+      {/* on-screen controls */}
+      <div className="contents">
+
 
           {/* joystick — analog, identical feel to the dungeon */}
           <div className="absolute bottom-4 left-4">
