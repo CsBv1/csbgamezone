@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditBar } from "@/components/CreditBar";
@@ -53,8 +53,8 @@ const PLAYER_SIZE = 45;
 const MOVE_SPEED = 7;
 const DB_UPDATE_INTERVAL = 200;
 /** Bigger, cinematic viewport (16:9). */
-const VIEWPORT_W = 1760;
-const VIEWPORT_H = 990;
+const VIEWPORT_W = 1920;
+const VIEWPORT_H = 1080;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
@@ -224,7 +224,13 @@ export default function BullCity() {
   const [myBull, setMyBull] = useState<CityBull | null>(null);
   const { connectedWallet } = useCardanoWallet();
   const { nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
+  const minimapCache = useRef<HTMLCanvasElement | null>(null);
   const heldBulls = useHeldCsbBulls(userId, (walletNfts || []) as any);
+  /* highest level first in the selection screen */
+  const sortedBulls = useMemo(
+    () => [...(heldBulls || [])].sort((a, b) => (b.level || 1) - (a.level || 1)),
+    [heldBulls],
+  );
   const bullArt = useRef<HTMLImageElement | null>(null);
   const otherArt = useRef<Record<string, HTMLImageElement>>({});
 
@@ -1192,19 +1198,23 @@ export default function BullCity() {
       ctx.lineWidth = 2;
       ctx.strokeRect(mmX, mmY, mmW, mmH);
 
-      // Minimap districts
-      DISTRICTS.forEach(d => {
-        ctx.fillStyle = d.color + '33';
-        ctx.fillRect(mmX + (d.x / CITY_WIDTH) * mmW, mmY + (d.y / CITY_HEIGHT) * mmH, (d.w / CITY_WIDTH) * mmW, (d.h / CITY_HEIGHT) * mmH);
-      });
-
-      // Minimap buildings
-      BUILDINGS.forEach(b => {
-        const bx = mmX + (b.x / CITY_WIDTH) * mmW;
-        const by = mmY + (b.y / CITY_HEIGHT) * mmH;
-        ctx.fillStyle = b.color + 'aa';
-        ctx.fillRect(bx, by, Math.max(3, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
-      });
+      // Minimap static layer (districts + buildings) — rendered once, then blitted
+      if (!minimapCache.current) {
+        const mc = document.createElement('canvas');
+        mc.width = mmW; mc.height = mmH;
+        const mctx = mc.getContext('2d')!;
+        DISTRICTS.forEach(d => {
+          mctx.fillStyle = d.color + '33';
+          mctx.fillRect((d.x / CITY_WIDTH) * mmW, (d.y / CITY_HEIGHT) * mmH, (d.w / CITY_WIDTH) * mmW, (d.h / CITY_HEIGHT) * mmH);
+        });
+        BUILDINGS.forEach(b => {
+          mctx.fillStyle = b.color + 'aa';
+          mctx.fillRect((b.x / CITY_WIDTH) * mmW, (b.y / CITY_HEIGHT) * mmH,
+            Math.max(3, (b.width / CITY_WIDTH) * mmW), Math.max(3, (b.height / CITY_HEIGHT) * mmH));
+        });
+        minimapCache.current = mc;
+      }
+      ctx.drawImage(minimapCache.current, mmX, mmY);
 
 
       // Minimap players
@@ -1395,7 +1405,7 @@ export default function BullCity() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#071427] to-slate-950 p-4 md:p-8">
         <div className="max-w-5xl mx-auto space-y-6">
-          <Button variant="ghost" onClick={() => navigate('/games/bull-world')} className="gap-2 text-cyan-300">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="gap-2 text-cyan-300">
             <ArrowLeft className="w-4 h-4" /> Back
           </Button>
           <div className="text-center space-y-2">
@@ -1405,7 +1415,7 @@ export default function BullCity() {
             <p className="text-cyan-200/60 text-sm">Select the Bull that walks the city. Your CNFT is your avatar.</p>
           </div>
 
-          {heldBulls.length === 0 ? (
+          {sortedBulls.length === 0 ? (
             <div className="text-center py-10 space-y-4">
               <Sparkles className="w-10 h-10 mx-auto animate-spin text-cyan-400" />
               <p className="text-cyan-200/60 text-sm">Scanning your wallet for Cardano Stake Bulls…</p>
@@ -1413,7 +1423,7 @@ export default function BullCity() {
           ) : null}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {heldBulls.map((b: HeldCsbBull) => (
+            {sortedBulls.map((b: HeldCsbBull) => (
               <Card key={b.nft_id}
                 onClick={() => enterCityWithBull({ nft_id: b.nft_id, name: b.nft_name, image: b.image, level: b.level })}
                 className="cursor-pointer p-3 bg-slate-900/80 border-2 border-cyan-500/40 hover:border-cyan-300 hover:scale-105 transition-all shadow-[0_0_20px_rgba(6,182,212,0.25)]">
@@ -1444,8 +1454,8 @@ export default function BullCity() {
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/games/bull-world'); }}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Bull World
+          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/dashboard'); }}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
           </Button>
           <CreditBar />
         </div>

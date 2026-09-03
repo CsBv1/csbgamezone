@@ -110,6 +110,8 @@ export default function BullWorldMMO() {
   const [bulls, setBulls] = useState<any[]>([]);
   const [bullsLoading, setBullsLoading] = useState(true);
   const [selecting, setSelecting] = useState(false);
+  /* the player must always pick a bull before entering the dungeon world */
+  const [entered, setEntered] = useState(false);
   const [panel, setPanel] = useState<null | "stats" | "map" | "skills">(null);
   const [others, setOthers] = useState<OtherPlayer[]>([]);
   const [hudTick, setHudTick] = useState(0);
@@ -885,17 +887,18 @@ export default function BullWorldMMO() {
     return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Sparkles className="w-12 h-12 animate-spin text-cyan-400" /></div>;
   }
 
-  if (!character || selecting) {
+  if (!character || selecting || !entered) {
     return (
       <CharacterSelect
         bulls={selectableBulls as any}
         loading={bullsLoading && selectableBulls.length === 0}
 
-        onBack={() => (selecting ? setSelecting(false) : navigate("/dashboard"))}
+        onBack={() => (selecting && entered ? setSelecting(false) : navigate("/dashboard"))}
         onPick={async (b) => {
           await chooseBull(b);
           try { sessionStorage.setItem("csbHubBull", JSON.stringify({ nft_id: b.nft_id, name: b.name, image: b.image || null, level: b.level || 1 })); } catch {}
           setSelecting(false);
+          setEntered(true);
         }}
       />
     );
