@@ -282,15 +282,7 @@ export default function BullCity() {
       setUsername(uname);
       setMyColor(color);
 
-      // If a bull was already picked for the Dungeon & City hub, enter straight in — no second selector
-      let hubBull: CityBull | null = null;
-      try { const raw = sessionStorage.getItem('csbHubBull'); if (raw) hubBull = JSON.parse(raw); } catch { /* ignore */ }
-      if (hubBull) {
-        setMyBull(hubBull);
-        await joinCity(user.id, uname, color);
-        setGameActive(true);
-      }
-
+      // City has its own bull selector — always show it before entering
       setIsLoading(false);
     };
     init();
