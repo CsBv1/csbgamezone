@@ -184,6 +184,204 @@ const ROADS = (() => {
   return r;
 })();
 
+/* ============================================================================
+   Cached ground layer — the whole city floor (terrain, districts, water,
+   roads, plaza) is painted ONCE into an offscreen canvas and then blitted per
+   frame. This is the single biggest performance win for the 4000×4000 map.
+   ========================================================================== */
+const GROUND_SCALE = 0.5;
+let groundLayer: HTMLCanvasElement | null = null;
+
+function buildGroundLayer(): HTMLCanvasElement {
+  if (groundLayer) return groundLayer;
+  const c = document.createElement('canvas');
+  c.width = Math.round(CITY_WIDTH * GROUND_SCALE);
+  c.height = Math.round(CITY_HEIGHT * GROUND_SCALE);
+  const x = c.getContext('2d')!;
+  x.scale(GROUND_SCALE, GROUND_SCALE);
+
+  /* --- base terrain --- */
+  const bg = x.createLinearGradient(0, 0, CITY_WIDTH, CITY_HEIGHT);
+  bg.addColorStop(0, '#0a1a2b');
+  bg.addColorStop(0.45, '#0f2a44');
+  bg.addColorStop(1, '#07131f');
+  x.fillStyle = bg;
+  x.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
+
+  /* --- paved plates: gives the floor real texture instead of a flat grid --- */
+  let s = 90210;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const PLATE = 160;
+  for (let py = 0; py < CITY_HEIGHT; py += PLATE) {
+    for (let px = 0; px < CITY_WIDTH; px += PLATE) {
+      const t = rnd();
+      x.fillStyle = `rgba(${18 + t * 14 | 0},${34 + t * 20 | 0},${52 + t * 26 | 0},0.55)`;
+      x.fillRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
+      x.strokeStyle = 'rgba(120,200,255,0.05)';
+      x.lineWidth = 1;
+      x.strokeRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
+      if (t > 0.86) {
+        x.fillStyle = 'rgba(0,212,255,0.05)';
+        x.fillRect(px + 20, py + 20, PLATE - 40, PLATE - 40);
+      }
+    }
+  }
+
+  /* --- district tinting --- */
+  DISTRICTS.forEach(d => {
+    const g = x.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
+    g.addColorStop(0, d.color + '2e');
+    g.addColorStop(1, 'transparent');
+    x.fillStyle = g;
+    x.fillRect(d.x, d.y, d.w, d.h);
+    x.strokeStyle = d.color + '33';
+    x.lineWidth = 3;
+    x.setLineDash([18, 14]);
+    x.strokeRect(d.x, d.y, d.w, d.h);
+    x.setLineDash([]);
+  });
+
+  /* --- water --- */
+  WATER.forEach(w => {
+    const wg = x.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
+    wg.addColorStop(0, 'rgba(22,132,176,0.8)');
+    wg.addColorStop(1, 'rgba(8,50,80,0.9)');
+    x.fillStyle = wg;
+    x.beginPath(); x.roundRect(w.x, w.y, w.w, w.h, 40); x.fill();
+    x.strokeStyle = 'rgba(120,230,255,0.35)'; x.lineWidth = 3; x.stroke();
+  });
+
+  /* --- roads: asphalt, kerbs, lane dashes, crosswalks --- */
+  ROADS.forEach(road => {
+    const vertical = road.x1 === road.x2;
+    const w = road.width;
+    const rx = vertical ? road.x1 - w / 2 : road.x1;
+    const ry = vertical ? road.y1 : road.y1 - w / 2;
+    const rw = vertical ? w : road.x2 - road.x1;
+    const rh = vertical ? road.y2 - road.y1 : w;
+
+    // kerb / sidewalk
+    x.fillStyle = 'rgba(96,120,146,0.55)';
+    x.fillRect(rx - 10, ry - 10, rw + 20, rh + 20);
+    // asphalt
+    const ag = vertical
+      ? x.createLinearGradient(rx, 0, rx + rw, 0)
+      : x.createLinearGradient(0, ry, 0, ry + rh);
+    ag.addColorStop(0, '#232f3d');
+    ag.addColorStop(0.5, '#2e3d4e');
+    ag.addColorStop(1, '#232f3d');
+    x.fillStyle = ag;
+    x.fillRect(rx, ry, rw, rh);
+    // neon kerb glow
+    x.strokeStyle = 'rgba(0,212,255,0.22)';
+    x.lineWidth = 2;
+    x.strokeRect(rx, ry, rw, rh);
+    // centre lane dashes
+    x.strokeStyle = 'rgba(255,205,60,0.5)';
+    x.lineWidth = 4;
+    x.setLineDash([40, 34]);
+    x.beginPath();
+    if (vertical) { x.moveTo(road.x1, road.y1); x.lineTo(road.x1, road.y2); }
+    else { x.moveTo(road.x1, road.y1); x.lineTo(road.x2, road.y1); }
+    x.stroke();
+    x.setLineDash([]);
+    // crosswalks every 800px
+    x.fillStyle = 'rgba(220,240,255,0.28)';
+    if (vertical) {
+      for (let y = road.y1 + 400; y < road.y2; y += 800)
+        for (let i = 0; i < 5; i++) x.fillRect(rx + 4 + i * (w / 5), y, w / 8, 26);
+    } else {
+      for (let xx = road.x1 + 400; xx < road.x2; xx += 800)
+        for (let i = 0; i < 5; i++) x.fillRect(xx, ry + 4 + i * (w / 5), 26, w / 8);
+    }
+  });
+
+  /* --- spawn plaza floor --- */
+  const pg = x.createRadialGradient(SPAWN_X, SPAWN_Y, 30, SPAWN_X, SPAWN_Y, 340);
+  pg.addColorStop(0, 'rgba(0,212,255,0.20)');
+  pg.addColorStop(1, 'transparent');
+  x.fillStyle = pg;
+  x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, 340, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = 'rgba(0,212,255,0.4)';
+  x.lineWidth = 4;
+  for (let r = 120; r <= 300; r += 90) { x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); x.stroke(); }
+
+  groundLayer = c;
+  return c;
+}
+
+/** Traffic — deterministic cars that drive the road grid. */
+const CAR_COLORS = ['#ff5a5a', '#ffd84d', '#57e0ff', '#8b5cf6', '#34d399', '#f97316', '#e2e8f0'];
+const CARS = (() => {
+  let s = 24681;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  return ROADS.flatMap((road, ri) => {
+    const n = 4;
+    return Array.from({ length: n }, (_, i) => ({
+      ri,
+      t: rnd(),
+      speed: 0.012 + rnd() * 0.022,
+      dir: i % 2 === 0 ? 1 : -1,
+      lane: i % 2 === 0 ? 1 : -1,
+      color: CAR_COLORS[Math.floor(rnd() * CAR_COLORS.length)],
+    }));
+  });
+})();
+
+function drawTraffic(ctx: CanvasRenderingContext2D, time: number, inView: (x: number, y: number) => boolean) {
+  CARS.forEach(car => {
+    const road = ROADS[car.ri];
+    const vertical = road.x1 === road.x2;
+    const len = vertical ? road.y2 - road.y1 : road.x2 - road.x1;
+    let prog = (car.t + time * car.speed * (car.dir > 0 ? 1 : -1)) % 1;
+    if (prog < 0) prog += 1;
+    const along = prog * len;
+    const off = car.lane * (road.width * 0.22);
+    const cx = vertical ? road.x1 + off : road.x1 + along;
+    const cy = vertical ? road.y1 + along : road.y1 + off;
+    if (!inView(cx, cy)) return;
+
+    const L = 34, W = 18;
+    ctx.save();
+    ctx.translate(cx, cy);
+    if (vertical) ctx.rotate(Math.PI / 2);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(0, 7, L * 0.55, W * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+    // body
+    const bg = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
+    bg.addColorStop(0, car.color);
+    bg.addColorStop(1, 'rgba(10,16,26,0.95)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.roundRect(-L / 2, -W / 2, L, W, 6); ctx.fill();
+    // cabin
+    ctx.fillStyle = 'rgba(180,235,255,0.55)';
+    ctx.beginPath(); ctx.roundRect(-L * 0.16, -W * 0.34, L * 0.42, W * 0.68, 3); ctx.fill();
+    // head / tail lights
+    const facing = car.dir > 0 ? 1 : -1;
+    ctx.fillStyle = 'rgba(255,245,190,0.95)';
+    ctx.beginPath(); ctx.arc((L / 2 - 3) * facing, -W * 0.28, 2.6, 0, Math.PI * 2);
+    ctx.arc((L / 2 - 3) * facing, W * 0.28, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,80,80,0.9)';
+    ctx.beginPath(); ctx.arc((-L / 2 + 3) * facing, -W * 0.28, 2.2, 0, Math.PI * 2);
+    ctx.arc((-L / 2 + 3) * facing, W * 0.28, 2.2, 0, Math.PI * 2); ctx.fill();
+    // headlight cone
+    const cone = ctx.createLinearGradient((L / 2) * facing, 0, (L / 2 + 70) * facing, 0);
+    cone.addColorStop(0, 'rgba(255,240,180,0.22)');
+    cone.addColorStop(1, 'transparent');
+    ctx.fillStyle = cone;
+    ctx.beginPath();
+    ctx.moveTo((L / 2) * facing, -W * 0.34);
+    ctx.lineTo((L / 2 + 70) * facing, -W * 1.1);
+    ctx.lineTo((L / 2 + 70) * facing, W * 1.1);
+    ctx.lineTo((L / 2) * facing, W * 0.34);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  });
+}
+
+
+
 export default function BullCity() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -209,16 +407,24 @@ export default function BullCity() {
   const [cmkrGlobal, setCmkrGlobal] = useState(0);                      // total minted this month (all players)
   const [cmkrBoard, setCmkrBoard] = useState<{ user_id: string; username: string; total: number }[]>([]);
   const [autoMine, setAutoMine] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+
   const cmkrMinedRef = useRef<Set<string>>(new Set());
   const cmkrTodayRef = useRef<Record<string, number>>({});
-  const [cameraOffset, setCameraOffset] = useState({
-    x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, SPAWN_X - VIEWPORT_W / 2)),
-    y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, SPAWN_Y - VIEWPORT_H / 2)),
-  });
+  const viewRef = useRef({ w: VIEWPORT_W, h: VIEWPORT_H });
   const keysPressed = useRef<Set<string>>(new Set());
   const lastDbUpdate = useRef<number>(0);
   const posRef = useRef({ x: SPAWN_X, y: SPAWN_Y });
   const joystick = useRef({ active: false, dx: 0, dy: 0 });
+
+  /* render mirrors — the draw loop reads refs so it never restarts on state change */
+  const playersRef = useRef<Player[]>([]);
+  const diamondsRef = useRef<CityDiamond[]>([]);
+  const myBullRef = useRef<CityBull | null>(null);
+  const myColorRef = useRef('#00D4FF');
+  const dirRef = useRef('down');
+  const usernameRef = useRef<string | null>(null);
+
 
   /* ——— Bull selection: your CNFT becomes your city avatar ——— */
   const [myBull, setMyBull] = useState<CityBull | null>(null);
@@ -233,6 +439,15 @@ export default function BullCity() {
   );
   const bullArt = useRef<HTMLImageElement | null>(null);
   const otherArt = useRef<Record<string, HTMLImageElement>>({});
+
+  /* keep the render mirrors fresh on every commit */
+  playersRef.current = players;
+  diamondsRef.current = diamonds;
+  myBullRef.current = myBull;
+  myColorRef.current = myColor;
+  dirRef.current = myDirection;
+  usernameRef.current = username;
+
 
   /* keep the picked bull in sync once artwork resolves */
   useEffect(() => {
@@ -664,11 +879,8 @@ export default function BullCity() {
         setMyPosition({ x: newX, y: newY });
         setMyDirection(newDirection);
 
-        // Update camera
-        setCameraOffset({
-          x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, newX - VIEWPORT_W / 2)),
-          y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, newY - VIEWPORT_H / 2))
-        });
+        /* camera is derived inside the render loop from posRef — no state churn */
+
 
         const now = Date.now();
         if (now - lastDbUpdate.current > DB_UPDATE_INTERVAL) {
@@ -755,11 +967,40 @@ export default function BullCity() {
 
   // Canvas rendering
   useEffect(() => {
-    if (!canvasRef.current || !gameActive) return;
-    const ctx = canvasRef.current.getContext('2d');
+    const canvas = canvasRef.current;
+    if (!canvas || !gameActive) return;
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    /* full-screen canvas — the backing store always matches the CSS box */
+    const resize = () => {
+      canvas.width = Math.max(320, Math.round(canvas.clientWidth));
+      canvas.height = Math.max(240, Math.round(canvas.clientHeight));
+      viewRef.current = { w: canvas.width, h: canvas.height };
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const ground = buildGroundLayer();
+
     const render = () => {
+      /* everything below reads refs so the loop never restarts on state change */
+      const VIEWPORT_W = canvas.width, VIEWPORT_H = canvas.height;
+      const myPosition = posRef.current;
+      const cameraOffset = {
+        x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, myPosition.x - VIEWPORT_W / 2)),
+        y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, myPosition.y - VIEWPORT_H / 2)),
+      };
+      const players = playersRef.current;
+      const diamonds = diamondsRef.current;
+      const nearBuilding = nearBuildingRef.current;
+      const isWorking = isWorkingRef.current;
+      const myBull = myBullRef.current;
+      const myColor = myColorRef.current;
+      const myDirection = dirRef.current;
+      const username = usernameRef.current;
+      const cmkrToday = cmkrTodayRef.current;
+
       ctx.save();
       ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
       ctx.translate(-cameraOffset.x, -cameraOffset.y);
@@ -770,108 +1011,47 @@ export default function BullCity() {
       const vx1 = cameraOffset.x + VIEWPORT_W + 120, vy1 = cameraOffset.y + VIEWPORT_H + 120;
       const inView = (x: number, y: number) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
 
-      // City background - dark with grid
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, CITY_HEIGHT);
-      bgGrad.addColorStop(0, '#081524');
-      bgGrad.addColorStop(0.5, '#0d2640');
-      bgGrad.addColorStop(1, '#050f1c');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
+      /* ---------- cached ground: terrain, districts, water, roads, plaza ---------- */
+      const sx0 = Math.max(0, cameraOffset.x), sy0 = Math.max(0, cameraOffset.y);
+      const sw = Math.min(CITY_WIDTH - sx0, VIEWPORT_W), sh = Math.min(CITY_HEIGHT - sy0, VIEWPORT_H);
+      ctx.drawImage(
+        ground,
+        sx0 * GROUND_SCALE, sy0 * GROUND_SCALE, sw * GROUND_SCALE, sh * GROUND_SCALE,
+        sx0, sy0, sw, sh,
+      );
 
-      /* ---------- districts ---------- */
-      DISTRICTS.forEach(d => {
-        const g = ctx.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
-        g.addColorStop(0, d.color + '22');
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.fillRect(d.x, d.y, d.w, d.h);
-        ctx.strokeStyle = d.color + '33';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([16, 12]);
-        ctx.strokeRect(d.x, d.y, d.w, d.h);
-        ctx.setLineDash([]);
-        // (district label is drawn on top of the buildings later so it stays readable)
-      });
-
-      /* ---------- water (Hydra Harbour) ---------- */
+      /* ---------- animated water shimmer on top of the cached harbour ---------- */
+      ctx.strokeStyle = 'rgba(160,240,255,0.18)';
+      ctx.lineWidth = 2;
       WATER.forEach(w => {
-        const wg = ctx.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
-        wg.addColorStop(0, 'rgba(20,120,160,0.75)');
-        wg.addColorStop(1, 'rgba(8,50,80,0.85)');
-        ctx.fillStyle = wg;
-        ctx.beginPath();
-        ctx.roundRect(w.x, w.y, w.w, w.h, 40);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(120,230,255,0.35)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        // animated wave lines
-        ctx.strokeStyle = 'rgba(160,240,255,0.18)';
-        ctx.lineWidth = 2;
+        if (!inView(w.x + w.w / 2, w.y + w.h / 2)) return;
         for (let i = 0; i < 8; i++) {
           const yy = w.y + 40 + i * (w.h / 9);
           ctx.beginPath();
-          for (let xx = w.x + 20; xx < w.x + w.w - 20; xx += 24) {
+          for (let xx = w.x + 20; xx < w.x + w.w - 20; xx += 28) {
             ctx.lineTo(xx, yy + Math.sin(time * 1.6 + xx * 0.02 + i) * 5);
           }
           ctx.stroke();
         }
       });
 
-      // Grid pattern
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.04)';
-      ctx.lineWidth = 1;
-      for (let x = Math.floor(vx0 / 100) * 100; x < vx1; x += 100) {
-        ctx.beginPath(); ctx.moveTo(x, vy0); ctx.lineTo(x, vy1); ctx.stroke();
-      }
-      for (let y = Math.floor(vy0 / 100) * 100; y < vy1; y += 100) {
-        ctx.beginPath(); ctx.moveTo(vx0, y); ctx.lineTo(vx1, y); ctx.stroke();
+      /* ---------- traffic ---------- */
+      drawTraffic(ctx, time, inView);
+
+      /* ---------- spawn plaza pulse + sign ---------- */
+      if (inView(SPAWN_X, SPAWN_Y)) {
+        const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
+        const pg = ctx.createRadialGradient(SPAWN_X, SPAWN_Y, 20, SPAWN_X, SPAWN_Y, 340 * plazaPulse);
+        pg.addColorStop(0, 'rgba(0,212,255,0.18)');
+        pg.addColorStop(1, 'transparent');
+        ctx.fillStyle = pg;
+        ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(0,212,255,0.7)';
+        ctx.font = 'bold 26px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
       }
 
-      // Roads
-      ROADS.forEach(road => {
-        ctx.fillStyle = 'rgba(30, 48, 66, 0.92)';
-        if (road.x1 === road.x2) {
-          // Vertical
-          ctx.fillRect(road.x1 - road.width / 2, road.y1, road.width, road.y2 - road.y1);
-          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.moveTo(road.x1 - road.width / 2, road.y1); ctx.lineTo(road.x1 - road.width / 2, road.y2);
-          ctx.moveTo(road.x1 + road.width / 2, road.y1); ctx.lineTo(road.x1 + road.width / 2, road.y2); ctx.stroke();
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
-          ctx.setLineDash([20, 15]);
-          ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x1, road.y2); ctx.stroke();
-          ctx.setLineDash([]);
-        } else {
-          // Horizontal
-          ctx.fillRect(road.x1, road.y1 - road.width / 2, road.x2 - road.x1, road.width);
-          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.moveTo(road.x1, road.y1 - road.width / 2); ctx.lineTo(road.x2, road.y1 - road.width / 2);
-          ctx.moveTo(road.x1, road.y1 + road.width / 2); ctx.lineTo(road.x2, road.y1 + road.width / 2); ctx.stroke();
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
-          ctx.setLineDash([20, 15]);
-          ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x2, road.y1); ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      });
-
-      /* ---------- spawn plaza ---------- */
-      const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
-      const pg = ctx.createRadialGradient(SPAWN_X, SPAWN_Y, 20, SPAWN_X, SPAWN_Y, 340 * plazaPulse);
-      pg.addColorStop(0, 'rgba(0,212,255,0.22)');
-      pg.addColorStop(1, 'transparent');
-      ctx.fillStyle = pg;
-      ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,212,255,0.45)';
-      ctx.lineWidth = 4;
-      for (let r = 120; r <= 300; r += 90) {
-        ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.fillStyle = 'rgba(0,212,255,0.7)';
-      ctx.font = 'bold 26px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
 
       /* ---------- ambient props ---------- */
       PROPS.forEach((p, i) => {
@@ -1246,8 +1426,12 @@ export default function BullCity() {
     };
 
     render();
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-  }, [gameActive, players, diamonds, myPosition, myDirection, myColor, username, userId, nearBuilding, cameraOffset, workCooldowns, isWorking, cmkrMined, cmkrToday, cmkrGlobal, myBull]);
+    return () => {
+      window.removeEventListener('resize', resize);
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [gameActive, userId]);
+
 
   const drawBull = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, direction: string, name: string | null, isMe: boolean, art?: HTMLImageElement | null) => {
     const scale = 1.6;
@@ -1450,58 +1634,51 @@ export default function BullCity() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050b18] via-[#071427] to-[#050b18] p-3 md:p-4">
-      <div className="max-w-[1800px] mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/dashboard'); }}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+    <div className="fixed inset-0 overflow-hidden bg-[#050b18]">
+      {/* Fullscreen city map */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+
+      {/* Top HUD overlay */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-start justify-between gap-2 p-2 pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <Button size="sm" variant="ghost" className="bg-slate-950/70 backdrop-blur text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/dashboard'); }}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
           </Button>
-          <CreditBar />
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-3">
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
+          <span className="hidden md:inline rounded-full bg-slate-950/70 backdrop-blur px-3 py-1.5 border border-cyan-500/30 text-sm font-black bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent">
             🐂 Cardano Stake Bulls · City
-          </h1>
-          <p className="text-cyan-200/50 text-xs md:text-sm">A living 3D Cardano landscape harbours, tech parks, governance halls and neon towers. Mine 🦉 <span className="text-amber-300 font-semibold">CMKR</span> at all {BUILDINGS.filter(b => b.reward).length} places up to 5 owls per place, every day.</p>
+          </span>
         </div>
 
-        {/* Stats */}
-        <div className="flex justify-center gap-2 md:gap-3 mb-3 flex-wrap">
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
+        <div className="flex flex-wrap justify-end gap-2 pointer-events-auto">
+          <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-cyan-500/30">
             <Users className="w-4 h-4 text-cyan-300" />
-            <span className="text-white text-sm">{players.length} Online</span>
+            <span className="text-white text-xs">{players.length}</span>
           </Card>
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/40">
+          <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-amber-400/40">
             <span className="text-base leading-none">🦉</span>
-            <span className="text-amber-200 text-sm font-bold">
-              {Object.values(cmkrToday).reduce((s, n) => s + n, 0)} today · {cmkrMyMonth} this month
+            <span className="text-amber-200 text-xs font-bold">
+              {Object.values(cmkrToday).reduce((s, n) => s + n, 0)} · {cmkrMyMonth}
             </span>
           </Card>
-          <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-cyan-500/30">
+          <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-cyan-500/30">
             <Gem className="w-4 h-4 text-cyan-300" />
-            <span className="text-white text-sm">+{collectedDiamonds} Earned</span>
+            <span className="text-white text-xs">+{collectedDiamonds}</span>
           </Card>
-
           {isWorking && (
-            <Card className="px-3 py-1.5 flex items-center gap-2 bg-slate-900/70 border-amber-400/50 animate-pulse">
+            <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-amber-400/50 animate-pulse">
               <Hammer className="w-4 h-4 text-amber-300" />
-              <span className="text-amber-300 text-sm font-bold">Working...</span>
+              <span className="text-amber-300 text-xs font-bold">Working…</span>
             </Card>
           )}
+          <Button size="sm" onClick={() => setShowPanel(true)} className="bg-amber-500/90 hover:bg-amber-400 text-black font-black text-xs">
+            🦉 CMKR
+          </Button>
         </div>
+      </div>
 
-        {/* Game Canvas + on-screen controls */}
-        <Card className="relative p-2 mb-3 overflow-hidden bg-slate-900/70 border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-          <canvas
-            ref={canvasRef}
-            width={VIEWPORT_W}
-            height={VIEWPORT_H}
-            className="w-full rounded-lg"
-            style={{ maxHeight: '82vh' }}
-          />
+      {/* on-screen controls */}
+      <div className="contents">
+
 
           {/* joystick — analog, identical feel to the dungeon */}
           <div className="absolute bottom-4 left-4">
@@ -1544,12 +1721,21 @@ export default function BullCity() {
           >
             ⚒️
           </button>
+      </div>
 
-        </Card>
 
+        {/* CMKR / info drawer — keeps the map fullscreen while mining stays one tap away */}
+        {showPanel && (
+        <div className="absolute inset-0 z-30 bg-black/70 backdrop-blur-sm overflow-y-auto p-3" onClick={() => setShowPanel(false)}>
+        <div className="max-w-3xl mx-auto space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-2">
+          <CreditBar />
+          <Button size="sm" variant="ghost" className="text-cyan-300" onClick={() => setShowPanel(false)}>✕ Close</Button>
+        </div>
 
         {/* CMKR mining board */}
-        <Card className="p-4 mt-3 bg-gradient-to-br from-[#10233a] to-[#0d1a2c] border-amber-400/30">
+        <Card className="p-4 bg-gradient-to-br from-[#10233a] to-[#0d1a2c] border-amber-400/30">
+
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <h3 className="font-bold text-amber-300 flex items-center gap-2">🦉 CMKR Mining · {CMKR_MONTH}</h3>
             <span className="text-xs text-amber-200/70">
@@ -1605,14 +1791,17 @@ export default function BullCity() {
 
 
         {/* Controls */}
-        <Card className="p-3 mt-3 hidden md:block bg-[#0d2640] border-[#FF9900]/30">
+        <Card className="p-3 hidden md:block bg-[#0d2640] border-[#FF9900]/30">
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-sm text-white/80">
             <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#FF9900]">WASD</kbd> Move</div>
             <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#FF9900]">E</kbd> Work</div>
             <div><kbd className="px-2 py-1 bg-[#1a3a4a] rounded text-[#FF9900]">SPACE</kbd> Interact</div>
           </div>
         </Card>
-      </div>
+        </div>
+        </div>
+        )}
+
 
       {/* Chat */}
       {userId && (
