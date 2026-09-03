@@ -1382,9 +1382,58 @@ export default function BullCity() {
     );
   }
 
+  /* ——— Bull selection gate ——— */
+  if (!gameActive || !myBull) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#071427] to-slate-950 p-4 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <Button variant="ghost" onClick={() => navigate('/games/bull-world')} className="gap-2 text-cyan-300">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </Button>
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-cyan-300 via-sky-200 to-amber-300 bg-clip-text text-transparent">
+              ENTER BULL CITY
+            </h1>
+            <p className="text-cyan-200/60 text-sm">Select the Bull that walks the city. Your CNFT is your avatar.</p>
+          </div>
+
+          {heldBulls.length === 0 ? (
+            <div className="text-center py-10 space-y-4">
+              <Sparkles className="w-10 h-10 mx-auto animate-spin text-cyan-400" />
+              <p className="text-cyan-200/60 text-sm">Scanning your wallet for Cardano Stake Bulls…</p>
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {heldBulls.map((b: HeldCsbBull) => (
+              <Card key={b.nft_id}
+                onClick={() => enterCityWithBull({ nft_id: b.nft_id, name: b.nft_name, image: b.image, level: b.level })}
+                className="cursor-pointer p-3 bg-slate-900/80 border-2 border-cyan-500/40 hover:border-cyan-300 hover:scale-105 transition-all shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+                <div className="aspect-square rounded-lg overflow-hidden bg-slate-800 flex items-center justify-center mb-2">
+                  {b.image
+                    ? <img src={b.image} alt={`${b.nft_name} Cardano Stake Bull NFT city avatar`} loading="lazy" className="w-full h-full object-cover" />
+                    : <span className="text-5xl">🐂</span>}
+                </div>
+                <div className="font-bold text-sm text-cyan-300">{b.nft_name}</div>
+                <div className="text-xs text-amber-300">Lv {b.level} · Legendary</div>
+              </Card>
+            ))}
+            <Card onClick={() => enterCityWithBull({ nft_id: null, name: username || 'Guest Bull', level: 1 })}
+              className="cursor-pointer p-3 bg-slate-900/80 border-2 border-slate-600 hover:border-slate-300 hover:scale-105 transition-all">
+              <div className="aspect-square rounded-lg bg-slate-800 flex items-center justify-center mb-2 text-5xl grayscale">🐂</div>
+              <div className="font-bold text-sm text-slate-300">Guest Bull</div>
+              <div className="text-xs text-slate-500">Lv 1 · No NFT needed</div>
+            </Card>
+          </div>
+          <p className="text-center text-xs text-cyan-200/40">Free entry — mine 🦉 CMKR at every place, 5 owls per place each day.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#050b18] via-[#071427] to-[#050b18] p-3 md:p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <Button variant="ghost" className="text-cyan-300 hover:bg-cyan-400/10" onClick={() => { leaveCity(); navigate('/games/bull-world'); }}>
