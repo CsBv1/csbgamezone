@@ -1727,11 +1727,18 @@ export default function BullCity() {
             ⚒️
           </button>
 
-        </Card>
-
+        {/* CMKR / info drawer — keeps the map fullscreen while mining stays one tap away */}
+        {showPanel && (
+        <div className="absolute inset-0 z-30 bg-black/70 backdrop-blur-sm overflow-y-auto p-3" onClick={() => setShowPanel(false)}>
+        <div className="max-w-3xl mx-auto space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-2">
+          <CreditBar />
+          <Button size="sm" variant="ghost" className="text-cyan-300" onClick={() => setShowPanel(false)}>✕ Close</Button>
+        </div>
 
         {/* CMKR mining board */}
-        <Card className="p-4 mt-3 bg-gradient-to-br from-[#10233a] to-[#0d1a2c] border-amber-400/30">
+        <Card className="p-4 bg-gradient-to-br from-[#10233a] to-[#0d1a2c] border-amber-400/30">
+
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <h3 className="font-bold text-amber-300 flex items-center gap-2">🦉 CMKR Mining · {CMKR_MONTH}</h3>
             <span className="text-xs text-amber-200/70">
