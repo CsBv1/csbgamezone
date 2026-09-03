@@ -953,11 +953,40 @@ export default function BullCity() {
 
   // Canvas rendering
   useEffect(() => {
-    if (!canvasRef.current || !gameActive) return;
-    const ctx = canvasRef.current.getContext('2d');
+    const canvas = canvasRef.current;
+    if (!canvas || !gameActive) return;
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    /* full-screen canvas — the backing store always matches the CSS box */
+    const resize = () => {
+      canvas.width = Math.max(320, Math.round(canvas.clientWidth));
+      canvas.height = Math.max(240, Math.round(canvas.clientHeight));
+      viewRef.current = { w: canvas.width, h: canvas.height };
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const ground = buildGroundLayer();
+
     const render = () => {
+      /* everything below reads refs so the loop never restarts on state change */
+      const VIEWPORT_W = canvas.width, VIEWPORT_H = canvas.height;
+      const myPosition = posRef.current;
+      const cameraOffset = {
+        x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, myPosition.x - VIEWPORT_W / 2)),
+        y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, myPosition.y - VIEWPORT_H / 2)),
+      };
+      const players = playersRef.current;
+      const diamonds = diamondsRef.current;
+      const nearBuilding = nearBuildingRef.current;
+      const isWorking = isWorkingRef.current;
+      const myBull = myBullRef.current;
+      const myColor = myColorRef.current;
+      const myDirection = dirRef.current;
+      const username = usernameRef.current;
+      const cmkrToday = cmkrTodayRef.current;
+
       ctx.save();
       ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
       ctx.translate(-cameraOffset.x, -cameraOffset.y);
@@ -968,108 +997,47 @@ export default function BullCity() {
       const vx1 = cameraOffset.x + VIEWPORT_W + 120, vy1 = cameraOffset.y + VIEWPORT_H + 120;
       const inView = (x: number, y: number) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
 
-      // City background - dark with grid
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, CITY_HEIGHT);
-      bgGrad.addColorStop(0, '#081524');
-      bgGrad.addColorStop(0.5, '#0d2640');
-      bgGrad.addColorStop(1, '#050f1c');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
+      /* ---------- cached ground: terrain, districts, water, roads, plaza ---------- */
+      const sx0 = Math.max(0, cameraOffset.x), sy0 = Math.max(0, cameraOffset.y);
+      const sw = Math.min(CITY_WIDTH - sx0, VIEWPORT_W), sh = Math.min(CITY_HEIGHT - sy0, VIEWPORT_H);
+      ctx.drawImage(
+        ground,
+        sx0 * GROUND_SCALE, sy0 * GROUND_SCALE, sw * GROUND_SCALE, sh * GROUND_SCALE,
+        sx0, sy0, sw, sh,
+      );
 
-      /* ---------- districts ---------- */
-      DISTRICTS.forEach(d => {
-        const g = ctx.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
-        g.addColorStop(0, d.color + '22');
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.fillRect(d.x, d.y, d.w, d.h);
-        ctx.strokeStyle = d.color + '33';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([16, 12]);
-        ctx.strokeRect(d.x, d.y, d.w, d.h);
-        ctx.setLineDash([]);
-        // (district label is drawn on top of the buildings later so it stays readable)
-      });
-
-      /* ---------- water (Hydra Harbour) ---------- */
+      /* ---------- animated water shimmer on top of the cached harbour ---------- */
+      ctx.strokeStyle = 'rgba(160,240,255,0.18)';
+      ctx.lineWidth = 2;
       WATER.forEach(w => {
-        const wg = ctx.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
-        wg.addColorStop(0, 'rgba(20,120,160,0.75)');
-        wg.addColorStop(1, 'rgba(8,50,80,0.85)');
-        ctx.fillStyle = wg;
-        ctx.beginPath();
-        ctx.roundRect(w.x, w.y, w.w, w.h, 40);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(120,230,255,0.35)';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        // animated wave lines
-        ctx.strokeStyle = 'rgba(160,240,255,0.18)';
-        ctx.lineWidth = 2;
+        if (!inView(w.x + w.w / 2, w.y + w.h / 2)) return;
         for (let i = 0; i < 8; i++) {
           const yy = w.y + 40 + i * (w.h / 9);
           ctx.beginPath();
-          for (let xx = w.x + 20; xx < w.x + w.w - 20; xx += 24) {
+          for (let xx = w.x + 20; xx < w.x + w.w - 20; xx += 28) {
             ctx.lineTo(xx, yy + Math.sin(time * 1.6 + xx * 0.02 + i) * 5);
           }
           ctx.stroke();
         }
       });
 
-      // Grid pattern
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.04)';
-      ctx.lineWidth = 1;
-      for (let x = Math.floor(vx0 / 100) * 100; x < vx1; x += 100) {
-        ctx.beginPath(); ctx.moveTo(x, vy0); ctx.lineTo(x, vy1); ctx.stroke();
-      }
-      for (let y = Math.floor(vy0 / 100) * 100; y < vy1; y += 100) {
-        ctx.beginPath(); ctx.moveTo(vx0, y); ctx.lineTo(vx1, y); ctx.stroke();
+      /* ---------- traffic ---------- */
+      drawTraffic(ctx, time, inView);
+
+      /* ---------- spawn plaza pulse + sign ---------- */
+      if (inView(SPAWN_X, SPAWN_Y)) {
+        const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
+        const pg = ctx.createRadialGradient(SPAWN_X, SPAWN_Y, 20, SPAWN_X, SPAWN_Y, 340 * plazaPulse);
+        pg.addColorStop(0, 'rgba(0,212,255,0.18)');
+        pg.addColorStop(1, 'transparent');
+        ctx.fillStyle = pg;
+        ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(0,212,255,0.7)';
+        ctx.font = 'bold 26px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
       }
 
-      // Roads
-      ROADS.forEach(road => {
-        ctx.fillStyle = 'rgba(30, 48, 66, 0.92)';
-        if (road.x1 === road.x2) {
-          // Vertical
-          ctx.fillRect(road.x1 - road.width / 2, road.y1, road.width, road.y2 - road.y1);
-          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.moveTo(road.x1 - road.width / 2, road.y1); ctx.lineTo(road.x1 - road.width / 2, road.y2);
-          ctx.moveTo(road.x1 + road.width / 2, road.y1); ctx.lineTo(road.x1 + road.width / 2, road.y2); ctx.stroke();
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
-          ctx.setLineDash([20, 15]);
-          ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x1, road.y2); ctx.stroke();
-          ctx.setLineDash([]);
-        } else {
-          // Horizontal
-          ctx.fillRect(road.x1, road.y1 - road.width / 2, road.x2 - road.x1, road.width);
-          ctx.strokeStyle = 'rgba(0, 212, 255, 0.25)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.moveTo(road.x1, road.y1 - road.width / 2); ctx.lineTo(road.x2, road.y1 - road.width / 2);
-          ctx.moveTo(road.x1, road.y1 + road.width / 2); ctx.lineTo(road.x2, road.y1 + road.width / 2); ctx.stroke();
-          ctx.strokeStyle = 'rgba(255, 200, 0, 0.3)';
-          ctx.setLineDash([20, 15]);
-          ctx.beginPath(); ctx.moveTo(road.x1, road.y1); ctx.lineTo(road.x2, road.y1); ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      });
-
-      /* ---------- spawn plaza ---------- */
-      const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
-      const pg = ctx.createRadialGradient(SPAWN_X, SPAWN_Y, 20, SPAWN_X, SPAWN_Y, 340 * plazaPulse);
-      pg.addColorStop(0, 'rgba(0,212,255,0.22)');
-      pg.addColorStop(1, 'transparent');
-      ctx.fillStyle = pg;
-      ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,212,255,0.45)';
-      ctx.lineWidth = 4;
-      for (let r = 120; r <= 300; r += 90) {
-        ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.fillStyle = 'rgba(0,212,255,0.7)';
-      ctx.font = 'bold 26px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
 
       /* ---------- ambient props ---------- */
       PROPS.forEach((p, i) => {
