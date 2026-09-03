@@ -1482,7 +1482,7 @@ export default function BullCity() {
             width={VIEWPORT_W}
             height={VIEWPORT_H}
             className="w-full rounded-lg"
-            style={{ maxHeight: '60vh' }}
+            style={{ maxHeight: '82vh' }}
           />
 
           {/* joystick — analog, identical feel to the dungeon */}
