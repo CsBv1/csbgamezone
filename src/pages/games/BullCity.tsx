@@ -726,7 +726,7 @@ export default function BullCity() {
     return () => { supabase.removeChannel(ch); clearInterval(tick); };
   }, [userId, loadCmkr]);
 
-  /** Award 1 🦉 CMKR for a place — up to 5 per place, per day, per player. */
+  /** Award 1 🦉 CMKR for a place — up to 5 per place, per rolling hour, per player. */
   const tryMineCmkr = async (building: Building): Promise<boolean> => {
     if (!userId) return false;
     if ((cmkrTodayRef.current[building.id] || 0) >= CMKR_DAILY_PER_PLACE) return false;
@@ -806,9 +806,9 @@ export default function BullCity() {
 
       if (gotOwl) {
         const left = CMKR_DAILY_PER_PLACE - (cmkrTodayRef.current[building.id] || 0);
-        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} — ${left} of ${CMKR_DAILY_PER_PLACE} owls left here today.` });
+        toast({ title: `🦉 +1 CMKR mined!`, description: `${building.name} — ${left} of ${CMKR_DAILY_PER_PLACE} owls left in this hour.` });
       } else {
-        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name}'s 5 daily 🦉 CMKR are done — resets tomorrow.` });
+        toast({ title: `${building.emoji} +${building.reward} 💎`, description: `${building.name} is mined out — refills in 1 hour.` });
       }
       audioManager.playSFX('win');
     } catch (error) {
@@ -1299,7 +1299,7 @@ export default function BullCity() {
           const owlLeft = left > 0 && cmkrGlobal < CMKR_MONTHLY_CAP;
           ctx.font = 'bold 11px Arial';
           ctx.fillStyle = owlLeft ? '#00FF88' : '#64748b';
-          ctx.fillText(owlLeft ? `🦉 ${left}/${CMKR_DAILY_PER_PLACE} CMKR LEFT TODAY` : '🦉 daily 5 mined', cx + ox, topY - 12);
+          ctx.fillText(owlLeft ? `🦉 ${left}/${CMKR_DAILY_PER_PLACE} CMKR LEFT` : '🦉 refills in 1h', cx + ox, topY - 12);
         }
 
         // ——— interaction prompt ———
@@ -1780,7 +1780,7 @@ export default function BullCity() {
               style={{ width: `${Math.min(100, (cmkrGlobal / CMKR_MONTHLY_CAP) * 100)}%` }} />
           </div>
           <p className="text-xs text-cyan-200/60 mb-3">
-            Every place gives up to <span className="text-amber-300 font-semibold">5 🦉 CMKR per player, per day</span> — mine all {BUILDINGS.filter(b => b.reward).length} places daily for up to {BUILDINGS.filter(b => b.reward).length * CMKR_DAILY_PER_PLACE} owls a day.
+            Every place gives up to <span className="text-amber-300 font-semibold">5 🦉 CMKR per player, per hour</span> — mine all {BUILDINGS.filter(b => b.reward).length} places, then every place refills 1 hour after it ran dry, so the auto-miner comes straight back online.
             <span className="text-amber-300 font-semibold"> Everyone who mines</span> is listed below and paid out in the Discord channel by Nick G.
           </p>
 
@@ -1805,7 +1805,7 @@ export default function BullCity() {
 
         {/* Buildings Guide */}
         <Card className="p-4 mt-3 bg-[#0d2640] border-[#FF9900]/30">
-          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots (5 🦉 each per day)</h3>
+          <h3 className="font-bold text-[#FF9900] mb-2">🏗️ City Buildings · Mining Spots (5 🦉 each, refills every hour)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
             {BUILDINGS.filter(b => b.reward).map(b => {
               const used = cmkrToday[b.id] || 0;
