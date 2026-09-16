@@ -654,25 +654,37 @@ export default function BullCity() {
   const loadCmkr = useCallback(async () => {
     const { data } = await supabase
       .from('cmkr_earnings' as any)
-      .select('user_id, username, place_id, amount, day')
+      .select('user_id, username, place_id, amount, created_at')
       .eq('month', CMKR_MONTH);
     const rows = (data || []) as any[];
 
-    setCmkrGlobal(rows.reduce((s, r) => s + (r.amount || 0), 0));
+    const globalTotal = rows.reduce((s, r) => s + (r.amount || 0), 0);
+    setCmkrGlobal(globalTotal);
 
     const myRows = rows.filter(r => r.user_id === userId);
     setCmkrMyMonth(myRows.reduce((s, r) => s + (r.amount || 0), 0));
 
-    const today: Record<string, number> = {};
-    myRows.filter(r => String(r.day).slice(0, 10) === CMKR_DAY).forEach(r => {
-      today[r.place_id] = (today[r.place_id] || 0) + (r.amount || 0);
-    });
-    cmkrTodayRef.current = today;
-    setCmkrToday(today);
+    /* rolling 1-hour window: a place refills 1h after the mine that used it up */
+    const cutoff = Date.now() - CMKR_RESET_MS;
+    const cycle: Record<string, number> = {};
+    const oldest: Record<string, number> = {};
+    myRows
+      .filter(r => new Date(r.created_at).getTime() > cutoff)
+      .forEach(r => {
+        cycle[r.place_id] = (cycle[r.place_id] || 0) + (r.amount || 0);
+        const t = new Date(r.created_at).getTime();
+        oldest[r.place_id] = Math.min(oldest[r.place_id] ?? t, t);
+      });
+    cmkrTodayRef.current = cycle;
+    setCmkrToday(cycle);
 
-    const maxed = new Set<string>(Object.keys(today).filter(k => today[k] >= CMKR_DAILY_PER_PLACE));
+    const maxed = new Set<string>(Object.keys(cycle).filter(k => cycle[k] >= CMKR_DAILY_PER_PLACE));
     cmkrMinedRef.current = maxed;
     setCmkrMined(maxed);
+
+    /* next moment any maxed place comes back online */
+    const nexts = [...maxed].map(k => (oldest[k] || 0) + CMKR_RESET_MS).filter(Boolean);
+    setCmkrNextReset(nexts.length ? Math.min(...nexts) : null);
 
     const totals = new Map<string, { user_id: string; username: string; total: number }>();
     rows.forEach(r => {
@@ -681,7 +693,24 @@ export default function BullCity() {
       if (r.username) e.username = r.username;
       totals.set(r.user_id, e);
     });
-    setCmkrBoard([...totals.values()].sort((a, b) => b.total - a.total));
+    const board = [...totals.values()].sort((a, b) => b.total - a.total);
+    setCmkrBoard(board);
+
+    /* 🦉 1,000,000 mined → post the full payout list to Discord (once per month) */
+    if (globalTotal >= CMKR_MONTHLY_CAP && board.length) {
+      const flag = `cmkr-cap-announced-${CMKR_MONTH}`;
+      if (!localStorage.getItem(flag)) {
+        localStorage.setItem(flag, '1');
+        const lines = board.map((b, i) => `${i + 1}. **${b.username}** — ${b.total.toLocaleString()} 🦉`).join('\n');
+        supabase.functions.invoke('discord-announce', {
+          body: {
+            type: 'event',
+            title: `🦉 CMKR CAP REACHED — ${CMKR_MONTHLY_CAP.toLocaleString()} mined (${CMKR_MONTH})`,
+            description: `All CMKR for this cycle have been mined in Bull City. Payout list:\n\n${lines.slice(0, 3500)}`,
+          },
+        }).catch(() => {});
+      }
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -691,7 +720,9 @@ export default function BullCity() {
       .channel('city-cmkr')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cmkr_earnings' }, () => loadCmkr())
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    /* refresh every 30s so places coming back online after their hour re-open the auto-miner */
+    const tick = setInterval(() => loadCmkr(), 30000);
+    return () => { supabase.removeChannel(ch); clearInterval(tick); };
   }, [userId, loadCmkr]);
 
   /** Award 1 🦉 CMKR for a place — up to 5 per place, per day, per player. */
