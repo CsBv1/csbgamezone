@@ -406,6 +406,7 @@ export default function BullCity() {
   const [cmkrToday, setCmkrToday] = useState<Record<string, number>>({}); // place id -> owls mined today by me
   const [cmkrMyMonth, setCmkrMyMonth] = useState(0);                    // my total owls this month
   const [cmkrGlobal, setCmkrGlobal] = useState(0);                      // total minted this month (all players)
+  const [cmkrNextReset, setCmkrNextReset] = useState<number | null>(null); // ms timestamp when a place refills
   const [cmkrBoard, setCmkrBoard] = useState<{ user_id: string; username: string; total: number }[]>([]);
   const [autoMine, setAutoMine] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
