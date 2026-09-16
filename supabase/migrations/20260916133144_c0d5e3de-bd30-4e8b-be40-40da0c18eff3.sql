@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.cmkr_enforce_monthly_cap() FROM PUBLIC, anon, authenticated;
