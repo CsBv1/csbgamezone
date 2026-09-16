@@ -55,6 +55,8 @@ const DB_UPDATE_INTERVAL = 200;
 /** Bigger, cinematic viewport (16:9). */
 const VIEWPORT_W = 1920;
 const VIEWPORT_H = 1080;
+/** camera zoom — <1 pulls the camera back so you see more of the city */
+const ZOOM = 0.62;
 const SPAWN_X = 2000;
 const SPAWN_Y = 2000;
 
@@ -1398,16 +1400,16 @@ export default function BullCity() {
       ctx.restore();
 
       // Cinematic post-pass: neon bloom tint + vignette
-      const bloom = ctx.createRadialGradient(VIEWPORT_W / 2, VIEWPORT_H / 2, VIEWPORT_H * 0.15, VIEWPORT_W / 2, VIEWPORT_H / 2, VIEWPORT_H * 0.85);
+      const bloom = ctx.createRadialGradient(SW / 2, SH / 2, SH * 0.15, SW / 2, SH / 2, SH * 0.85);
       bloom.addColorStop(0, 'rgba(34,211,238,0.05)');
       bloom.addColorStop(1, 'rgba(2,6,16,0.55)');
       ctx.fillStyle = bloom;
-      ctx.fillRect(0, 0, VIEWPORT_W, VIEWPORT_H);
+      ctx.fillRect(0, 0, SW, SH);
 
 
       // Minimap
       const mmW = 170, mmH = 170;
-      const mmX = VIEWPORT_W - mmW - 10, mmY = 10;
+      const mmX = SW - mmW - 10, mmY = 10;
       ctx.fillStyle = 'rgba(3,10,20,0.78)';
       ctx.fillRect(mmX, mmY, mmW, mmH);
       ctx.strokeStyle = '#FF9900';
