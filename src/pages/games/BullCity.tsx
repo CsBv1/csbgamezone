@@ -729,6 +729,12 @@ export default function BullCity() {
     return () => { supabase.removeChannel(ch); clearInterval(tick); };
   }, [userId, loadCmkr]);
 
+  useEffect(() => {
+    const t = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+
   /** Award 1 🦉 CMKR for a place — up to 5 per place, per rolling hour, per player. */
   const tryMineCmkr = async (building: Building): Promise<boolean> => {
     if (!userId) return false;
