@@ -1697,6 +1697,11 @@ export default function BullCity() {
             <span className="text-amber-200 text-xs font-bold">
               {Object.values(cmkrToday).reduce((s, n) => s + n, 0)} · {cmkrMyMonth}
             </span>
+            {cmkrNextReset && cmkrNextReset > clock && (
+              <span className="text-amber-300/70 text-[10px] font-semibold">
+                ↻ {Math.max(1, Math.ceil((cmkrNextReset - clock) / 60000))}m
+              </span>
+            )}
           </Card>
           <Card className="px-2.5 py-1 flex items-center gap-1.5 bg-slate-950/70 backdrop-blur border-cyan-500/30">
             <Gem className="w-4 h-4 text-cyan-300" />
