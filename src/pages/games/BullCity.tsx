@@ -1018,11 +1018,13 @@ export default function BullCity() {
 
     const render = () => {
       /* everything below reads refs so the loop never restarts on state change */
-      const VIEWPORT_W = canvas.width, VIEWPORT_H = canvas.height;
+      /* SW/SH = screen pixels · VIEWPORT = world units visible (zoomed out) */
+      const SW = canvas.width, SH = canvas.height;
+      const VIEWPORT_W = SW / ZOOM, VIEWPORT_H = SH / ZOOM;
       const myPosition = posRef.current;
       const cameraOffset = {
-        x: Math.max(0, Math.min(CITY_WIDTH - VIEWPORT_W, myPosition.x - VIEWPORT_W / 2)),
-        y: Math.max(0, Math.min(CITY_HEIGHT - VIEWPORT_H, myPosition.y - VIEWPORT_H / 2)),
+        x: Math.max(0, Math.min(Math.max(0, CITY_WIDTH - VIEWPORT_W), myPosition.x - VIEWPORT_W / 2)),
+        y: Math.max(0, Math.min(Math.max(0, CITY_HEIGHT - VIEWPORT_H), myPosition.y - VIEWPORT_H / 2)),
       };
       const players = playersRef.current;
       const diamonds = diamondsRef.current;
@@ -1035,7 +1037,8 @@ export default function BullCity() {
       const cmkrToday = cmkrTodayRef.current;
 
       ctx.save();
-      ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
+      ctx.clearRect(0, 0, SW, SH);
+      ctx.scale(ZOOM, ZOOM);
       ctx.translate(-cameraOffset.x, -cameraOffset.y);
 
       const time = Date.now() / 1000;
