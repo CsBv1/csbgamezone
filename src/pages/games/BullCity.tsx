@@ -200,61 +200,59 @@ function buildGroundLayer(): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = Math.round(CITY_WIDTH * GROUND_SCALE);
   c.height = Math.round(CITY_HEIGHT * GROUND_SCALE);
-  const x = c.getContext('2d')!;
+  const x = c.getContext('2d');
+  if (!x) return c;
   x.scale(GROUND_SCALE, GROUND_SCALE);
 
-  /* --- base terrain --- */
+  /* Low-poly grassland base — cached once for a smooth full-screen map. */
   const bg = x.createLinearGradient(0, 0, CITY_WIDTH, CITY_HEIGHT);
-  bg.addColorStop(0, '#0a1a2b');
-  bg.addColorStop(0.45, '#0f2a44');
-  bg.addColorStop(1, '#07131f');
+  bg.addColorStop(0, '#28452d');
+  bg.addColorStop(0.48, '#365d3c');
+  bg.addColorStop(1, '#1e382a');
   x.fillStyle = bg;
   x.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
 
-  /* --- paved plates: gives the floor real texture instead of a flat grid --- */
-  let s = 90210;
-  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
-  const PLATE = 160;
-  for (let py = 0; py < CITY_HEIGHT; py += PLATE) {
-    for (let px = 0; px < CITY_WIDTH; px += PLATE) {
+  let seed = 90210;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const tile = 120;
+  for (let py = 0; py < CITY_HEIGHT; py += tile) {
+    for (let px = 0; px < CITY_WIDTH; px += tile) {
       const t = rnd();
-      x.fillStyle = `rgba(${18 + t * 14 | 0},${34 + t * 20 | 0},${52 + t * 26 | 0},0.55)`;
-      x.fillRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
-      x.strokeStyle = 'rgba(120,200,255,0.05)';
-      x.lineWidth = 1;
-      x.strokeRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
-      if (t > 0.86) {
-        x.fillStyle = 'rgba(0,212,255,0.05)';
-        x.fillRect(px + 20, py + 20, PLATE - 40, PLATE - 40);
+      x.fillStyle = `rgba(${38 + Math.floor(t * 14)},${70 + Math.floor(t * 26)},${40 + Math.floor(t * 14)},0.38)`;
+      x.beginPath();
+      x.moveTo(px, py + 10); x.lineTo(px + tile - 12, py); x.lineTo(px + tile, py + tile - 18);
+      x.lineTo(px + 14, py + tile); x.closePath(); x.fill();
+      if (t > 0.8) {
+        x.strokeStyle = 'rgba(194,190,104,0.16)';
+        x.lineWidth = 3;
+        for (let k = 18; k < tile; k += 24) {
+          x.beginPath(); x.moveTo(px + k, py + 14); x.lineTo(px + k - 12, py + tile - 14); x.stroke();
+        }
       }
     }
   }
 
-  /* --- district tinting --- */
   DISTRICTS.forEach(d => {
-    const g = x.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
-    g.addColorStop(0, d.color + '2e');
+    const g = x.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.35);
+    g.addColorStop(0, d.color + '30');
     g.addColorStop(1, 'transparent');
     x.fillStyle = g;
     x.fillRect(d.x, d.y, d.w, d.h);
-    x.strokeStyle = d.color + '33';
-    x.lineWidth = 3;
-    x.setLineDash([18, 14]);
+    x.strokeStyle = d.color + '26';
+    x.lineWidth = 8;
     x.strokeRect(d.x, d.y, d.w, d.h);
-    x.setLineDash([]);
   });
 
-  /* --- water --- */
   WATER.forEach(w => {
     const wg = x.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
-    wg.addColorStop(0, 'rgba(22,132,176,0.8)');
-    wg.addColorStop(1, 'rgba(8,50,80,0.9)');
+    wg.addColorStop(0, 'rgba(55,151,164,0.9)');
+    wg.addColorStop(1, 'rgba(19,77,95,0.96)');
     x.fillStyle = wg;
-    x.beginPath(); x.roundRect(w.x, w.y, w.w, w.h, 40); x.fill();
-    x.strokeStyle = 'rgba(120,230,255,0.35)'; x.lineWidth = 3; x.stroke();
+    x.beginPath(); x.roundRect(w.x, w.y, w.w, w.h, 42); x.fill();
+    x.strokeStyle = 'rgba(157,198,151,0.5)'; x.lineWidth = 10; x.stroke();
   });
 
-  /* --- roads: asphalt, kerbs, lane dashes, crosswalks --- */
+  /* Broad cobbled paths with worn dirt verges. */
   ROADS.forEach(road => {
     const vertical = road.x1 === road.x2;
     const w = road.width;
@@ -262,103 +260,33 @@ function buildGroundLayer(): HTMLCanvasElement {
     const ry = vertical ? road.y1 : road.y1 - w / 2;
     const rw = vertical ? w : road.x2 - road.x1;
     const rh = vertical ? road.y2 - road.y1 : w;
-
-    // kerb / sidewalk
-    x.fillStyle = 'rgba(96,120,146,0.55)';
-    x.fillRect(rx - 10, ry - 10, rw + 20, rh + 20);
-    // asphalt
-    const ag = vertical
-      ? x.createLinearGradient(rx, 0, rx + rw, 0)
-      : x.createLinearGradient(0, ry, 0, ry + rh);
-    ag.addColorStop(0, '#232f3d');
-    ag.addColorStop(0.5, '#2e3d4e');
-    ag.addColorStop(1, '#232f3d');
-    x.fillStyle = ag;
+    x.fillStyle = 'rgba(101,75,48,0.84)';
+    x.fillRect(rx - 13, ry - 13, rw + 26, rh + 26);
+    const path = vertical ? x.createLinearGradient(rx, 0, rx + rw, 0) : x.createLinearGradient(0, ry, 0, ry + rh);
+    path.addColorStop(0, '#655f51'); path.addColorStop(0.5, '#918773'); path.addColorStop(1, '#5a5549');
+    x.fillStyle = path;
     x.fillRect(rx, ry, rw, rh);
-    // neon kerb glow
-    x.strokeStyle = 'rgba(0,212,255,0.22)';
-    x.lineWidth = 2;
-    x.strokeRect(rx, ry, rw, rh);
-    // centre lane dashes
-    x.strokeStyle = 'rgba(255,205,60,0.5)';
-    x.lineWidth = 4;
-    x.setLineDash([40, 34]);
-    x.beginPath();
-    if (vertical) { x.moveTo(road.x1, road.y1); x.lineTo(road.x1, road.y2); }
-    else { x.moveTo(road.x1, road.y1); x.lineTo(road.x2, road.y1); }
-    x.stroke();
-    x.setLineDash([]);
-    // crosswalks every 800px
-    x.fillStyle = 'rgba(220,240,255,0.28)';
-    if (vertical) {
-      for (let y = road.y1 + 400; y < road.y2; y += 800)
-        for (let i = 0; i < 5; i++) x.fillRect(rx + 4 + i * (w / 5), y, w / 8, 26);
-    } else {
-      for (let xx = road.x1 + 400; xx < road.x2; xx += 800)
-        for (let i = 0; i < 5; i++) x.fillRect(xx, ry + 4 + i * (w / 5), 26, w / 8);
+    x.strokeStyle = 'rgba(39,34,27,0.66)'; x.lineWidth = 3; x.strokeRect(rx, ry, rw, rh);
+    x.strokeStyle = 'rgba(226,213,177,0.24)'; x.lineWidth = 2;
+    const length = vertical ? rh : rw;
+    for (let n = 12; n < length; n += 42) {
+      x.beginPath();
+      if (vertical) { x.moveTo(rx + 5, ry + n); x.lineTo(rx + rw - 5, ry + n + (n % 4)); }
+      else { x.moveTo(rx + n, ry + 5); x.lineTo(rx + n + (n % 4), ry + rh - 5); }
+      x.stroke();
     }
   });
 
-  /* --- spawn plaza floor --- */
+  /* Castle-green gathering circle. */
   const pg = x.createRadialGradient(SPAWN_X, SPAWN_Y, 30, SPAWN_X, SPAWN_Y, 340);
-  pg.addColorStop(0, 'rgba(0,212,255,0.20)');
-  pg.addColorStop(1, 'transparent');
-  x.fillStyle = pg;
-  x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, 340, 0, Math.PI * 2); x.fill();
-  x.strokeStyle = 'rgba(0,212,255,0.4)';
-  x.lineWidth = 4;
+  pg.addColorStop(0, 'rgba(220,190,105,0.22)'); pg.addColorStop(1, 'transparent');
+  x.fillStyle = pg; x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, 340, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = 'rgba(211,195,147,0.55)'; x.lineWidth = 5;
   for (let r = 120; r <= 300; r += 90) { x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); x.stroke(); }
 
   groundLayer = c;
   return c;
 }
-
-/** Traffic — deterministic cars that drive the road grid. */
-const CAR_COLORS = ['#ff5a5a', '#ffd84d', '#57e0ff', '#8b5cf6', '#34d399', '#f97316', '#e2e8f0'];
-const CARS = (() => {
-  let s = 24681;
-  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
-  return ROADS.flatMap((road, ri) => {
-    const n = 4;
-    return Array.from({ length: n }, (_, i) => ({
-      ri,
-      t: rnd(),
-      speed: 0.012 + rnd() * 0.022,
-      dir: i % 2 === 0 ? 1 : -1,
-      lane: i % 2 === 0 ? 1 : -1,
-      color: CAR_COLORS[Math.floor(rnd() * CAR_COLORS.length)],
-    }));
-  });
-})();
-
-function drawTraffic(ctx: CanvasRenderingContext2D, time: number, inView: (x: number, y: number) => boolean) {
-  CARS.forEach(car => {
-    const road = ROADS[car.ri];
-    const vertical = road.x1 === road.x2;
-    const len = vertical ? road.y2 - road.y1 : road.x2 - road.x1;
-    let prog = (car.t + time * car.speed * (car.dir > 0 ? 1 : -1)) % 1;
-    if (prog < 0) prog += 1;
-    const along = prog * len;
-    const off = car.lane * (road.width * 0.22);
-    const cx = vertical ? road.x1 + off : road.x1 + along;
-    const cy = vertical ? road.y1 + along : road.y1 + off;
-    if (!inView(cx, cy)) return;
-
-        ctx.save();
-    ctx.translate(cx, cy);
-    // simple low-poly villager
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath(); ctx.ellipse(0, 4, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = car.color;
-    ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(6, 2); ctx.lineTo(4, -14); ctx.lineTo(-4, -14); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#f3c9b1';
-    ctx.beginPath(); ctx.arc(0, -18, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-    });
-  });
-}
-
-
 
 export default function BullCity() {
   const navigate = useNavigate();
@@ -1055,9 +983,6 @@ export default function BullCity() {
         }
       });
 
-      /* ---------- traffic ---------- */
-      drawTraffic(ctx, time, inView);
-
       /* ---------- spawn plaza pulse + sign ---------- */
       if (inView(SPAWN_X, SPAWN_Y)) {
         const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
@@ -1069,7 +994,7 @@ export default function BullCity() {
         ctx.fillStyle = 'rgba(255,215,0,0.8)';
         ctx.font = 'bold 28px Serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🏰 THE HIGH KING'S SQUARE', SPAWN_X, SPAWN_Y - 360);
+        ctx.fillText('🐂 CARDANO STAKE BULLS CASTLE GREEN', SPAWN_X, SPAWN_Y - 360);
       }
 
 
@@ -1645,7 +1570,7 @@ export default function BullCity() {
               <div className="text-xs text-slate-500">Lv 1 · No NFT needed</div>
             </Card>
           </div>
-          <p className="text-center text-xs text-cyan-200/40">Free entry — mine 🦉 CMKR at every place, 5 owls per place each day.</p>
+          <p className="text-center text-xs text-cyan-200/40">Free entry — mine 🦉 CMKR at every place, 5 owls per place each hour.</p>
         </div>
       </div>
     );
