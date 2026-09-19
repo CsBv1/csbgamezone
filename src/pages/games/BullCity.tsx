@@ -83,29 +83,29 @@ const BUILDINGS: Building[] = [
   // ——— Stake Plaza (spawn) ———
   { id: 'spawn-gate', name: 'Bulls Spawn Gate', x: 1930, y: 1760, width: 140, height: 90, color: '#00D4FF', emoji: '🌀', type: 'decoration' },
   { id: 'bull-statue', name: 'Founder Bull Statue', x: 1920, y: 2150, width: 160, height: 140, color: '#C0C0C0', emoji: '🐂', type: 'decoration' },
-  { id: 'stake-pool', name: 'Stake Pool HQ', x: 1640, y: 1640, width: 200, height: 150, color: '#00D4FF', emoji: '⚙️', type: 'forge', reward: 9, cooldownMs: 15000 },
-  { id: 'rune-temple', name: 'Rune Power Temple', x: 2180, y: 1640, width: 190, height: 150, color: '#a78bfa', emoji: '🔯', type: 'forge', reward: 11, cooldownMs: 20000 },
+  { id: 'stake-pool', name: 'Stake Pool HQ', x: 1640, y: 1640, width: 200, height: 150, color: '#00D4FF', emoji: '🔨', type: 'forge', reward: 9, cooldownMs: 15000 },
+  { id: 'rune-temple', name: 'Rune Power Temple', x: 2180, y: 1640, width: 190, height: 150, color: '#a78bfa', emoji: '🔮', type: 'forge', reward: 11, cooldownMs: 20000 },
 
   // ——— Epoch Financial District ———
-  { id: 'ada-mint', name: 'ADA Mint', x: 2700, y: 1480, width: 210, height: 160, color: '#FFD700', emoji: '🪙', type: 'bank', reward: 14, cooldownMs: 26000 },
+  { id: 'ada-mint', name: 'ADA Mint', x: 2700, y: 1480, width: 210, height: 160, color: '#FFD700', emoji: '💰', type: 'bank', reward: 14, cooldownMs: 26000 },
   { id: 'bull-bank', name: 'Bull Reserve Bank', x: 3150, y: 1500, width: 220, height: 180, color: '#FFD700', emoji: '🏦', type: 'bank', reward: 15, cooldownMs: 30000 },
-  { id: 'dex-exchange', name: 'Bull DEX Exchange', x: 2760, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '📈', type: 'market', reward: 12, cooldownMs: 22000 },
+  { id: 'dex-exchange', name: 'Bull DEX Exchange', x: 2760, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '⚖️', type: 'market', reward: 12, cooldownMs: 22000 },
   { id: 'epoch-tower', name: 'Epoch Clock Tower', x: 3400, y: 1950, width: 120, height: 230, color: '#f59e0b', emoji: '🕐', type: 'tower' },
-  { id: 'nft-gallery', name: 'CNFT Gallery', x: 3180, y: 2200, width: 200, height: 150, color: '#ff6b35', emoji: '🖼️', type: 'market', reward: 10, cooldownMs: 18000 },
+  { id: 'nft-gallery', name: 'CNFT Gallery', x: 3180, y: 2200, width: 200, height: 150, color: '#ff6b35', emoji: '📜', type: 'market', reward: 10, cooldownMs: 18000 },
 
   // ——— Plutus Tech Park ———
   { id: 'plutus-lab', name: 'Plutus Smart Lab', x: 320, y: 1450, width: 220, height: 160, color: '#9933FF', emoji: '🔮', type: 'forge', reward: 10, cooldownMs: 20000 },
-  { id: 'validator-farm', name: 'Validator Node Farm', x: 720, y: 1420, width: 240, height: 150, color: '#38bdf8', emoji: '🖥️', type: 'forge', reward: 13, cooldownMs: 24000 },
-  { id: 'oracle-spire', name: 'Oracle Data Spire', x: 1120, y: 1500, width: 130, height: 240, color: '#c084fc', emoji: '🛰️', type: 'tower' },
+  { id: 'validator-farm', name: 'Validator Node Farm', x: 720, y: 1420, width: 240, height: 150, color: '#38bdf8', emoji: '🧙', type: 'forge', reward: 13, cooldownMs: 24000 },
+  { id: 'oracle-spire', name: 'Oracle Data Spire', x: 1120, y: 1500, width: 130, height: 240, color: '#c084fc', emoji: '🏰', type: 'tower' },
   { id: 'crystal-lab', name: 'Crystal Research Lab', x: 420, y: 1900, width: 200, height: 150, color: '#7df9ff', emoji: '🧪', type: 'forge', reward: 11, cooldownMs: 21000 },
   { id: 'stake-factory', name: 'Stake Factory', x: 860, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '🏭', type: 'forge', reward: 12, cooldownMs: 25000 },
 
   // ——— Hydra Harbour ———
-  { id: 'hydra-docks', name: 'Hydra Docks', x: 320, y: 2750, width: 250, height: 160, color: '#22d3ee', emoji: '⚓', type: 'market', reward: 9, cooldownMs: 16000 },
-  { id: 'ada-lighthouse', name: 'ADA Lighthouse', x: 200, y: 3350, width: 120, height: 250, color: '#e2e8f0', emoji: '🗼', type: 'tower' },
+  { id: 'hydra-docks', name: 'Hydra Docks', x: 320, y: 2750, width: 250, height: 160, color: '#22d3ee', emoji: '⛵', type: 'market', reward: 9, cooldownMs: 16000 },
+  { id: 'ada-lighthouse', name: 'ADA Lighthouse', x: 200, y: 3350, width: 120, height: 250, color: '#e2e8f0', emoji: '🏰', type: 'tower' },
   { id: 'fishing-wharf', name: 'Bull Fishing Wharf', x: 800, y: 3200, width: 220, height: 150, color: '#0ea5e9', emoji: '🎣', type: 'mine', reward: 7, cooldownMs: 13000 },
   { id: 'tavern', name: 'Harbour Bull Tavern', x: 1250, y: 2850, width: 200, height: 150, color: '#FF4444', emoji: '🍺', type: 'tavern' },
-  { id: 'cargo-yard', name: 'Cargo Yard', x: 1300, y: 3350, width: 260, height: 170, color: '#fb923c', emoji: '📦', type: 'market', reward: 8, cooldownMs: 15000 },
+  { id: 'cargo-yard', name: 'Cargo Yard', x: 1300, y: 3350, width: 260, height: 170, color: '#fb923c', emoji: '🪵', type: 'market', reward: 8, cooldownMs: 15000 },
 
   // ——— Ouroboros Fields ———
   { id: 'ouroboros-ring', name: 'Ouroboros Ring', x: 2020, y: 520, width: 260, height: 260, color: '#00ff88', emoji: '♾️', type: 'decoration' },
@@ -115,7 +115,7 @@ const BUILDINGS: Building[] = [
   { id: 'gold-forge', name: 'Gold Forge', x: 1550, y: 880, width: 200, height: 150, color: '#FFD700', emoji: '🔥', type: 'forge', reward: 8, cooldownMs: 15000 },
 
   // ——— Voltaire Governance Quarter ———
-  { id: 'catalyst-hall', name: 'Catalyst Hall', x: 2300, y: 2800, width: 260, height: 180, color: '#f472b6', emoji: '🗳️', type: 'bank', reward: 13, cooldownMs: 27000 },
+  { id: 'catalyst-hall', name: 'Catalyst Hall', x: 2300, y: 2800, width: 260, height: 180, color: '#f472b6', emoji: '👑', type: 'bank', reward: 13, cooldownMs: 27000 },
   { id: 'senate', name: 'Bull Senate', x: 2800, y: 3150, width: 280, height: 190, color: '#e879f9', emoji: '🏛️', type: 'tavern' },
   { id: 'treasury', name: 'Treasury Vault', x: 3350, y: 2800, width: 220, height: 170, color: '#FFD700', emoji: '🔐', type: 'bank', reward: 16, cooldownMs: 32000 },
   { id: 'arena-stadium', name: 'Bull Arena Stadium', x: 2250, y: 3350, width: 320, height: 220, color: '#ff4d6d', emoji: '⚔️', type: 'decoration' },
@@ -129,12 +129,12 @@ const BUILDINGS: Building[] = [
   // ——— Genesis Wilds ———
   { id: 'genesis-shrine', name: 'Genesis Shrine', x: 380, y: 380, width: 180, height: 160, color: '#5ce65c', emoji: '⛩️', type: 'decoration' },
   { id: 'lumber-camp', name: 'Bull Lumber Camp', x: 760, y: 620, width: 220, height: 150, color: '#a3e635', emoji: '🪓', type: 'mine', reward: 6, cooldownMs: 11000 },
-  { id: 'wild-market', name: 'Wilds Trading Post', x: 320, y: 850, width: 210, height: 150, color: '#44FF44', emoji: '🏪', type: 'market', reward: 7, cooldownMs: 14000 },
+  { id: 'wild-market', name: 'Wilds Trading Post', x: 320, y: 850, width: 210, height: 150, color: '#44FF44', emoji: '🛖', type: 'market', reward: 7, cooldownMs: 14000 },
 
   // ——— Landmarks / decoration ———
   { id: 'fountain', name: 'Ouroboros Fountain', x: 1900, y: 1900, width: 200, height: 200, color: '#00BBFF', emoji: '⛲', type: 'decoration' },
   { id: 'park', name: 'Central Bull Park', x: 1450, y: 2450, width: 300, height: 220, color: '#228B22', emoji: '🌳', type: 'decoration' },
-  { id: 'tower-nw', name: 'North Watch Tower', x: 120, y: 120, width: 110, height: 180, color: '#667788', emoji: '🗼', type: 'tower' },
+  { id: 'tower-nw', name: 'North Watch Tower', x: 120, y: 120, width: 110, height: 180, color: '#667788', emoji: '🏰', type: 'tower' },
   { id: 'tower-ne', name: 'East Beacon', x: 3780, y: 120, width: 110, height: 180, color: '#667788', emoji: '🔦', type: 'tower' },
   { id: 'tower-sw', name: 'South Keep', x: 120, y: 3780, width: 110, height: 170, color: '#667788', emoji: '🏰', type: 'tower' },
   { id: 'tower-se', name: 'Frontier Post', x: 3780, y: 3780, width: 110, height: 170, color: '#667788', emoji: '🧭', type: 'tower' },
@@ -344,42 +344,17 @@ function drawTraffic(ctx: CanvasRenderingContext2D, time: number, inView: (x: nu
     const cy = vertical ? road.y1 + along : road.y1 + off;
     if (!inView(cx, cy)) return;
 
-    const L = 34, W = 18;
-    ctx.save();
+        ctx.save();
     ctx.translate(cx, cy);
-    if (vertical) ctx.rotate(Math.PI / 2);
-    // shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath(); ctx.ellipse(0, 7, L * 0.55, W * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-    // body
-    const bg = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
-    bg.addColorStop(0, car.color);
-    bg.addColorStop(1, 'rgba(10,16,26,0.95)');
-    ctx.fillStyle = bg;
-    ctx.beginPath(); ctx.roundRect(-L / 2, -W / 2, L, W, 6); ctx.fill();
-    // cabin
-    ctx.fillStyle = 'rgba(180,235,255,0.55)';
-    ctx.beginPath(); ctx.roundRect(-L * 0.16, -W * 0.34, L * 0.42, W * 0.68, 3); ctx.fill();
-    // head / tail lights
-    const facing = car.dir > 0 ? 1 : -1;
-    ctx.fillStyle = 'rgba(255,245,190,0.95)';
-    ctx.beginPath(); ctx.arc((L / 2 - 3) * facing, -W * 0.28, 2.6, 0, Math.PI * 2);
-    ctx.arc((L / 2 - 3) * facing, W * 0.28, 2.6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,80,80,0.9)';
-    ctx.beginPath(); ctx.arc((-L / 2 + 3) * facing, -W * 0.28, 2.2, 0, Math.PI * 2);
-    ctx.arc((-L / 2 + 3) * facing, W * 0.28, 2.2, 0, Math.PI * 2); ctx.fill();
-    // headlight cone
-    const cone = ctx.createLinearGradient((L / 2) * facing, 0, (L / 2 + 70) * facing, 0);
-    cone.addColorStop(0, 'rgba(255,240,180,0.22)');
-    cone.addColorStop(1, 'transparent');
-    ctx.fillStyle = cone;
-    ctx.beginPath();
-    ctx.moveTo((L / 2) * facing, -W * 0.34);
-    ctx.lineTo((L / 2 + 70) * facing, -W * 1.1);
-    ctx.lineTo((L / 2 + 70) * facing, W * 1.1);
-    ctx.lineTo((L / 2) * facing, W * 0.34);
-    ctx.closePath(); ctx.fill();
+    // simple low-poly villager
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(0, 4, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = car.color;
+    ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(6, 2); ctx.lineTo(4, -14); ctx.lineTo(-4, -14); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f3c9b1';
+    ctx.beginPath(); ctx.arc(0, -18, 5, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
+    });
   });
 }
 
@@ -1105,11 +1080,11 @@ export default function BullCity() {
         if (p.kind === 'tree') {
           ctx.fillStyle = 'rgba(0,0,0,0.35)';
           ctx.beginPath(); ctx.ellipse(p.x, p.y + 14 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#3b2a18';
+          ctx.fillStyle = '#5c4033';
           ctx.fillRect(p.x - 3 * s, p.y - 6 * s, 6 * s, 20 * s);
           const tg = ctx.createRadialGradient(p.x - 4 * s, p.y - 22 * s, 2, p.x, p.y - 16 * s, 22 * s);
-          tg.addColorStop(0, '#7ef7a8');
-          tg.addColorStop(1, '#12633a');
+          tg.addColorStop(0, '#4e7a35');
+          tg.addColorStop(1, '#2d4c1e');
           ctx.fillStyle = tg;
           ctx.beginPath(); ctx.arc(p.x, p.y - 18 * s, 18 * s, 0, Math.PI * 2); ctx.fill();
         } else if (p.kind === 'rock') {
@@ -1123,15 +1098,15 @@ export default function BullCity() {
           ctx.strokeRect(p.x - 14 * s, p.y - 14 * s, 28 * s, 28 * s);
           ctx.beginPath(); ctx.moveTo(p.x - 14 * s, p.y - 14 * s); ctx.lineTo(p.x + 14 * s, p.y + 14 * s); ctx.stroke();
         } else if (p.kind === 'lamp') {
-          ctx.strokeStyle = '#5b7488'; ctx.lineWidth = 4;
+          ctx.strokeStyle = '#5c4033'; ctx.lineWidth = 4;
           ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - 46); ctx.stroke();
           const flicker = 0.55 + Math.sin(time * 3 + i) * 0.12;
           const lg = ctx.createRadialGradient(p.x, p.y - 50, 0, p.x, p.y - 50, 60);
-          lg.addColorStop(0, `rgba(255,215,120,${flicker * 0.5})`);
+          lg.addColorStop(0, `rgba(255,140,0,${flicker * 0.6})`);
           lg.addColorStop(1, 'transparent');
           ctx.fillStyle = lg;
           ctx.beginPath(); ctx.arc(p.x, p.y - 50, 60, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ffe08a';
+          ctx.fillStyle = '#ff8c00';
           ctx.beginPath(); ctx.arc(p.x, p.y - 50, 6, 0, Math.PI * 2); ctx.fill();
         } else if (p.kind === 'holo') {
           const float = Math.sin(time * 1.2 + i) * 6;
