@@ -72,72 +72,72 @@ const DISTRICTS: { name: string; x: number; y: number; w: number; h: number; col
   { name: 'Stake Plaza', x: 1550, y: 1550, w: 900, h: 900, color: '#00d4ff', label: '🏰 GREAT HALL PLAZA' },
   { name: 'Epoch Financial', x: 2500, y: 1350, w: 1350, h: 1050, color: '#ffd700', label: '💰 MERCHANT QUARTER' },
   { name: 'Plutus Tech Park', x: 150, y: 1300, w: 1300, h: 1100, color: '#9933ff', label: '🧪 ALCHEMIST CIRCLE' },
-  { name: 'Hydra Harbour', x: 150, y: 2550, w: 1650, h: 1250, color: '#22d3ee', label: '⚓ WHISPERING HARBOUR' },
+  { name: 'Hydra Harbour', x: 150, y: 2550, w: 1650, h: 1250, color: '#008b8b', label: '⚓ WHISPERING HARBOUR' },
   { name: 'Ouroboros Fields', x: 1400, y: 150, w: 1400, h: 1050, color: '#00ff88', label: '🌾 ANCIENT HARVEST' },
-  { name: 'Voltaire Quarter', x: 2000, y: 2600, w: 1800, h: 1200, color: '#f472b6', label: '🏛️ KINGS QUARTER' },
-  { name: 'Midnight Ridge', x: 2900, y: 200, w: 950, h: 950, color: '#8b5cf6', label: '⛰️ SHADOW PEAKS' },
-  { name: 'Genesis Wilds', x: 200, y: 200, w: 1000, h: 900, color: '#5ce65c', label: '🌲 FORGOTTEN WILDS' },
+  { name: 'Voltaire Quarter', x: 2000, y: 2600, w: 1800, h: 1200, color: '#c71585', label: '🏛️ KINGS QUARTER' },
+  { name: 'Midnight Ridge', x: 2900, y: 200, w: 950, h: 950, color: '#4b0082', label: '⛰️ SHADOW PEAKS' },
+  { name: 'Genesis Wilds', x: 200, y: 200, w: 1000, h: 900, color: '#228b22', label: '🌲 FORGOTTEN WILDS' },
 ];
 
 const BUILDINGS: Building[] = [
   // ——— Stake Plaza (spawn) ———
-  { id: 'spawn-gate', name: 'Bulls Spawn Gate', x: 1930, y: 1760, width: 140, height: 90, color: '#00D4FF', emoji: '🌀', type: 'decoration' },
-  { id: 'bull-statue', name: 'Founder Bull Statue', x: 1920, y: 2150, width: 160, height: 140, color: '#C0C0C0', emoji: '🐂', type: 'decoration' },
-  { id: 'stake-pool', name: 'Stake Pool HQ', x: 1640, y: 1640, width: 200, height: 150, color: '#00D4FF', emoji: '⚙️', type: 'forge', reward: 9, cooldownMs: 15000 },
-  { id: 'rune-temple', name: 'Rune Power Temple', x: 2180, y: 1640, width: 190, height: 150, color: '#a78bfa', emoji: '🔯', type: 'forge', reward: 11, cooldownMs: 20000 },
+  { id: 'spawn-gate', name: 'Bulls Spawn Gate', x: 1930, y: 1760, width: 140, height: 90, color: '#696969', emoji: '🌀', type: 'decoration' },
+  { id: 'bull-statue', name: 'Founder Bull Statue', x: 1920, y: 2150, width: 160, height: 140, color: '#808080', emoji: '🐂', type: 'decoration' },
+  { id: 'stake-pool', name: 'Stake Pool HQ', x: 1640, y: 1640, width: 200, height: 150, color: '#696969', emoji: '🔨', type: 'forge', reward: 9, cooldownMs: 15000 },
+  { id: 'rune-temple', name: 'Rune Power Temple', x: 2180, y: 1640, width: 190, height: 150, color: '#8b4513', emoji: '🔮', type: 'forge', reward: 11, cooldownMs: 20000 },
 
   // ——— Epoch Financial District ———
-  { id: 'ada-mint', name: 'ADA Mint', x: 2700, y: 1480, width: 210, height: 160, color: '#FFD700', emoji: '🪙', type: 'bank', reward: 14, cooldownMs: 26000 },
-  { id: 'bull-bank', name: 'Bull Reserve Bank', x: 3150, y: 1500, width: 220, height: 180, color: '#FFD700', emoji: '🏦', type: 'bank', reward: 15, cooldownMs: 30000 },
-  { id: 'dex-exchange', name: 'Bull DEX Exchange', x: 2760, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '📈', type: 'market', reward: 12, cooldownMs: 22000 },
-  { id: 'epoch-tower', name: 'Epoch Clock Tower', x: 3400, y: 1950, width: 120, height: 230, color: '#f59e0b', emoji: '🕐', type: 'tower' },
-  { id: 'nft-gallery', name: 'CNFT Gallery', x: 3180, y: 2200, width: 200, height: 150, color: '#ff6b35', emoji: '🖼️', type: 'market', reward: 10, cooldownMs: 18000 },
+  { id: 'ada-mint', name: 'ADA Mint', x: 2700, y: 1480, width: 210, height: 160, color: '#b8860b', emoji: '💰', type: 'bank', reward: 14, cooldownMs: 26000 },
+  { id: 'bull-bank', name: 'Bull Reserve Bank', x: 3150, y: 1500, width: 220, height: 180, color: '#b8860b', emoji: '🏦', type: 'bank', reward: 15, cooldownMs: 30000 },
+  { id: 'dex-exchange', name: 'Bull DEX Exchange', x: 2760, y: 1950, width: 230, height: 170, color: '#556b2f', emoji: '⚖️', type: 'market', reward: 12, cooldownMs: 22000 },
+  { id: 'epoch-tower', name: 'Epoch Clock Tower', x: 3400, y: 1950, width: 120, height: 230, color: '#8b4513', emoji: '🕐', type: 'tower' },
+  { id: 'nft-gallery', name: 'CNFT Gallery', x: 3180, y: 2200, width: 200, height: 150, color: '#a0522d', emoji: '📜', type: 'market', reward: 10, cooldownMs: 18000 },
 
   // ——— Plutus Tech Park ———
-  { id: 'plutus-lab', name: 'Plutus Smart Lab', x: 320, y: 1450, width: 220, height: 160, color: '#9933FF', emoji: '🔮', type: 'forge', reward: 10, cooldownMs: 20000 },
-  { id: 'validator-farm', name: 'Validator Node Farm', x: 720, y: 1420, width: 240, height: 150, color: '#38bdf8', emoji: '🖥️', type: 'forge', reward: 13, cooldownMs: 24000 },
-  { id: 'oracle-spire', name: 'Oracle Data Spire', x: 1120, y: 1500, width: 130, height: 240, color: '#c084fc', emoji: '🛰️', type: 'tower' },
-  { id: 'crystal-lab', name: 'Crystal Research Lab', x: 420, y: 1900, width: 200, height: 150, color: '#7df9ff', emoji: '🧪', type: 'forge', reward: 11, cooldownMs: 21000 },
-  { id: 'stake-factory', name: 'Stake Factory', x: 860, y: 1950, width: 230, height: 170, color: '#00FF88', emoji: '🏭', type: 'forge', reward: 12, cooldownMs: 25000 },
+  { id: 'plutus-lab', name: 'Plutus Smart Lab', x: 320, y: 1450, width: 220, height: 160, color: '#4b0082', emoji: '🔮', type: 'forge', reward: 10, cooldownMs: 20000 },
+  { id: 'validator-farm', name: 'Validator Node Farm', x: 720, y: 1420, width: 240, height: 150, color: '#4682b4', emoji: '🧙', type: 'forge', reward: 13, cooldownMs: 24000 },
+  { id: 'oracle-spire', name: 'Oracle Data Spire', x: 1120, y: 1500, width: 130, height: 240, color: '#483d8b', emoji: '🏰', type: 'tower' },
+  { id: 'crystal-lab', name: 'Crystal Research Lab', x: 420, y: 1900, width: 200, height: 150, color: '#5f9ea0', emoji: '🧪', type: 'forge', reward: 11, cooldownMs: 21000 },
+  { id: 'stake-factory', name: 'Stake Factory', x: 860, y: 1950, width: 230, height: 170, color: '#556b2f', emoji: '🏭', type: 'forge', reward: 12, cooldownMs: 25000 },
 
   // ——— Hydra Harbour ———
-  { id: 'hydra-docks', name: 'Hydra Docks', x: 320, y: 2750, width: 250, height: 160, color: '#22d3ee', emoji: '⚓', type: 'market', reward: 9, cooldownMs: 16000 },
-  { id: 'ada-lighthouse', name: 'ADA Lighthouse', x: 200, y: 3350, width: 120, height: 250, color: '#e2e8f0', emoji: '🗼', type: 'tower' },
-  { id: 'fishing-wharf', name: 'Bull Fishing Wharf', x: 800, y: 3200, width: 220, height: 150, color: '#0ea5e9', emoji: '🎣', type: 'mine', reward: 7, cooldownMs: 13000 },
-  { id: 'tavern', name: 'Harbour Bull Tavern', x: 1250, y: 2850, width: 200, height: 150, color: '#FF4444', emoji: '🍺', type: 'tavern' },
-  { id: 'cargo-yard', name: 'Cargo Yard', x: 1300, y: 3350, width: 260, height: 170, color: '#fb923c', emoji: '📦', type: 'market', reward: 8, cooldownMs: 15000 },
+  { id: 'hydra-docks', name: 'Hydra Docks', x: 320, y: 2750, width: 250, height: 160, color: '#008b8b', emoji: '⛵', type: 'market', reward: 9, cooldownMs: 16000 },
+  { id: 'ada-lighthouse', name: 'ADA Lighthouse', x: 200, y: 3350, width: 120, height: 250, color: '#dcdcdc', emoji: '🏰', type: 'tower' },
+  { id: 'fishing-wharf', name: 'Bull Fishing Wharf', x: 800, y: 3200, width: 220, height: 150, color: '#1e90ff', emoji: '🎣', type: 'mine', reward: 7, cooldownMs: 13000 },
+  { id: 'tavern', name: 'Harbour Bull Tavern', x: 1250, y: 2850, width: 200, height: 150, color: '#800000', emoji: '🍺', type: 'tavern' },
+  { id: 'cargo-yard', name: 'Cargo Yard', x: 1300, y: 3350, width: 260, height: 170, color: '#d2691e', emoji: '🪵', type: 'market', reward: 8, cooldownMs: 15000 },
 
   // ——— Ouroboros Fields ———
   { id: 'ouroboros-ring', name: 'Ouroboros Ring', x: 2020, y: 520, width: 260, height: 260, color: '#00ff88', emoji: '♾️', type: 'decoration' },
-  { id: 'delegation-barn', name: 'Delegation Barn', x: 1550, y: 320, width: 230, height: 160, color: '#84cc16', emoji: '🚜', type: 'mine', reward: 6, cooldownMs: 11000 },
-  { id: 'gem-quarry', name: 'Gem Quarry', x: 2450, y: 300, width: 220, height: 160, color: '#FF6B35', emoji: '💎', type: 'mine', reward: 6, cooldownMs: 12000 },
-  { id: 'diamond-mine', name: 'Diamond Mine', x: 2450, y: 850, width: 220, height: 160, color: '#00D4FF', emoji: '⛏️', type: 'mine', reward: 5, cooldownMs: 10000 },
-  { id: 'gold-forge', name: 'Gold Forge', x: 1550, y: 880, width: 200, height: 150, color: '#FFD700', emoji: '🔥', type: 'forge', reward: 8, cooldownMs: 15000 },
+  { id: 'delegation-barn', name: 'Delegation Barn', x: 1550, y: 320, width: 230, height: 160, color: '#6b8e23', emoji: '🚜', type: 'mine', reward: 6, cooldownMs: 11000 },
+  { id: 'gem-quarry', name: 'Gem Quarry', x: 2450, y: 300, width: 220, height: 160, color: '#b22222', emoji: '💎', type: 'mine', reward: 6, cooldownMs: 12000 },
+  { id: 'diamond-mine', name: 'Diamond Mine', x: 2450, y: 850, width: 220, height: 160, color: '#696969', emoji: '⛏️', type: 'mine', reward: 5, cooldownMs: 10000 },
+  { id: 'gold-forge', name: 'Gold Forge', x: 1550, y: 880, width: 200, height: 150, color: '#b8860b', emoji: '🔥', type: 'forge', reward: 8, cooldownMs: 15000 },
 
   // ——— Voltaire Governance Quarter ———
-  { id: 'catalyst-hall', name: 'Catalyst Hall', x: 2300, y: 2800, width: 260, height: 180, color: '#f472b6', emoji: '🗳️', type: 'bank', reward: 13, cooldownMs: 27000 },
-  { id: 'senate', name: 'Bull Senate', x: 2800, y: 3150, width: 280, height: 190, color: '#e879f9', emoji: '🏛️', type: 'tavern' },
-  { id: 'treasury', name: 'Treasury Vault', x: 3350, y: 2800, width: 220, height: 170, color: '#FFD700', emoji: '🔐', type: 'bank', reward: 16, cooldownMs: 32000 },
-  { id: 'arena-stadium', name: 'Bull Arena Stadium', x: 2250, y: 3350, width: 320, height: 220, color: '#ff4d6d', emoji: '⚔️', type: 'decoration' },
-  { id: 'academy', name: 'Bull Academy', x: 3400, y: 3350, width: 240, height: 170, color: '#60a5fa', emoji: '🎓', type: 'market', reward: 9, cooldownMs: 17000 },
+  { id: 'catalyst-hall', name: 'Catalyst Hall', x: 2300, y: 2800, width: 260, height: 180, color: '#c71585', emoji: '👑', type: 'bank', reward: 13, cooldownMs: 27000 },
+  { id: 'senate', name: 'Bull Senate', x: 2800, y: 3150, width: 280, height: 190, color: '#9932cc', emoji: '🏛️', type: 'tavern' },
+  { id: 'treasury', name: 'Treasury Vault', x: 3350, y: 2800, width: 220, height: 170, color: '#b8860b', emoji: '🔐', type: 'bank', reward: 16, cooldownMs: 32000 },
+  { id: 'arena-stadium', name: 'Bull Arena Stadium', x: 2250, y: 3350, width: 320, height: 220, color: '#b22222', emoji: '⚔️', type: 'decoration' },
+  { id: 'academy', name: 'Bull Academy', x: 3400, y: 3350, width: 240, height: 170, color: '#4169e1', emoji: '🎓', type: 'market', reward: 9, cooldownMs: 17000 },
 
   // ——— Midnight Ridge ———
-  { id: 'midnight-spire', name: 'Midnight Spire', x: 3250, y: 350, width: 150, height: 300, color: '#8b5cf6', emoji: '🌌', type: 'tower' },
-  { id: 'shadow-market', name: 'Shadow Market', x: 3000, y: 800, width: 220, height: 160, color: '#a855f7', emoji: '🕯️', type: 'market', reward: 11, cooldownMs: 19000 },
-  { id: 'observatory', name: 'Rune Observatory', x: 3550, y: 800, width: 200, height: 170, color: '#c4b5fd', emoji: '🔭', type: 'forge', reward: 10, cooldownMs: 18000 },
+  { id: 'midnight-spire', name: 'Midnight Spire', x: 3250, y: 350, width: 150, height: 300, color: '#4b0082', emoji: '🌌', type: 'tower' },
+  { id: 'shadow-market', name: 'Shadow Market', x: 3000, y: 800, width: 220, height: 160, color: '#800080', emoji: '🕯️', type: 'market', reward: 11, cooldownMs: 19000 },
+  { id: 'observatory', name: 'Rune Observatory', x: 3550, y: 800, width: 200, height: 170, color: '#9370db', emoji: '🔭', type: 'forge', reward: 10, cooldownMs: 18000 },
 
   // ——— Genesis Wilds ———
-  { id: 'genesis-shrine', name: 'Genesis Shrine', x: 380, y: 380, width: 180, height: 160, color: '#5ce65c', emoji: '⛩️', type: 'decoration' },
-  { id: 'lumber-camp', name: 'Bull Lumber Camp', x: 760, y: 620, width: 220, height: 150, color: '#a3e635', emoji: '🪓', type: 'mine', reward: 6, cooldownMs: 11000 },
-  { id: 'wild-market', name: 'Wilds Trading Post', x: 320, y: 850, width: 210, height: 150, color: '#44FF44', emoji: '🏪', type: 'market', reward: 7, cooldownMs: 14000 },
+  { id: 'genesis-shrine', name: 'Genesis Shrine', x: 380, y: 380, width: 180, height: 160, color: '#228b22', emoji: '⛩️', type: 'decoration' },
+  { id: 'lumber-camp', name: 'Bull Lumber Camp', x: 760, y: 620, width: 220, height: 150, color: '#556b2f', emoji: '🪓', type: 'mine', reward: 6, cooldownMs: 11000 },
+  { id: 'wild-market', name: 'Wilds Trading Post', x: 320, y: 850, width: 210, height: 150, color: '#32cd32', emoji: '🛖', type: 'market', reward: 7, cooldownMs: 14000 },
 
   // ——— Landmarks / decoration ———
-  { id: 'fountain', name: 'Ouroboros Fountain', x: 1900, y: 1900, width: 200, height: 200, color: '#00BBFF', emoji: '⛲', type: 'decoration' },
-  { id: 'park', name: 'Central Bull Park', x: 1450, y: 2450, width: 300, height: 220, color: '#228B22', emoji: '🌳', type: 'decoration' },
-  { id: 'tower-nw', name: 'North Watch Tower', x: 120, y: 120, width: 110, height: 180, color: '#667788', emoji: '🗼', type: 'tower' },
-  { id: 'tower-ne', name: 'East Beacon', x: 3780, y: 120, width: 110, height: 180, color: '#667788', emoji: '🔦', type: 'tower' },
-  { id: 'tower-sw', name: 'South Keep', x: 120, y: 3780, width: 110, height: 170, color: '#667788', emoji: '🏰', type: 'tower' },
-  { id: 'tower-se', name: 'Frontier Post', x: 3780, y: 3780, width: 110, height: 170, color: '#667788', emoji: '🧭', type: 'tower' },
+  { id: 'fountain', name: 'Ouroboros Fountain', x: 1900, y: 1900, width: 200, height: 200, color: '#4682b4', emoji: '⛲', type: 'decoration' },
+  { id: 'park', name: 'Central Bull Park', x: 1450, y: 2450, width: 300, height: 220, color: '#006400', emoji: '🌳', type: 'decoration' },
+  { id: 'tower-nw', name: 'North Watch Tower', x: 120, y: 120, width: 110, height: 180, color: '#708090', emoji: '🏰', type: 'tower' },
+  { id: 'tower-ne', name: 'East Beacon', x: 3780, y: 120, width: 110, height: 180, color: '#708090', emoji: '🔦', type: 'tower' },
+  { id: 'tower-sw', name: 'South Keep', x: 120, y: 3780, width: 110, height: 170, color: '#708090', emoji: '🏰', type: 'tower' },
+  { id: 'tower-se', name: 'Frontier Post', x: 3780, y: 3780, width: 110, height: 170, color: '#708090', emoji: '🧭', type: 'tower' },
 ];
 
 /** Ambient props — trees, lamps, holo-signs, water, cars. Purely visual. */
@@ -163,7 +163,7 @@ const PROPS: Prop[] = (() => {
       out.push({ kind: 'lamp', x, y: y + 45 });
     }
   }
-  const signs = ['STAKE $CSB', 'EPOCH 500', 'HYDRA ONLINE', 'BULL RUN 2026', 'DELEGATE NOW', 'CNFT DROP', 'VOTE CATALYST', 'RUNE POWER'];
+  const signs = ['GREAT HALL', 'MARKET', 'HARBOUR', 'FESTIVAL', 'TRIBUTE', 'ROYAL DECREE', 'COUNCIL', 'ALCHEMY'];
   signs.forEach((t, i) => out.push({ kind: 'holo', x: 400 + (i % 4) * 950, y: 640 + Math.floor(i / 4) * 1900, text: t }));
   return out;
 })();
@@ -200,61 +200,59 @@ function buildGroundLayer(): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = Math.round(CITY_WIDTH * GROUND_SCALE);
   c.height = Math.round(CITY_HEIGHT * GROUND_SCALE);
-  const x = c.getContext('2d')!;
+  const x = c.getContext('2d');
+  if (!x) return c;
   x.scale(GROUND_SCALE, GROUND_SCALE);
 
-  /* --- base terrain --- */
+  /* Low-poly grassland base — cached once for a smooth full-screen map. */
   const bg = x.createLinearGradient(0, 0, CITY_WIDTH, CITY_HEIGHT);
-  bg.addColorStop(0, '#0a1a2b');
-  bg.addColorStop(0.45, '#0f2a44');
-  bg.addColorStop(1, '#07131f');
+  bg.addColorStop(0, '#28452d');
+  bg.addColorStop(0.48, '#365d3c');
+  bg.addColorStop(1, '#1e382a');
   x.fillStyle = bg;
   x.fillRect(0, 0, CITY_WIDTH, CITY_HEIGHT);
 
-  /* --- paved plates: gives the floor real texture instead of a flat grid --- */
-  let s = 90210;
-  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
-  const PLATE = 160;
-  for (let py = 0; py < CITY_HEIGHT; py += PLATE) {
-    for (let px = 0; px < CITY_WIDTH; px += PLATE) {
+  let seed = 90210;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const tile = 120;
+  for (let py = 0; py < CITY_HEIGHT; py += tile) {
+    for (let px = 0; px < CITY_WIDTH; px += tile) {
       const t = rnd();
-      x.fillStyle = `rgba(${18 + t * 14 | 0},${34 + t * 20 | 0},${52 + t * 26 | 0},0.55)`;
-      x.fillRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
-      x.strokeStyle = 'rgba(120,200,255,0.05)';
-      x.lineWidth = 1;
-      x.strokeRect(px + 2, py + 2, PLATE - 4, PLATE - 4);
-      if (t > 0.86) {
-        x.fillStyle = 'rgba(0,212,255,0.05)';
-        x.fillRect(px + 20, py + 20, PLATE - 40, PLATE - 40);
+      x.fillStyle = `rgba(${38 + Math.floor(t * 14)},${70 + Math.floor(t * 26)},${40 + Math.floor(t * 14)},0.38)`;
+      x.beginPath();
+      x.moveTo(px, py + 10); x.lineTo(px + tile - 12, py); x.lineTo(px + tile, py + tile - 18);
+      x.lineTo(px + 14, py + tile); x.closePath(); x.fill();
+      if (t > 0.8) {
+        x.strokeStyle = 'rgba(194,190,104,0.16)';
+        x.lineWidth = 3;
+        for (let k = 18; k < tile; k += 24) {
+          x.beginPath(); x.moveTo(px + k, py + 14); x.lineTo(px + k - 12, py + tile - 14); x.stroke();
+        }
       }
     }
   }
 
-  /* --- district tinting --- */
   DISTRICTS.forEach(d => {
-    const g = x.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.4);
-    g.addColorStop(0, d.color + '2e');
+    const g = x.createRadialGradient(d.x + d.w / 2, d.y + d.h / 2, 40, d.x + d.w / 2, d.y + d.h / 2, Math.max(d.w, d.h) / 1.35);
+    g.addColorStop(0, d.color + '30');
     g.addColorStop(1, 'transparent');
     x.fillStyle = g;
     x.fillRect(d.x, d.y, d.w, d.h);
-    x.strokeStyle = d.color + '33';
-    x.lineWidth = 3;
-    x.setLineDash([18, 14]);
+    x.strokeStyle = d.color + '26';
+    x.lineWidth = 8;
     x.strokeRect(d.x, d.y, d.w, d.h);
-    x.setLineDash([]);
   });
 
-  /* --- water --- */
   WATER.forEach(w => {
     const wg = x.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
-    wg.addColorStop(0, 'rgba(22,132,176,0.8)');
-    wg.addColorStop(1, 'rgba(8,50,80,0.9)');
+    wg.addColorStop(0, 'rgba(55,151,164,0.9)');
+    wg.addColorStop(1, 'rgba(19,77,95,0.96)');
     x.fillStyle = wg;
-    x.beginPath(); x.roundRect(w.x, w.y, w.w, w.h, 40); x.fill();
-    x.strokeStyle = 'rgba(120,230,255,0.35)'; x.lineWidth = 3; x.stroke();
+    x.beginPath(); x.roundRect(w.x, w.y, w.w, w.h, 42); x.fill();
+    x.strokeStyle = 'rgba(157,198,151,0.5)'; x.lineWidth = 10; x.stroke();
   });
 
-  /* --- roads: asphalt, kerbs, lane dashes, crosswalks --- */
+  /* Broad cobbled paths with worn dirt verges. */
   ROADS.forEach(road => {
     const vertical = road.x1 === road.x2;
     const w = road.width;
@@ -262,128 +260,33 @@ function buildGroundLayer(): HTMLCanvasElement {
     const ry = vertical ? road.y1 : road.y1 - w / 2;
     const rw = vertical ? w : road.x2 - road.x1;
     const rh = vertical ? road.y2 - road.y1 : w;
-
-    // kerb / sidewalk
-    x.fillStyle = 'rgba(96,120,146,0.55)';
-    x.fillRect(rx - 10, ry - 10, rw + 20, rh + 20);
-    // asphalt
-    const ag = vertical
-      ? x.createLinearGradient(rx, 0, rx + rw, 0)
-      : x.createLinearGradient(0, ry, 0, ry + rh);
-    ag.addColorStop(0, '#232f3d');
-    ag.addColorStop(0.5, '#2e3d4e');
-    ag.addColorStop(1, '#232f3d');
-    x.fillStyle = ag;
+    x.fillStyle = 'rgba(101,75,48,0.84)';
+    x.fillRect(rx - 13, ry - 13, rw + 26, rh + 26);
+    const path = vertical ? x.createLinearGradient(rx, 0, rx + rw, 0) : x.createLinearGradient(0, ry, 0, ry + rh);
+    path.addColorStop(0, '#655f51'); path.addColorStop(0.5, '#918773'); path.addColorStop(1, '#5a5549');
+    x.fillStyle = path;
     x.fillRect(rx, ry, rw, rh);
-    // neon kerb glow
-    x.strokeStyle = 'rgba(0,212,255,0.22)';
-    x.lineWidth = 2;
-    x.strokeRect(rx, ry, rw, rh);
-    // centre lane dashes
-    x.strokeStyle = 'rgba(255,205,60,0.5)';
-    x.lineWidth = 4;
-    x.setLineDash([40, 34]);
-    x.beginPath();
-    if (vertical) { x.moveTo(road.x1, road.y1); x.lineTo(road.x1, road.y2); }
-    else { x.moveTo(road.x1, road.y1); x.lineTo(road.x2, road.y1); }
-    x.stroke();
-    x.setLineDash([]);
-    // crosswalks every 800px
-    x.fillStyle = 'rgba(220,240,255,0.28)';
-    if (vertical) {
-      for (let y = road.y1 + 400; y < road.y2; y += 800)
-        for (let i = 0; i < 5; i++) x.fillRect(rx + 4 + i * (w / 5), y, w / 8, 26);
-    } else {
-      for (let xx = road.x1 + 400; xx < road.x2; xx += 800)
-        for (let i = 0; i < 5; i++) x.fillRect(xx, ry + 4 + i * (w / 5), 26, w / 8);
+    x.strokeStyle = 'rgba(39,34,27,0.66)'; x.lineWidth = 3; x.strokeRect(rx, ry, rw, rh);
+    x.strokeStyle = 'rgba(226,213,177,0.24)'; x.lineWidth = 2;
+    const length = vertical ? rh : rw;
+    for (let n = 12; n < length; n += 42) {
+      x.beginPath();
+      if (vertical) { x.moveTo(rx + 5, ry + n); x.lineTo(rx + rw - 5, ry + n + (n % 4)); }
+      else { x.moveTo(rx + n, ry + 5); x.lineTo(rx + n + (n % 4), ry + rh - 5); }
+      x.stroke();
     }
   });
 
-  /* --- spawn plaza floor --- */
+  /* Castle-green gathering circle. */
   const pg = x.createRadialGradient(SPAWN_X, SPAWN_Y, 30, SPAWN_X, SPAWN_Y, 340);
-  pg.addColorStop(0, 'rgba(0,212,255,0.20)');
-  pg.addColorStop(1, 'transparent');
-  x.fillStyle = pg;
-  x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, 340, 0, Math.PI * 2); x.fill();
-  x.strokeStyle = 'rgba(0,212,255,0.4)';
-  x.lineWidth = 4;
+  pg.addColorStop(0, 'rgba(220,190,105,0.22)'); pg.addColorStop(1, 'transparent');
+  x.fillStyle = pg; x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, 340, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = 'rgba(211,195,147,0.55)'; x.lineWidth = 5;
   for (let r = 120; r <= 300; r += 90) { x.beginPath(); x.arc(SPAWN_X, SPAWN_Y, r, 0, Math.PI * 2); x.stroke(); }
 
   groundLayer = c;
   return c;
 }
-
-/** Traffic — deterministic cars that drive the road grid. */
-const CAR_COLORS = ['#ff5a5a', '#ffd84d', '#57e0ff', '#8b5cf6', '#34d399', '#f97316', '#e2e8f0'];
-const CARS = (() => {
-  let s = 24681;
-  const rnd = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
-  return ROADS.flatMap((road, ri) => {
-    const n = 4;
-    return Array.from({ length: n }, (_, i) => ({
-      ri,
-      t: rnd(),
-      speed: 0.012 + rnd() * 0.022,
-      dir: i % 2 === 0 ? 1 : -1,
-      lane: i % 2 === 0 ? 1 : -1,
-      color: CAR_COLORS[Math.floor(rnd() * CAR_COLORS.length)],
-    }));
-  });
-})();
-
-function drawTraffic(ctx: CanvasRenderingContext2D, time: number, inView: (x: number, y: number) => boolean) {
-  CARS.forEach(car => {
-    const road = ROADS[car.ri];
-    const vertical = road.x1 === road.x2;
-    const len = vertical ? road.y2 - road.y1 : road.x2 - road.x1;
-    let prog = (car.t + time * car.speed * (car.dir > 0 ? 1 : -1)) % 1;
-    if (prog < 0) prog += 1;
-    const along = prog * len;
-    const off = car.lane * (road.width * 0.22);
-    const cx = vertical ? road.x1 + off : road.x1 + along;
-    const cy = vertical ? road.y1 + along : road.y1 + off;
-    if (!inView(cx, cy)) return;
-
-    const L = 34, W = 18;
-    ctx.save();
-    ctx.translate(cx, cy);
-    if (vertical) ctx.rotate(Math.PI / 2);
-    // shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath(); ctx.ellipse(0, 7, L * 0.55, W * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-    // body
-    const bg = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
-    bg.addColorStop(0, car.color);
-    bg.addColorStop(1, 'rgba(10,16,26,0.95)');
-    ctx.fillStyle = bg;
-    ctx.beginPath(); ctx.roundRect(-L / 2, -W / 2, L, W, 6); ctx.fill();
-    // cabin
-    ctx.fillStyle = 'rgba(180,235,255,0.55)';
-    ctx.beginPath(); ctx.roundRect(-L * 0.16, -W * 0.34, L * 0.42, W * 0.68, 3); ctx.fill();
-    // head / tail lights
-    const facing = car.dir > 0 ? 1 : -1;
-    ctx.fillStyle = 'rgba(255,245,190,0.95)';
-    ctx.beginPath(); ctx.arc((L / 2 - 3) * facing, -W * 0.28, 2.6, 0, Math.PI * 2);
-    ctx.arc((L / 2 - 3) * facing, W * 0.28, 2.6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,80,80,0.9)';
-    ctx.beginPath(); ctx.arc((-L / 2 + 3) * facing, -W * 0.28, 2.2, 0, Math.PI * 2);
-    ctx.arc((-L / 2 + 3) * facing, W * 0.28, 2.2, 0, Math.PI * 2); ctx.fill();
-    // headlight cone
-    const cone = ctx.createLinearGradient((L / 2) * facing, 0, (L / 2 + 70) * facing, 0);
-    cone.addColorStop(0, 'rgba(255,240,180,0.22)');
-    cone.addColorStop(1, 'transparent');
-    ctx.fillStyle = cone;
-    ctx.beginPath();
-    ctx.moveTo((L / 2) * facing, -W * 0.34);
-    ctx.lineTo((L / 2 + 70) * facing, -W * 1.1);
-    ctx.lineTo((L / 2 + 70) * facing, W * 1.1);
-    ctx.lineTo((L / 2) * facing, W * 0.34);
-    ctx.closePath(); ctx.fill();
-    ctx.restore();
-  });
-}
-
-
 
 export default function BullCity() {
   const navigate = useNavigate();
@@ -1080,9 +983,6 @@ export default function BullCity() {
         }
       });
 
-      /* ---------- traffic ---------- */
-      drawTraffic(ctx, time, inView);
-
       /* ---------- spawn plaza pulse + sign ---------- */
       if (inView(SPAWN_X, SPAWN_Y)) {
         const plazaPulse = 1 + Math.sin(time * 1.5) * 0.05;
@@ -1091,10 +991,10 @@ export default function BullCity() {
         pg.addColorStop(1, 'transparent');
         ctx.fillStyle = pg;
         ctx.beginPath(); ctx.arc(SPAWN_X, SPAWN_Y, 340 * plazaPulse, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(0,212,255,0.7)';
-        ctx.font = 'bold 26px Arial';
+        ctx.fillStyle = 'rgba(255,215,0,0.8)';
+        ctx.font = 'bold 28px Serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🐂 CARDANO STAKE BULLS ZONE', SPAWN_X, SPAWN_Y - 360);
+        ctx.fillText('🐂 CARDANO STAKE BULLS CASTLE GREEN', SPAWN_X, SPAWN_Y - 360);
       }
 
 
@@ -1105,11 +1005,11 @@ export default function BullCity() {
         if (p.kind === 'tree') {
           ctx.fillStyle = 'rgba(0,0,0,0.35)';
           ctx.beginPath(); ctx.ellipse(p.x, p.y + 14 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#3b2a18';
+          ctx.fillStyle = '#5c4033';
           ctx.fillRect(p.x - 3 * s, p.y - 6 * s, 6 * s, 20 * s);
           const tg = ctx.createRadialGradient(p.x - 4 * s, p.y - 22 * s, 2, p.x, p.y - 16 * s, 22 * s);
-          tg.addColorStop(0, '#7ef7a8');
-          tg.addColorStop(1, '#12633a');
+          tg.addColorStop(0, '#4e7a35');
+          tg.addColorStop(1, '#2d4c1e');
           ctx.fillStyle = tg;
           ctx.beginPath(); ctx.arc(p.x, p.y - 18 * s, 18 * s, 0, Math.PI * 2); ctx.fill();
         } else if (p.kind === 'rock') {
@@ -1123,30 +1023,28 @@ export default function BullCity() {
           ctx.strokeRect(p.x - 14 * s, p.y - 14 * s, 28 * s, 28 * s);
           ctx.beginPath(); ctx.moveTo(p.x - 14 * s, p.y - 14 * s); ctx.lineTo(p.x + 14 * s, p.y + 14 * s); ctx.stroke();
         } else if (p.kind === 'lamp') {
-          ctx.strokeStyle = '#5b7488'; ctx.lineWidth = 4;
+          ctx.strokeStyle = '#5c4033'; ctx.lineWidth = 4;
           ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - 46); ctx.stroke();
           const flicker = 0.55 + Math.sin(time * 3 + i) * 0.12;
           const lg = ctx.createRadialGradient(p.x, p.y - 50, 0, p.x, p.y - 50, 60);
-          lg.addColorStop(0, `rgba(255,215,120,${flicker * 0.5})`);
+          lg.addColorStop(0, `rgba(255,140,0,${flicker * 0.6})`);
           lg.addColorStop(1, 'transparent');
           ctx.fillStyle = lg;
           ctx.beginPath(); ctx.arc(p.x, p.y - 50, 60, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ffe08a';
+          ctx.fillStyle = '#ff8c00';
           ctx.beginPath(); ctx.arc(p.x, p.y - 50, 6, 0, Math.PI * 2); ctx.fill();
         } else if (p.kind === 'holo') {
-          const float = Math.sin(time * 1.2 + i) * 6;
           ctx.save();
-          ctx.globalAlpha = 0.85;
-          ctx.fillStyle = 'rgba(0,212,255,0.12)';
-          ctx.strokeStyle = 'rgba(0,212,255,0.6)';
+          ctx.fillStyle = '#6f4e37';
+          ctx.fillRect(p.x - 2, p.y - 10, 4, 60);
+          ctx.fillStyle = '#8b5a2b';
+          ctx.strokeStyle = '#5c4033';
           ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.roundRect(p.x - 110, p.y - 34 + float, 220, 56, 10); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#7df9ff';
-          ctx.font = 'bold 20px Arial';
+          ctx.beginPath(); ctx.roundRect(p.x - 70, p.y - 40, 140, 40, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f3c9b1';
+          ctx.font = 'bold 15px Serif';
           ctx.textAlign = 'center';
-          ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 14;
-          ctx.fillText(p.text || '', p.x, p.y + 3 + float);
-          ctx.shadowBlur = 0;
+          ctx.fillText(p.text || '', p.x, p.y - 14);
           ctx.restore();
         }
       });
@@ -1155,7 +1053,7 @@ export default function BullCity() {
       for (let i = 0; i < 60; i++) {
         const px = vx0 + ((i * 137 + time * 12) % (VIEWPORT_W + 240));
         const py = vy0 + ((i * 211 + Math.sin(time * 0.8 + i) * 40) % (VIEWPORT_H + 240));
-        ctx.fillStyle = i % 3 === 0 ? 'rgba(255,215,0,0.25)' : 'rgba(0, 212, 255, 0.28)';
+        ctx.fillStyle = i % 3 === 0 ? 'rgba(255,255,200,0.15)' : 'rgba(100, 255, 100, 0.1)';
         ctx.beginPath();
         ctx.arc(px, py, 2, 0, Math.PI * 2);
         ctx.fill();
@@ -1244,7 +1142,7 @@ export default function BullCity() {
               const [cx2, cy2] = pt(u1, v1); const [dx2, dy2] = pt(u0, v1);
               ctx.moveTo(ax, ay); ctx.lineTo(bx2, by2); ctx.lineTo(cx2, cy2); ctx.lineTo(dx2, dy2);
               ctx.closePath();
-              ctx.fillStyle = lit ? `rgba(255,240,170,${flick})` : 'rgba(12,28,44,0.85)';
+              ctx.fillStyle = lit ? `rgba(255,160,50,${flick * 0.8})` : 'rgba(20,15,10,0.9)';
               ctx.fill();
               ctx.strokeStyle = 'rgba(0,0,0,0.35)';
               ctx.lineWidth = 1;
@@ -1278,27 +1176,40 @@ export default function BullCity() {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // roof detail — vents / antenna / neon rim
-        ctx.strokeStyle = 'rgba(0,212,255,0.55)';
-        ctx.lineWidth = 1.5;
+        // timber roof beams and stone trim
+        ctx.strokeStyle = 'rgba(55,35,21,0.72)';
+        ctx.lineWidth = 4;
         ctx.strokeRect(bx + ox + 10, topY + 10, bw - 20, bh - 20);
+        ctx.lineWidth = 2;
+        for (let beam = 28; beam < bw - 18; beam += 34) {
+          ctx.beginPath();
+          ctx.moveTo(bx + ox + beam, topY + 12);
+          ctx.lineTo(bx + ox + beam - 10, topY + bh - 12);
+          ctx.stroke();
+        }
         if (building.type === 'tower') {
-          const blink = 0.4 + Math.abs(Math.sin(time * 2)) * 0.6;
-          ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.moveTo(cx + ox, topY + bh / 2); ctx.lineTo(cx + ox, topY - 55); ctx.stroke();
-          ctx.fillStyle = `rgba(255,70,70,${blink})`;
-          ctx.beginPath(); ctx.arc(cx + ox, topY - 58, 6, 0, Math.PI * 2); ctx.fill();
+          const wave = Math.sin(time * 2 + building.x) * 5;
+          ctx.strokeStyle = '#4a3827'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(cx + ox, topY + bh / 2); ctx.lineTo(cx + ox, topY - 62); ctx.stroke();
+          ctx.fillStyle = building.color;
+          ctx.beginPath();
+          ctx.moveTo(cx + ox, topY - 60);
+          ctx.lineTo(cx + ox + 34 + wave, topY - 48);
+          ctx.lineTo(cx + ox, topY - 34);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(244,224,153,0.9)';
+          ctx.beginPath(); ctx.arc(cx + ox + 8, topY - 48, 3, 0, Math.PI * 2); ctx.fill();
         }
 
         // ——— emoji sign floating over the roof ———
         const bob = Math.sin(time * 1.6 + building.x) * 4;
-        ctx.font = '30px Arial';
+        ctx.font = '30px Serif';
         ctx.textAlign = 'center';
         ctx.fillText(building.emoji, cx + ox, topY + bh / 2 + 10 + bob);
 
         // ——— name plate at street level ———
         ctx.fillStyle = '#fff';
-        ctx.font = isNear ? 'bold 14px Arial' : '12px Arial';
+        ctx.font = isNear ? 'bold 14px Serif' : '12px Serif';
         ctx.shadowColor = building.color;
         ctx.shadowBlur = isNear ? 10 : 4;
         ctx.fillText(building.name, cx, by + bh + 20);
@@ -1309,7 +1220,7 @@ export default function BullCity() {
           const used = cmkrToday[building.id] || 0;
           const left = Math.max(0, CMKR_DAILY_PER_PLACE - used);
           const owlLeft = left > 0 && cmkrGlobal < CMKR_MONTHLY_CAP;
-          ctx.font = 'bold 11px Arial';
+          ctx.font = 'bold 11px Serif';
           ctx.fillStyle = owlLeft ? '#00FF88' : '#64748b';
           ctx.fillText(owlLeft ? `🦉 ${left}/${CMKR_DAILY_PER_PLACE} CMKR LEFT` : '🦉 refills in 1h', cx + ox, topY - 12);
         }
@@ -1317,7 +1228,7 @@ export default function BullCity() {
         // ——— interaction prompt ———
         if (building.reward && isNear) {
           ctx.fillStyle = '#FFD700';
-          ctx.font = 'bold 12px Arial';
+          ctx.font = 'bold 12px Serif';
           ctx.fillText(`⚡ PRESS E/SPACE (+${building.reward} 💎)`, cx, by + bh + 38);
 
           const cooldownLeft = workCooldowns[building.id] ?
@@ -1334,7 +1245,7 @@ export default function BullCity() {
         const lx = d.x + 22, ly = d.y + 38;
         if (!inView(d.x + d.w / 2, d.y + d.h / 2) && !inView(lx, ly)) return;
         ctx.textAlign = 'left';
-        ctx.font = 'bold 22px Arial';
+        ctx.font = 'bold 22px Serif';
         const w = ctx.measureText(d.label).width;
         ctx.fillStyle = 'rgba(4,12,22,0.72)';
         ctx.beginPath();
@@ -1367,12 +1278,12 @@ export default function BullCity() {
         ctx.arc(diamond.x, diamond.y, 25 * pulse, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.font = '28px Arial';
+        ctx.font = '28px Serif';
         ctx.textAlign = 'center';
         ctx.fillText(isGold ? '🪙' : '💎', diamond.x, diamond.y + 8);
         
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px Arial';
+        ctx.font = 'bold 10px Serif';
         ctx.shadowColor = isGold ? '#FFD700' : '#00D4FF';
         ctx.shadowBlur = 4;
         ctx.fillText(`+${diamond.value}`, diamond.x, diamond.y + 28);
@@ -1394,7 +1305,7 @@ export default function BullCity() {
         ctx.beginPath();
         ctx.arc(myPosition.x, myPosition.y, 60 + Math.sin(time * 8) * 10, 0, Math.PI * 2);
         ctx.fill();
-        ctx.font = 'bold 20px Arial';
+        ctx.font = 'bold 20px Serif';
         ctx.textAlign = 'center';
         ctx.fillText('⚒️', myPosition.x, myPosition.y - 80);
       }
@@ -1462,7 +1373,7 @@ export default function BullCity() {
         (VIEWPORT_H / CITY_HEIGHT) * mmH
       );
 
-      ctx.font = '9px Arial';
+      ctx.font = '9px Serif';
       ctx.fillStyle = '#FF9900';
       ctx.textAlign = 'center';
       ctx.fillText('MINIMAP', mmX + mmW / 2, mmY + mmH + 12);
@@ -1499,7 +1410,7 @@ export default function BullCity() {
       ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
       ctx.shadowBlur = 0;
 
-      ctx.font = isMe ? 'bold 13px Arial' : '11px Arial';
+      ctx.font = isMe ? 'bold 13px Serif' : '11px Serif';
       ctx.textAlign = 'center';
       const label = name || 'Player';
       const lw = ctx.measureText(label).width + 14;
@@ -1583,7 +1494,7 @@ export default function BullCity() {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    ctx.font = isMe ? 'bold 13px Arial' : '11px Arial';
+    ctx.font = isMe ? 'bold 13px Serif' : '11px Serif';
     ctx.textAlign = 'center';
     const nameText = name || 'Player';
     const nameW = ctx.measureText(nameText).width + 14;
@@ -1672,7 +1583,7 @@ export default function BullCity() {
               <div className="text-xs text-slate-500">Lv 1 · No NFT needed</div>
             </Card>
           </div>
-          <p className="text-center text-xs text-cyan-200/40">Free entry — mine 🦉 CMKR at every place, 5 owls per place each day.</p>
+          <p className="text-center text-xs text-cyan-200/40">Free entry — mine 🦉 CMKR at every place, 5 owls per place each hour.</p>
         </div>
       </div>
     );
