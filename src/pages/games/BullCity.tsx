@@ -69,14 +69,14 @@ const CMKR_RESET_MS = 60 * 60 * 1000;                    // each place refills 1
 
 /** Themed districts painted under the city grid. */
 const DISTRICTS: { name: string; x: number; y: number; w: number; h: number; color: string; label: string }[] = [
-  { name: 'Stake Plaza', x: 1550, y: 1550, w: 900, h: 900, color: '#00d4ff', label: '🐂 CARDANO STAKE BULLS PLAZA' },
-  { name: 'Epoch Financial', x: 2500, y: 1350, w: 1350, h: 1050, color: '#ffd700', label: '🏦 EPOCH FINANCIAL DISTRICT' },
-  { name: 'Plutus Tech Park', x: 150, y: 1300, w: 1300, h: 1100, color: '#9933ff', label: '🧪 PLUTUS TECH PARK' },
-  { name: 'Hydra Harbour', x: 150, y: 2550, w: 1650, h: 1250, color: '#22d3ee', label: '🌊 HYDRA HARBOUR' },
-  { name: 'Ouroboros Fields', x: 1400, y: 150, w: 1400, h: 1050, color: '#00ff88', label: '🌾 OUROBOROS FIELDS' },
-  { name: 'Voltaire Quarter', x: 2000, y: 2600, w: 1800, h: 1200, color: '#f472b6', label: '🏛️ VOLTAIRE GOVERNANCE QUARTER' },
-  { name: 'Midnight Ridge', x: 2900, y: 200, w: 950, h: 950, color: '#8b5cf6', label: '🌌 MIDNIGHT RIDGE' },
-  { name: 'Genesis Wilds', x: 200, y: 200, w: 1000, h: 900, color: '#5ce65c', label: '🌲 GENESIS WILDS' },
+  { name: 'Stake Plaza', x: 1550, y: 1550, w: 900, h: 900, color: '#00d4ff', label: '🏰 GREAT HALL PLAZA' },
+  { name: 'Epoch Financial', x: 2500, y: 1350, w: 1350, h: 1050, color: '#ffd700', label: '💰 MERCHANT QUARTER' },
+  { name: 'Plutus Tech Park', x: 150, y: 1300, w: 1300, h: 1100, color: '#9933ff', label: '🧪 ALCHEMIST CIRCLE' },
+  { name: 'Hydra Harbour', x: 150, y: 2550, w: 1650, h: 1250, color: '#22d3ee', label: '⚓ WHISPERING HARBOUR' },
+  { name: 'Ouroboros Fields', x: 1400, y: 150, w: 1400, h: 1050, color: '#00ff88', label: '🌾 ANCIENT HARVEST' },
+  { name: 'Voltaire Quarter', x: 2000, y: 2600, w: 1800, h: 1200, color: '#f472b6', label: '🏛️ KINGS QUARTER' },
+  { name: 'Midnight Ridge', x: 2900, y: 200, w: 950, h: 950, color: '#8b5cf6', label: '⛰️ SHADOW PEAKS' },
+  { name: 'Genesis Wilds', x: 200, y: 200, w: 1000, h: 900, color: '#5ce65c', label: '🌲 FORGOTTEN WILDS' },
 ];
 
 const BUILDINGS: Building[] = [
