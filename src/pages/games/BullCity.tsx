@@ -1176,16 +1176,29 @@ export default function BullCity() {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // roof detail — vents / antenna / neon rim
-        ctx.strokeStyle = 'rgba(0,212,255,0.55)';
-        ctx.lineWidth = 1.5;
+        // timber roof beams and stone trim
+        ctx.strokeStyle = 'rgba(55,35,21,0.72)';
+        ctx.lineWidth = 4;
         ctx.strokeRect(bx + ox + 10, topY + 10, bw - 20, bh - 20);
+        ctx.lineWidth = 2;
+        for (let beam = 28; beam < bw - 18; beam += 34) {
+          ctx.beginPath();
+          ctx.moveTo(bx + ox + beam, topY + 12);
+          ctx.lineTo(bx + ox + beam - 10, topY + bh - 12);
+          ctx.stroke();
+        }
         if (building.type === 'tower') {
-          const blink = 0.4 + Math.abs(Math.sin(time * 2)) * 0.6;
-          ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.moveTo(cx + ox, topY + bh / 2); ctx.lineTo(cx + ox, topY - 55); ctx.stroke();
-          ctx.fillStyle = `rgba(255,70,70,${blink})`;
-          ctx.beginPath(); ctx.arc(cx + ox, topY - 58, 6, 0, Math.PI * 2); ctx.fill();
+          const wave = Math.sin(time * 2 + building.x) * 5;
+          ctx.strokeStyle = '#4a3827'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(cx + ox, topY + bh / 2); ctx.lineTo(cx + ox, topY - 62); ctx.stroke();
+          ctx.fillStyle = building.color;
+          ctx.beginPath();
+          ctx.moveTo(cx + ox, topY - 60);
+          ctx.lineTo(cx + ox + 34 + wave, topY - 48);
+          ctx.lineTo(cx + ox, topY - 34);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(244,224,153,0.9)';
+          ctx.beginPath(); ctx.arc(cx + ox + 8, topY - 48, 3, 0, Math.PI * 2); ctx.fill();
         }
 
         // ——— emoji sign floating over the roof ———
