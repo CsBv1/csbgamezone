@@ -27,6 +27,7 @@ const SUPPORTED_WALLETS = [
   { id: 'nufi', name: 'NuFi', aliases: ['nufi'] },
   { id: 'begin', name: 'Begin', aliases: ['begin'] },
   { id: 'yoroi', name: 'Yoroi', aliases: ['yoroi'] },
+  { id: '1am', name: '1AM', aliases: ['1am'] },
 ];
 
 export const CardanoWalletConnector = ({ 
