@@ -120,8 +120,8 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Trophy className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent">Cardano Stake Bulls</h1>
+              <img src="/favicon.png" alt="CsB token logo" className="w-8 h-8 rounded-full object-cover" />
+              <h1 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent">CsB Game Zone</h1>
             </div>
             {isConnected && <CreditBar />}
           </div>
