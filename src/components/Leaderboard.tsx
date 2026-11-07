@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Gem, Trophy, Award } from "lucide-react";
+import { Trophy, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaderboardEntry {
@@ -215,6 +215,7 @@ export const Leaderboard = () => {
   return (
     <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
       <div className="flex items-center gap-3 mb-4">
+        <img src="/favicon.png" alt="CsB token logo" className="w-6 h-6 rounded-full object-cover" />
         <Trophy className="w-6 h-6 text-yellow-500" />
         <h3 className="text-xl font-bold text-foreground">CsB Leaderboard Most Hodl💎🐂</h3>
       </div>
@@ -250,6 +251,11 @@ export const Leaderboard = () => {
                 <div className="flex items-center gap-3 flex-1 min-w-0 relative z-10">
                   {/* Rank with Arena entry + Bulls */}
                   <div className="flex flex-col items-center min-w-[3rem]">
+                    <img
+                      src="/favicon.png"
+                      alt="CsB token logo"
+                      className="w-4 h-4 rounded-full object-cover mb-1 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
+                    />
                     {isHolder && (
                       <button
                         type="button"
@@ -309,10 +315,14 @@ export const Leaderboard = () => {
                   </div>
                 </div>
                 <div className="text-right ml-4 relative z-10">
-                  <div className="flex items-center gap-1 mb-1">
-                    <Gem className="w-4 h-4 text-cyan-400" />
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <img
+                      src="/favicon.png"
+                      alt="CsB token logo"
+                      className="w-4 h-4 rounded-full object-cover"
+                    />
                     <span className="font-bold gradient-gold bg-clip-text text-transparent">
-                      {Number(entry.csb_tokens || 0).toLocaleString()} CsB
+                      {Number(entry.csb_tokens || 0).toLocaleString()}
                     </span>
                   </div>
                   {diamondGap > 0 && (
