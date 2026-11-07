@@ -194,7 +194,7 @@ export const Leaderboard = () => {
       <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
         <div className="flex items-center gap-3 mb-4">
           <Trophy className="w-6 h-6 text-yellow-500" />
-          <h3 className="text-xl font-bold text-foreground">CsB Leaderboard Most Hodl💎🐂</h3>
+          <h3 className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">CsB Leaderboard Most Hodl<img src="/favicon.png" alt="CsB token logo" className="w-6 h-6 rounded-full object-cover" /></h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -215,9 +215,8 @@ export const Leaderboard = () => {
   return (
     <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
       <div className="flex items-center gap-3 mb-4">
-        <img src="/favicon.png" alt="CsB token logo" className="w-6 h-6 rounded-full object-cover" />
         <Trophy className="w-6 h-6 text-yellow-500" />
-        <h3 className="text-xl font-bold text-foreground">CsB Leaderboard Most Hodl💎🐂</h3>
+        <h3 className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">CsB Leaderboard Most Hodl<img src="/favicon.png" alt="CsB token logo" className="w-6 h-6 rounded-full object-cover" /></h3>
       </div>
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {leaderboard.length === 0 ? (
@@ -251,11 +250,6 @@ export const Leaderboard = () => {
                 <div className="flex items-center gap-3 flex-1 min-w-0 relative z-10">
                   {/* Rank with Arena entry + Bulls */}
                   <div className="flex flex-col items-center min-w-[3rem]">
-                    <img
-                      src="/favicon.png"
-                      alt="CsB token logo"
-                      className="w-4 h-4 rounded-full object-cover mb-1 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
-                    />
                     {isHolder && (
                       <button
                         type="button"
