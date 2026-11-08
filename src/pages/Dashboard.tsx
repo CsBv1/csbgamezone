@@ -504,39 +504,54 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Community Links */}
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-6 text-center gradient-gold bg-clip-text text-transparent">🐂 Cardano Stake Bulls Community 🐂</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-              {[
-                { href: "https://stakecsb.lovable.app", icon: TrendingUp, title: "Stake Platform", desc: "Stake your ADA!", color: "primary" },
-                { href: "https://csb-mint.netlify.app", icon: Key, title: "Mint Bull 🔑", desc: "Mint on the new launch pad!", color: "amber" },
-                { href: "https://discord.gg/FCyYYwryYW", icon: Users, title: "Discord", desc: "Join our Discord!", color: "indigo" },
-                { href: "https://x.com/worldofgaia5art?s=21&t=mSdrl7vSEhr5s0minUvc-w", icon: Globe, title: "Twitter / X", desc: "Follow us!", color: "blue" },
-                { href: "https://csbpubliclibrary.lovable.app/", icon: ExternalLink, title: "Library", desc: "Read the public library", color: "cyan" },
-                { href: "https://csbmerch.lovable.app/", icon: Sparkles, title: "Merchandise", desc: "Shop official merch", color: "primary" },
-              ].map(link => (
-                <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className="group">
-                  <Card className="p-4 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40 hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-full bg-primary/20"><link.icon className="w-6 h-6 text-primary" /></div>
-                      <h3 className="font-bold text-foreground">{link.title}</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{link.desc}</p>
-                    <div className="flex items-center gap-1 text-primary text-xs mt-2"><span>Visit</span><ExternalLink className="w-3 h-3" /></div>
-                  </Card>
-                </a>
-              ))}
+          {/* Footer — styled like stakecsb.lovable.app */}
+          <footer className="mt-12 pt-8 border-t border-border/50">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 max-w-6xl mx-auto">
+              <div>
+                <p className="font-bold text-foreground">CsB Game Zone</p>
+                <p className="text-xs font-semibold tracking-[0.25em] text-amber-400 mt-1">PLAY · LEVEL · EARN</p>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Created by CsB Founder{" "}
+                  <span className="font-bold text-amber-400">Nick G</span> ♡
+                </p>
+              </div>
+              <div className="md:text-right">
+                <p className="text-xs font-semibold tracking-[0.25em] text-muted-foreground mb-3">MORE FROM CSB</p>
+                <div className="flex flex-wrap md:justify-end items-center gap-x-2 gap-y-2 max-w-xl">
+                  {[
+                    { href: "https://discord.gg/FCyYYwryYW", label: "Join Us" },
+                    { href: "https://csb-mint.netlify.app", label: "Mint Your Bull" },
+                    { href: "https://www.snek.fun/token/52419331e752bc3a7c6ee74d76f1169df1535d77d07da382c62b0bab435342", label: "CsB on Snek.fun" },
+                    { href: "https://www.snek.fun/token/a6b92cdf28af39782e8baecb712298e0bc91787375569b1f0c8fd703.244353427631", label: "CsBv1 on Snek.fun" },
+                    { href: "https://cnft-launch.lovable.app/", label: "CNFT Launch Pad" },
+                    { href: "https://csbswap.lovable.app/cnft-swap", label: "CNFT + Token Swap" },
+                    { href: "https://stakecsb.lovable.app", label: "Stake Platform" },
+                    { href: "https://csbpubliclibrary.lovable.app/", label: "Library" },
+                    { href: "https://csbmerch.lovable.app/", label: "Merch" },
+                    { href: "https://broadcastlive.lovable.app/", label: "Broadcast Live" },
+                    { href: "https://x.com/csbstake?s=11", label: "@CsbStake" },
+                    { href: "https://youtube.com/@stake-bulls?si=4cPr55O9_gtGbMhu", label: "@stake-bulls" },
+                  ].map((link, i, arr) => (
+                    <span key={link.href} className="flex items-center gap-2">
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                      >
+                        {link.label}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      {i < arr.length - 1 && <span className="text-amber-400/60">•</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Founder credit */}
-          <div className="mt-8 pt-6 border-t border-border/50 text-center">
-            <p className="text-sm text-muted-foreground">
-              Made by Cardano Stake Bull founder{" "}
-              <span className="font-bold gradient-gold bg-clip-text text-transparent">Nick G</span> 🐂
-            </p>
-          </div>
+            <div className="mt-8 pt-4 border-t border-border/50 max-w-6xl mx-auto">
+              <p className="text-xs text-muted-foreground">© 2026 Cardano Stake Bulls.</p>
+            </div>
+          </footer>
         </div>
       </main>
     </div>
