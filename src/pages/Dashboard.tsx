@@ -319,10 +319,12 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Game categories — side-by-side scroll boxes */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Diamond Earning Games */}
-          <div>
-            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">💎 Earn Diamonds & Credits</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="p-4 bg-card/80 border-2 border-primary/40 shadow-xl">
+            <h2 className="text-xl font-bold mb-4 gradient-gold bg-clip-text text-transparent text-center">💎 Earn Diamonds & Credits</h2>
+            <div className="h-[560px] overflow-y-auto snap-y snap-mandatory space-y-4 pr-1">
               {[
                 { id: 'bull-mining', name: '🐂 Bull Mining Idle', desc: 'Bulls work together mining diamonds & credits!', gradient: 'from-emerald-600 to-green-700', icon: Pickaxe, btn: 'Start Mining' },
                 { id: 'milk-the-bull', name: '🥛 Milk The Bull', desc: 'Click to milk! Build streaks for bonuses!', gradient: 'from-blue-600 to-cyan-700', icon: Gem, btn: 'Start Milking' },
@@ -337,7 +339,7 @@ const Dashboard = () => {
                 { id: 'holders-arena', name: '👑 Holders Arena', desc: 'Exclusive RPG arena for CSB Bull holders!', gradient: 'from-yellow-500 to-amber-700', icon: Crown, btn: 'Enter Arena', holdersOnly: true },
 
               ].map((game: any) => (
-                <Card key={game.id} className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl relative ${bullsOwned > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-primary hover:border-accent'}`}
+                <Card key={game.id} className={`group overflow-hidden bg-card border-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer shadow-xl relative snap-start ${bullsOwned > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-primary hover:border-accent'}`}
                   onClick={() => {
                     if (game.holdersOnly && totalBulls === 0) {
                       toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" });
@@ -359,13 +361,13 @@ const Dashboard = () => {
                 </Card>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Advanced Key-Only Games */}
-          <div>
-            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent text-center">🔑 Advanced Key-Only Games</h2>
-            <p className="text-center text-muted-foreground mb-6">Exclusive games requiring keys. Higher stakes, bigger rewards!</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="p-4 bg-card/80 border-2 border-yellow-500/40 shadow-xl">
+            <h2 className="text-xl font-bold mb-1 gradient-gold bg-clip-text text-transparent text-center">🔑 Advanced Key-Only Games</h2>
+            <p className="text-center text-muted-foreground text-xs mb-4">Exclusive games requiring keys. Higher stakes, bigger rewards!</p>
+            <div className="h-[560px] overflow-y-auto snap-y snap-mandatory space-y-4 pr-1">
               {[
                 { title: "⚔️ Bull Gauntlet", desc: "Battle through waves!", icon: Trophy, gradient: "from-orange-600 to-red-700", route: "bull-gauntlet", btn: "Enter Arena" },
                 { title: "💎 Diamond Fortress", desc: "Defend and collect!", icon: Gem, gradient: "from-cyan-600 to-blue-700", route: "diamond-fortress", btn: "Enter Fortress" },
@@ -382,21 +384,18 @@ const Dashboard = () => {
                 { title: "🔐 Risk Vault", desc: "High-risk!", icon: Lock, gradient: "from-red-600 to-orange-700", route: "risk-vault", btn: "Take Risk" },
                 { title: "⚡ Speed Run", desc: "Reflex arcade!", icon: Gauge, gradient: "from-yellow-600 to-amber-700", route: "speed-run", btn: "Start Run" },
               ].map(g => (
-                <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
+                <div key={g.route} className="snap-start">
+                <GameCard title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => navigate(`/games/${g.route}`)} badge="🔑 KEY REQUIRED" badgeColor="bg-yellow-500 text-black"
                   buttonText={g.btn} buttonVariant="key" isHolder={bullsOwned > 0} />
+                </div>
               ))}
             </div>
-          </div>
-
-          {/* Subscription */}
-          <div className="max-w-2xl mx-auto space-y-4">
-            <SubscriptionBox bullsOwned={bullsOwned} />
-          </div>
+          </Card>
 
           {/* Holder-Only Strategy Games */}
-          <div>
-            <h2 className="text-3xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">👑 Holder-Only Strategy Games (Earn 🔑 Keys)</h2>
+          <Card className="p-4 bg-card/80 border-2 border-amber-500/40 shadow-xl">
+            <h2 className="text-xl font-bold mb-4 gradient-gold bg-clip-text text-transparent text-center">👑 Holder-Only Strategy Games (Earn 🔑 Keys)</h2>
             {totalBulls === 0 && (
               <div className="mb-4 p-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-xl border border-amber-500/40 flex items-center gap-3">
                 <Lock className="w-6 h-6 text-amber-400" />
@@ -405,7 +404,7 @@ const Dashboard = () => {
                 </p>
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="h-[560px] overflow-y-auto snap-y snap-mandatory space-y-4 pr-1">
               {[
                 { title: "⚔️ CSB Battle (1P)", desc: "Fight AI with your bulls, win Rune Power!", icon: Swords, gradient: "from-sky-500 to-cyan-700", route: "csb/battle-arena?mode=ai", btn: "Battle AI", external: true },
                 { title: "🎮 CSB Battle (PvP)", desc: "1v1 multiplayer · 3x Rune Power rewards!", icon: Users, gradient: "from-sky-600 to-blue-700", route: "csb/battle-arena?mode=pvp", btn: "Find Match", external: true },
@@ -482,12 +481,20 @@ const Dashboard = () => {
                 { title: "🏰 Bull Fortress", desc: "Tower defense waves!", icon: Shield, gradient: "from-slate-800 to-gray-900", route: "bull-fortress", btn: "Defend" },
                 { title: "📊 Crypto Trader", desc: "Buy low, sell high!", icon: TrendingUp, gradient: "from-cyan-800 to-blue-900", route: "crypto-trader", btn: "Trade" },
               ].map(g => (
-                <GameCard key={g.route} title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
+                <div key={g.route} className="snap-start">
+                <GameCard title={g.title} description={g.desc} icon={g.icon} gradient={g.gradient}
                   onClick={() => totalBulls > 0 ? navigate((g as any).external ? `/${g.route}` : `/games/${g.route}`) : toast({ title: "🔒 Holders Only", description: "Hold a CSB Bull NFT or Subscribe to unlock!", variant: "destructive" })}
                   badge={totalBulls > 0 ? ((g as any).external ? "🪙 Rune Power" : "🔑 KEYS") : "🔒 LOCKED"} badgeColor={totalBulls > 0 ? ((g as any).external ? "bg-amber-500 text-black" : "bg-yellow-500 text-black") : "bg-gray-600 text-gray-300"}
                   buttonText={totalBulls > 0 ? g.btn : "🔒 Locked"} buttonVariant="key" isHolder={totalBulls > 0} />
+                </div>
               ))}
             </div>
+          </Card>
+          </div>
+
+          {/* Subscription */}
+          <div className="max-w-2xl mx-auto space-y-4">
+            <SubscriptionBox bullsOwned={bullsOwned} />
           </div>
 
           {/* CSB Game Master */}
