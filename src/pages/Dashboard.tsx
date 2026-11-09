@@ -188,31 +188,31 @@ const Dashboard = () => {
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30 max-w-md mx-auto">
             <div className="flex items-center gap-3 mb-4">
               <Gem className="w-6 h-6 text-cyan-400" />
-              <h3 className="text-xl font-bold text-foreground">Get Diamonds</h3>
+              <h3 className="text-xl font-bold text-foreground">Swap Center</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">Trade credits for diamonds</p>
-            <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-foreground">100 Credits</span>
-                <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">5 💎</span>
-              </div>
-              <Button size="sm" className="w-full" onClick={() => handleSwap(100, 5)} disabled={isSwapping || !isConnected}>Swap Now</Button>
-            </div>
-          </Card>
+            <p className="text-sm text-muted-foreground mb-4">Trade credits and diamonds for game currencies</p>
 
-          {/* Bukal & Key Swaps */}
-          <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-yellow-500/30 max-w-md mx-auto">
-            <div className="flex items-center gap-3 mb-4"><div className="text-2xl">🏆</div><h3 className="text-xl font-bold text-foreground">Get Bukals</h3></div>
-            <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex justify-between items-center mb-2"><span className="text-sm text-foreground">1,000,000 Credits</span><span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">1 🏆</span></div>
+            <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg mb-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-foreground">💎 Diamonds</span>
+                <span className="text-xs text-muted-foreground">100 Credits = 5 💎</span>
+              </div>
+              <Button size="sm" className="w-full" onClick={() => handleSwap(100, 5)} disabled={isSwapping || !isConnected}>Get Diamonds</Button>
+            </div>
+
+            <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg mb-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-foreground">🏆 Bukals</span>
+                <span className="text-xs text-muted-foreground">1,000,000 Credits = 1 🏆</span>
+              </div>
               <Button size="sm" className="w-full" onClick={() => handleCreditToBukalSwap(1000000, 1)} disabled={isSwapping || !isConnected}>Get Bukal</Button>
             </div>
-          </Card>
 
-          <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-accent/30 max-w-md mx-auto">
-            <div className="flex items-center gap-3 mb-4"><div className="text-2xl">🔑</div><h3 className="text-xl font-bold text-foreground">Get Keys</h3></div>
             <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex justify-between items-center mb-2"><span className="text-sm text-foreground">1,000,000 💎</span><span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">1 🔑</span></div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-foreground">🔑 Keys</span>
+                <span className="text-xs text-muted-foreground">1,000,000 💎 = 1 🔑</span>
+              </div>
               <Button size="sm" className="w-full" onClick={() => handleDiamondToKeySwap(1000000, 1)} disabled={isSwapping || !isConnected}>Get Key</Button>
             </div>
           </Card>
