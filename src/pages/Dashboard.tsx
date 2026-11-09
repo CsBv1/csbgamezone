@@ -216,6 +216,12 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* CsB Hodlers Games */}
+          <div>
+            <h2 className="text-3xl font-bold mb-2 gradient-gold bg-clip-text text-transparent text-center">👑 CsB Hodlers Games</h2>
+            <p className="text-center text-muted-foreground mb-6">Pick your Bull and play our flagship CsB Hodler worlds!</p>
+            <div className="space-y-8">
+
           {/* Bull City — own entry with bull selector */}
           <Card className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-cyan-400 hover:border-cyan-300'}`}
             onClick={() => navigate('/games/bull-city')}>
@@ -303,7 +309,8 @@ const Dashboard = () => {
             </div>
           </Card>
 
-
+            </div>
+          </div>
 
           {/* Wheel of Fortune */}
           <Card className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
