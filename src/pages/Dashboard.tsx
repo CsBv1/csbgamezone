@@ -130,7 +130,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
             {!isConnected ? (
               <Card className="p-6 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40">
                 <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">Connect Wallet</h3>
@@ -181,23 +181,24 @@ const Dashboard = () => {
               </Card>
             )}
 
-            <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
-              <div className="flex items-center gap-3 mb-4">
-                <Gem className="w-6 h-6 text-cyan-400" />
-                <h3 className="text-xl font-bold text-foreground">Get Diamonds</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">Trade credits for diamonds</p>
-              <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-foreground">100 Credits</span>
-                  <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">5 💎</span>
-                </div>
-                <Button size="sm" className="w-full" onClick={() => handleSwap(100, 5)} disabled={isSwapping || !isConnected}>Swap Now</Button>
-              </div>
-            </Card>
           </div>
 
           <Leaderboard />
+
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30 max-w-md mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <Gem className="w-6 h-6 text-cyan-400" />
+              <h3 className="text-xl font-bold text-foreground">Get Diamonds</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">Trade credits for diamonds</p>
+            <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-foreground">100 Credits</span>
+                <span className="text-sm font-semibold gradient-gold bg-clip-text text-transparent">5 💎</span>
+              </div>
+              <Button size="sm" className="w-full" onClick={() => handleSwap(100, 5)} disabled={isSwapping || !isConnected}>Swap Now</Button>
+            </div>
+          </Card>
 
           {/* Bukal & Key Swaps */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-yellow-500/30 max-w-md mx-auto">
