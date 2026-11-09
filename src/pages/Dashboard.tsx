@@ -217,100 +217,34 @@ const Dashboard = () => {
           </Card>
 
           {/* CsB Hodlers Games */}
-          <div>
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-amber-500/40 shadow-xl">
             <h2 className="text-3xl font-bold mb-2 gradient-gold bg-clip-text text-transparent text-center">👑 CsB Hodlers Games</h2>
             <p className="text-center text-muted-foreground mb-6">Pick your Bull and play our flagship CsB Hodler worlds!</p>
-            <div className="space-y-8">
-
-          {/* Bull City — own entry with bull selector */}
-          <Card className={`group overflow-hidden bg-card border-4 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : 'border-cyan-400 hover:border-cyan-300'}`}
-            onClick={() => navigate('/games/bull-city')}>
-            <div className="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-600 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-cyan-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌍 MULTIPLAYER CITY</div>
-              <div className="flex items-center gap-6">
-                <Globe className="w-24 h-24 text-white group-hover:scale-110 transition-transform animate-pulse" />
-                <Users className="w-16 h-16 text-cyan-300 group-hover:scale-110 transition-transform" />
-              </div>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 CsB Bull City 🌍</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select your Bull and enter the multiplayer Cardano metropolis — explore 8 districts, meet other players & mine CMKR in all 24 buildings 🚀</p>
-              <Button variant="outline" size="lg" className="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black">Enter Bull City</Button>
-            </div>
-          </Card>
-
-          {/* Bull World Dungeon — own entry with bull selector */}
-          <Card className="group overflow-hidden bg-card border-4 border-indigo-400 hover:border-indigo-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
-            onClick={() => navigate('/games/bull-world')}>
-            <div className="h-40 bg-gradient-to-br from-slate-900 via-indigo-800 to-cyan-700 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-indigo-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚔️ MMORPG WORLD</div>
-              <span className="text-6xl group-hover:scale-110 transition-transform">🐂⚔️</span>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂 CsB Dungeon 🌍</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select your Bull and enter the open world — 15 regions, real-time combat, world bosses, EXP to level up your CsB Bulls & collect diamonds together!</p>
-              <Button variant="outline" size="lg" className="w-full border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black">Enter Dungeon</Button>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[
+                { id: 'bull-city', name: '🐂 CsB Bull City 🌍', emoji: '🏙️', badge: '🌍 MULTIPLAYER CITY', badgeBg: 'bg-cyan-400', border: 'border-cyan-400 hover:border-cyan-300', btnClass: 'border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black', gradient: 'from-indigo-600 via-purple-600 to-cyan-600', desc: 'Multiplayer Cardano metropolis — 8 districts, other players & CMKR mining in all 24 buildings 🚀', btn: 'Enter Bull City' },
+                { id: 'bull-world', name: '🐂 CsB Dungeon 🌍', emoji: '🐂⚔️', badge: '⚔️ MMORPG WORLD', badgeBg: 'bg-indigo-400', border: 'border-indigo-400 hover:border-indigo-300', btnClass: 'border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black', gradient: 'from-slate-900 via-indigo-800 to-cyan-700', desc: 'Open world — 15 regions, real-time combat, world bosses, EXP to level your bulls!', btn: 'Enter Dungeon' },
+                { id: 'csb-level-dungeon', name: '🗺️ CsB Level Dungeon', emoji: '🗺️🐂', badge: '🗺️ NEW ROGUELIKE', badgeBg: 'bg-violet-400', border: 'border-violet-400 hover:border-violet-300', btnClass: 'border-violet-400 text-violet-300 hover:bg-violet-400 hover:text-black', gradient: 'from-slate-900 via-violet-800 to-cyan-700', desc: 'Procedural crawl — 5 biomes, 7 enemy breeds, a boss every 5th floor. EXP & Rune Power ⚡', btn: 'Enter Level Dungeon' },
+                { id: 'csb-level-tower', name: '🗼 CsB Level Tower', emoji: '🗼🐂', badge: '🗼 NEW CLIMB', badgeBg: 'bg-amber-400', border: 'border-amber-400 hover:border-amber-300', btnClass: 'border-amber-400 text-amber-300 hover:bg-amber-400 hover:text-black', gradient: 'from-slate-900 via-amber-700 to-fuchsia-700', desc: 'Climb 5 tower zones, 7 new enemy breeds, a boss guarding every 5th tier. EXP & Rune Power ⚡', btn: 'Enter Level Tower' },
+                { id: 'csb-ranch', name: '🐂🌾 Charles Hoskinson Ranch', emoji: '🐂🌾', badge: '🌾 NEW WORLD', badgeBg: 'bg-emerald-400', border: 'border-emerald-400 hover:border-emerald-300', btnClass: 'border-emerald-400 text-emerald-300 hover:bg-emerald-400 hover:text-black', gradient: 'from-emerald-900 via-lime-700 to-amber-600', desc: 'Fan-made Cardano ranch world — 11 areas, farming, mining & Cardano Quests. Unlock the Ranch Dungeon ⚙️', btn: 'Enter the Ranch' },
+                { id: 'csb-ascension', name: '🏛️ CsB Ascension Sky Citadel', emoji: '🏛️🐂', badge: '⚔️ FLAGSHIP', badgeBg: 'bg-sky-400', border: 'border-sky-400 hover:border-sky-300', btnClass: 'border-sky-400 text-sky-300 hover:bg-sky-400 hover:text-black', gradient: 'from-slate-900 via-sky-800 to-purple-700', desc: 'Arena roguelite — 3-hit combos, dodge i-frames, elite affixes, gear loot, boon drafts & Bull Nova. 5 rings, 5 bosses ⚡', btn: 'Ascend the Citadel' },
+              ].map((g: any) => (
+                <Card key={g.id} className={`group overflow-hidden bg-card border-2 hover:scale-[1.03] transition-all duration-300 cursor-pointer shadow-lg relative ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : g.border}`}
+                  onClick={() => navigate(`/games/${g.id}`)}>
+                  <div className={`h-20 bg-gradient-to-br ${g.gradient} flex items-center justify-center relative`}>
+                    <div className={`absolute top-1 right-1 ${g.badgeBg} text-black px-1.5 py-0.5 rounded-full text-[9px] font-bold`}>{g.badge}</div>
+                    <span className="text-4xl group-hover:scale-110 transition-transform">{g.emoji}</span>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-sm font-bold mb-1 text-foreground">{g.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{g.desc}</p>
+                    <Button variant="outline" size="sm" className={`w-full h-7 text-xs ${g.btnClass}`}>{g.btn}</Button>
+                  </div>
+                </Card>
+              ))}
             </div>
           </Card>
 
-          {/* CsB Level Dungeon */}
-          <Card className="group overflow-hidden bg-card border-4 border-violet-400 hover:border-violet-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
-            onClick={() => navigate('/games/csb-level-dungeon')}>
-            <div className="h-40 bg-gradient-to-br from-slate-900 via-violet-800 to-cyan-700 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-violet-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🗺️ NEW ROGUELIKE</div>
-              <span className="text-6xl group-hover:scale-110 transition-transform">🗺️🐂</span>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🗺️ CsB Level Dungeon</h3>
-              <p className="text-sm text-muted-foreground mb-4">Pick a CsB Bull and dive into a brand new procedural crawl — 5 biomes, 7 enemy breeds, a boss every 5th floor. Earn EXP to level your bulls & haul home Rune Power ⚡</p>
-              <Button variant="outline" size="lg" className="w-full border-violet-400 text-violet-300 hover:bg-violet-400 hover:text-black">Enter Level Dungeon</Button>
-            </div>
-          </Card>
-
-          {/* CsB Level Tower */}
-          <Card className="group overflow-hidden bg-card border-4 border-amber-400 hover:border-amber-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
-            onClick={() => navigate('/games/csb-level-tower')}>
-            <div className="h-40 bg-gradient-to-br from-slate-900 via-amber-700 to-fuchsia-700 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-amber-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🗼 NEW CLIMB</div>
-              <span className="text-6xl group-hover:scale-110 transition-transform">🗼🐂</span>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🗼 CsB Level Tower</h3>
-              <p className="text-sm text-muted-foreground mb-4">Pick a CsB Bull and climb upward — 5 tower zones, 7 new enemy breeds, a boss guarding every 5th tier. Ascend for EXP to level your bulls & bank Rune Power ⚡</p>
-              <Button variant="outline" size="lg" className="w-full border-amber-400 text-amber-300 hover:bg-amber-400 hover:text-black">Enter Level Tower</Button>
-            </div>
-          </Card>
-
-          {/* Charles Hoskinson Ranch */}
-          <Card className="group overflow-hidden bg-card border-4 border-emerald-400 hover:border-emerald-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
-            onClick={() => navigate('/games/csb-ranch')}>
-            <div className="h-40 bg-gradient-to-br from-emerald-900 via-lime-700 to-amber-600 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-emerald-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">🌾 NEW WORLD</div>
-              <span className="text-6xl group-hover:scale-110 transition-transform">🐂🌾</span>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🐂🌾 Charles Hoskinson Ranch</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select your Bull and enter a fan-made Cardano ranch world — 11 areas, farming, mining, lore & Cardano Quests. Finish them all to unlock the Ranch Dungeon and face THE CHAOS ENGINE ⚙️</p>
-              <Button variant="outline" size="lg" className="w-full border-emerald-400 text-emerald-300 hover:bg-emerald-400 hover:text-black">Enter the Ranch</Button>
-            </div>
-          </Card>
-
-          {/* CsB Ascension — Sky Citadel */}
-          <Card className="group overflow-hidden bg-card border-4 border-sky-400 hover:border-sky-300 hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl"
-            onClick={() => navigate('/games/csb-ascension')}>
-            <div className="h-40 bg-gradient-to-br from-slate-900 via-sky-800 to-purple-700 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 bg-sky-400 text-black px-3 py-1 rounded-full text-xs font-bold animate-pulse">⚔️ FLAGSHIP</div>
-              <span className="text-6xl group-hover:scale-110 transition-transform">🏛️🐂</span>
-            </div>
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">🏛️ CsB Ascension Sky Citadel</h3>
-              <p className="text-sm text-muted-foreground mb-4">Our most advanced bull game yet — arena roguelite with 3-hit combos, dodge i-frames, elite affixes, gear loot with rarities, boon drafts on level up and a charged Bull Nova ultimate. 5 rings, 5 bosses, EXP & Rune Power ⚡</p>
-              <Button variant="outline" size="lg" className="w-full border-sky-400 text-sky-300 hover:bg-sky-400 hover:text-black">Ascend the Citadel</Button>
-            </div>
-          </Card>
-
-            </div>
-          </div>
 
           {/* Wheel of Fortune */}
           <Card className="group overflow-hidden bg-card border-4 border-accent hover:border-primary hover:scale-105 transition-all duration-300 cursor-pointer shadow-xl max-w-md mx-auto"
