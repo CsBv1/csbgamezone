@@ -218,7 +218,7 @@ export const Leaderboard = () => {
         <Trophy className="w-6 h-6 text-yellow-500" />
         <h3 className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">CsB Leaderboard Most Hodl<img src="/favicon.png" alt="CsB token logo" className="w-6 h-6 rounded-full object-cover" /></h3>
       </div>
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="space-y-2">
         {leaderboard.length === 0 ? (
           <p className="text-center text-muted-foreground py-4">
             No hodlers yet. Connect a wallet holding $CsB! 💎🐂

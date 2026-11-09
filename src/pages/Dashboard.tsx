@@ -130,7 +130,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {!isConnected ? (
               <Card className="p-6 bg-gradient-to-br from-primary/20 to-card border-2 border-primary/40">
                 <h3 className="text-2xl font-bold gradient-gold bg-clip-text text-transparent mb-4">Connect Wallet</h3>
@@ -181,8 +181,6 @@ const Dashboard = () => {
               </Card>
             )}
 
-            <Leaderboard />
-
             <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-primary/30">
               <div className="flex items-center gap-3 mb-4">
                 <Gem className="w-6 h-6 text-cyan-400" />
@@ -198,6 +196,8 @@ const Dashboard = () => {
               </div>
             </Card>
           </div>
+
+          <Leaderboard />
 
           {/* Bukal & Key Swaps */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-2 border-yellow-500/30 max-w-md mx-auto">
@@ -222,12 +222,12 @@ const Dashboard = () => {
             <p className="text-center text-muted-foreground mb-6">Pick your Bull and play our flagship CsB Hodler worlds!</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { id: 'bull-city', name: '🐂 CsB Bull City 🌍', emoji: '🏙️', badge: '🌍 MULTIPLAYER CITY', badgeBg: 'bg-cyan-400', border: 'border-cyan-400 hover:border-cyan-300', btnClass: 'border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black', gradient: 'from-indigo-600 via-purple-600 to-cyan-600', desc: 'Multiplayer Cardano metropolis — 8 districts, other players & CMKR mining in all 24 buildings 🚀', btn: 'Enter Bull City' },
-                { id: 'bull-world', name: '🐂 CsB Dungeon 🌍', emoji: '🐂⚔️', badge: '⚔️ MMORPG WORLD', badgeBg: 'bg-indigo-400', border: 'border-indigo-400 hover:border-indigo-300', btnClass: 'border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black', gradient: 'from-slate-900 via-indigo-800 to-cyan-700', desc: 'Open world — 15 regions, real-time combat, world bosses, EXP to level your bulls!', btn: 'Enter Dungeon' },
-                { id: 'csb-level-dungeon', name: '🗺️ CsB Level Dungeon', emoji: '🗺️🐂', badge: '🗺️ NEW ROGUELIKE', badgeBg: 'bg-violet-400', border: 'border-violet-400 hover:border-violet-300', btnClass: 'border-violet-400 text-violet-300 hover:bg-violet-400 hover:text-black', gradient: 'from-slate-900 via-violet-800 to-cyan-700', desc: 'Procedural crawl — 5 biomes, 7 enemy breeds, a boss every 5th floor. EXP & Rune Power ⚡', btn: 'Enter Level Dungeon' },
+                { id: 'bull-city', name: '🐂 CsB Bull City 🌍', emoji: '🏙️', badge: '🌍 MULTIPLAYER CITY', badgeBg: 'bg-cyan-400', border: 'border-cyan-400 hover:border-cyan-300', btnClass: 'border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-black', gradient: 'from-indigo-600 via-purple-600 to-cyan-600', desc: 'Multiplayer Cardano metropolis with 8 districts, other players & CMKR mining in all 24 buildings 🚀', btn: 'Enter Bull City' },
+                { id: 'bull-world', name: '🐂 CsB Dungeon 🌍', emoji: '🐂⚔️', badge: '⚔️ MMORPG WORLD', badgeBg: 'bg-indigo-400', border: 'border-indigo-400 hover:border-indigo-300', btnClass: 'border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black', gradient: 'from-slate-900 via-indigo-800 to-cyan-700', desc: 'Open world with 15 regions, real-time combat, world bosses & EXP to level your bulls!', btn: 'Enter Dungeon' },
+                { id: 'csb-level-dungeon', name: '🗺️ CsB Level Dungeon', emoji: '🗺️🐂', badge: '🗺️ NEW ROGUELIKE', badgeBg: 'bg-violet-400', border: 'border-violet-400 hover:border-violet-300', btnClass: 'border-violet-400 text-violet-300 hover:bg-violet-400 hover:text-black', gradient: 'from-slate-900 via-violet-800 to-cyan-700', desc: 'Procedural crawl with 5 biomes, 7 enemy breeds & a boss every 5th floor. EXP & Rune Power ⚡', btn: 'Enter Level Dungeon' },
                 { id: 'csb-level-tower', name: '🗼 CsB Level Tower', emoji: '🗼🐂', badge: '🗼 NEW CLIMB', badgeBg: 'bg-amber-400', border: 'border-amber-400 hover:border-amber-300', btnClass: 'border-amber-400 text-amber-300 hover:bg-amber-400 hover:text-black', gradient: 'from-slate-900 via-amber-700 to-fuchsia-700', desc: 'Climb 5 tower zones, 7 new enemy breeds, a boss guarding every 5th tier. EXP & Rune Power ⚡', btn: 'Enter Level Tower' },
-                { id: 'csb-ranch', name: '🐂🌾 Charles Hoskinson Ranch', emoji: '🐂🌾', badge: '🌾 NEW WORLD', badgeBg: 'bg-emerald-400', border: 'border-emerald-400 hover:border-emerald-300', btnClass: 'border-emerald-400 text-emerald-300 hover:bg-emerald-400 hover:text-black', gradient: 'from-emerald-900 via-lime-700 to-amber-600', desc: 'Fan-made Cardano ranch world — 11 areas, farming, mining & Cardano Quests. Unlock the Ranch Dungeon ⚙️', btn: 'Enter the Ranch' },
-                { id: 'csb-ascension', name: '🏛️ CsB Ascension Sky Citadel', emoji: '🏛️🐂', badge: '⚔️ FLAGSHIP', badgeBg: 'bg-sky-400', border: 'border-sky-400 hover:border-sky-300', btnClass: 'border-sky-400 text-sky-300 hover:bg-sky-400 hover:text-black', gradient: 'from-slate-900 via-sky-800 to-purple-700', desc: 'Arena roguelite — 3-hit combos, dodge i-frames, elite affixes, gear loot, boon drafts & Bull Nova. 5 rings, 5 bosses ⚡', btn: 'Ascend the Citadel' },
+                { id: 'csb-ranch', name: '🐂🌾 Charles Hoskinson Ranch', emoji: '🐂🌾', badge: '🌾 NEW WORLD', badgeBg: 'bg-emerald-400', border: 'border-emerald-400 hover:border-emerald-300', btnClass: 'border-emerald-400 text-emerald-300 hover:bg-emerald-400 hover:text-black', gradient: 'from-emerald-900 via-lime-700 to-amber-600', desc: 'Fan-made Cardano ranch world with 11 areas, farming, mining & Cardano Quests. Unlock the Ranch Dungeon ⚙️', btn: 'Enter the Ranch' },
+                { id: 'csb-ascension', name: '🏛️ CsB Ascension Sky Citadel', emoji: '🏛️🐂', badge: '⚔️ FLAGSHIP', badgeBg: 'bg-sky-400', border: 'border-sky-400 hover:border-sky-300', btnClass: 'border-sky-400 text-sky-300 hover:bg-sky-400 hover:text-black', gradient: 'from-slate-900 via-sky-800 to-purple-700', desc: 'Arena roguelite with 3-hit combos, dodge i-frames, elite affixes, gear loot, boon drafts & Bull Nova. 5 rings, 5 bosses ⚡', btn: 'Ascend the Citadel' },
               ].map((g: any) => (
                 <Card key={g.id} className={`group overflow-hidden bg-card border-2 hover:scale-[1.03] transition-all duration-300 cursor-pointer shadow-lg relative ${totalBulls > 0 ? 'border-amber-400 animate-pulse-glow' : g.border}`}
                   onClick={() => navigate(`/games/${g.id}`)}>
