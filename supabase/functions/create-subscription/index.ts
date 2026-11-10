@@ -90,13 +90,13 @@ serve(async (req) => {
     }
     
     // Check if customer exists in Stripe
+    // Only reuse a Stripe customer that was created for THIS user (matched by metadata),
+    // never one matched by a caller-influenced email address.
     let customerId;
-    if (userEmail) {
-      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-      }
-    }
+    try {
+      const found = await stripe.customers.search({ query: `metadata['user_id']:'${user.id}'`, limit: 1 });
+      if (found.data.length > 0) customerId = found.data[0].id;
+    } catch (_) { /* search unavailable: let checkout create a new customer */ }
 
     const origin = req.headers.get("origin") || "https://csbgamezone.lovable.app";
 
@@ -137,10 +137,10 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+        'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
       },
       body: JSON.stringify({
-        email: user.email,
+        email: userEmail,
         tier: tier,
         bulls: tierConfig.bulls
       })
@@ -153,7 +153,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error creating subscription:", errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Could not start checkout. Please try again." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

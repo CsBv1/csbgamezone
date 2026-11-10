@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -298,6 +299,37 @@ serve(async (req) => {
       type = url.searchParams.get("type") || "daily";
     }
 
+    // Caller-supplied content may only be posted by trusted server jobs.
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const isService = !!serviceKey && (req.headers.get("Authorization") ?? "") === `Bearer ${serviceKey}`;
+    if ((type === "event" || type === "custom") && !isService) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (type === "cmkr-cap") {
+      // Payout list is computed server-side; nothing from the caller is posted.
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+      const month = new Date().toISOString().slice(0, 7);
+      const { data: rows } = await admin.from("cmkr_earnings").select("user_id, username, amount").eq("month", month).limit(100000);
+      const totals = new Map<string, { username: string; total: number }>();
+      let sum = 0;
+      for (const r of rows ?? []) {
+        sum += r.amount;
+        const e = totals.get(r.user_id) ?? { username: r.username || "Bull", total: 0 };
+        e.total += r.amount;
+        totals.set(r.user_id, e);
+      }
+      if (sum < 1000000) {
+        return new Response(JSON.stringify({ ok: false, reason: "cap not reached" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const board = [...totals.values()].sort((a, b) => b.total - a.total);
+      const lines = board.map((b, i) => `${i + 1}. **${b.username.slice(0, 40)}** — ${b.total.toLocaleString()} 🦉`).join("\n");
+      await sendEvent(`🦉 CMKR CAP REACHED — 1,000,000 mined (${month})`, `All CMKR for this cycle have been mined in Bull City. Payout list:\n\n${lines.slice(0, 3500)}`);
+      return new Response(JSON.stringify({ ok: true, type }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     switch (type) {
       case "daily":
         await sendDaily();
@@ -324,7 +356,7 @@ serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("discord-announce error:", msg);
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "Announcement failed" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

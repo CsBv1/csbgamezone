@@ -608,13 +608,8 @@ export default function BullCity() {
       const flag = `cmkr-cap-announced-${CMKR_MONTH}`;
       if (!localStorage.getItem(flag)) {
         localStorage.setItem(flag, '1');
-        const lines = board.map((b, i) => `${i + 1}. **${b.username}** — ${b.total.toLocaleString()} 🦉`).join('\n');
         supabase.functions.invoke('discord-announce', {
-          body: {
-            type: 'event',
-            title: `🦉 CMKR CAP REACHED — ${CMKR_MONTHLY_CAP.toLocaleString()} mined (${CMKR_MONTH})`,
-            description: `All CMKR for this cycle have been mined in Bull City. Payout list:\n\n${lines.slice(0, 3500)}`,
-          },
+          body: { type: 'cmkr-cap' },
         }).catch(() => {});
       }
     }

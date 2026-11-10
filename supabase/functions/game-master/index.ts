@@ -11,7 +11,14 @@ serve(async (req) => {
   }
 
   try {
-    const { message, context, bullsOwned, rarityBonus } = await req.json();
+    const body = await req.json();
+    const message = String(body?.message ?? "").slice(0, 1000);
+    const context = String(body?.context ?? "").slice(0, 200).replace(/[\r\n`]/g, " ");
+    const bullsOwned = Math.max(0, Math.min(10000, Math.floor(Number(body?.bullsOwned) || 0)));
+    const rarityBonus = Math.max(0, Math.min(10000, Number(body?.rarityBonus) || 0));
+    if (!message.trim()) {
+      return new Response(JSON.stringify({ error: "Message is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -33,8 +40,6 @@ Key platform info:
 - Bulls NFT holders get special bonuses (${bullsOwned || 0} bulls owned, ${rarityBonus || 0}% bonus)
 - The policy ID for CSB Bulls is: b11c9439e1dbec97f89037e0f7bde3b2daad4ad279812ffd9d24e43e
 
-Player context: ${context || 'New player on dashboard'}
-
 Keep responses concise (2-3 sentences max) and helpful. Use emojis sparingly. If the user owns Bulls NFTs, acknowledge their holder status!`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -47,7 +52,7 @@ Keep responses concise (2-3 sentences max) and helpful. Use emojis sparingly. If
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: message }
+          { role: "user", content: `[Player context, untrusted: ${context || "dashboard"}]\n${message}` }
         ],
       }),
     });
@@ -76,8 +81,7 @@ Keep responses concise (2-3 sentences max) and helpful. Use emojis sparingly. If
     });
   } catch (error) {
     console.error("Game Master error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Something went wrong";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Something went wrong" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
