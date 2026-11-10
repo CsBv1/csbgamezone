@@ -160,15 +160,6 @@ export const CreditBar = () => {
       if (error) throw error;
 
       if (data) {
-        await supabase.from('user_nft_bonuses' as any).upsert({
-          user_id: user.id,
-          bulls_owned: data.bullsOwned || 0,
-          rarity_bonus: data.rarityBonus || 0,
-          highest_rarity: data.highestRarity || 'none',
-          last_scanned_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
-
         setBullsOwned(data.bullsOwned || 0);
         toast({
           title: `Wallet scanned`,

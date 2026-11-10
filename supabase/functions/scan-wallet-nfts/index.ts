@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -448,6 +449,32 @@ serve(async (req) => {
     };
 
     console.log("=== FINAL RESULT ===", JSON.stringify(result));
+
+    // Persist holdings server-side, only for the caller's own linked wallet.
+    try {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+      if (token) {
+        const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+        const { data: u } = await admin.auth.getUser(token);
+        const uid = u?.user?.id;
+        if (uid) {
+          const { data: prof } = await admin.from("profiles").select("wallet_address").eq("id", uid).maybeSingle();
+          if (prof?.wallet_address && prof.wallet_address === walletAddress) {
+            await admin.from("user_nft_bonuses").upsert({
+              user_id: uid,
+              bulls_owned: totalBulls,
+              rarity_bonus: finalBonus,
+              highest_rarity: result.highestRarity,
+              csb_tokens: csbTokens,
+              last_scanned_at: new Date().toISOString(),
+            }, { onConflict: "user_id" });
+          }
+        }
+      }
+    } catch (e) {
+      console.log("persist error:", e);
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

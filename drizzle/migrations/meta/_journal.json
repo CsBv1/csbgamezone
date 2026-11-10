@@ -15,6 +15,20 @@
       "when": 1794324207640,
       "tag": "0001_scope_cmkr_and_room_players_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794325028502,
+      "tag": "0002_server_owned_holdings_and_balance_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794325044855,
+      "tag": "0003_allow_first_wallet_link",
+      "breakpoints": true
     }
   ]
 }

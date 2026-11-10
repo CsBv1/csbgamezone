@@ -117,36 +117,7 @@ export function useNFTBonuses(walletAddress: string | null) {
 
       setHasScanned(true);
 
-      // Save to database for persistence
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: existing } = await supabase
-          .from("user_nft_bonuses")
-          .select("id")
-          .eq("user_id", user.id)
-          .single();
-
-        if (existing) {
-          await supabase
-            .from("user_nft_bonuses")
-            .update({
-              bulls_owned: result.bullsOwned,
-              rarity_bonus: result.rarityBonus,
-              highest_rarity: result.highestRarity,
-              csb_tokens: result.csbTokens,
-              last_scanned_at: new Date().toISOString(),
-            })
-            .eq("user_id", user.id);
-        } else {
-          await supabase.from("user_nft_bonuses").insert({
-            user_id: user.id,
-            bulls_owned: result.bullsOwned,
-            rarity_bonus: result.rarityBonus,
-            highest_rarity: result.highestRarity,
-            csb_tokens: result.csbTokens,
-          } as any);
-        }
-      }
+      // Holdings are saved by the scanner on the server.
 
       if (result.bullsOwned > 0) {
         toast({
