@@ -559,16 +559,20 @@ export default function BullCity() {
 
   /* ——————————————— CMKR 🦉 partner token ——————————————— */
   const loadCmkr = useCallback(async () => {
-    const { data } = await supabase
-      .from('cmkr_earnings' as any)
-      .select('user_id, username, place_id, amount, created_at')
-      .eq('month', CMKR_MONTH);
-    const rows = (data || []) as any[];
+    const [{ data }, { data: boardData }] = await Promise.all([
+      supabase
+        .from('cmkr_earnings' as any)
+        .select('user_id, username, place_id, amount, created_at')
+        .eq('month', CMKR_MONTH)
+        .eq('user_id', userId),
+      supabase.rpc('cmkr_month_board' as any, { _month: CMKR_MONTH }),
+    ]);
+    const myRows = (data || []) as any[];
+    const rows = ((boardData || []) as any[]).map(b => ({ user_id: b.user_id, username: b.username, amount: Number(b.total) || 0 }));
 
     const globalTotal = rows.reduce((s, r) => s + (r.amount || 0), 0);
     setCmkrGlobal(globalTotal);
 
-    const myRows = rows.filter(r => r.user_id === userId);
     setCmkrMyMonth(myRows.reduce((s, r) => s + (r.amount || 0), 0));
 
     /* rolling 1-hour window: a place refills 1h after the mine that used it up */

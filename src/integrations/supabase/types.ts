@@ -1269,7 +1269,16 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_room_players: { Args: { _room_id: string }; Returns: boolean }
       cleanup_old_chat_messages: { Args: never; Returns: undefined }
+      cmkr_month_board: {
+        Args: { _month: string }
+        Returns: {
+          total: number
+          user_id: string
+          username: string
+        }[]
+      }
       csb_apply_battle_action: {
         Args: { _action: string; _room_id: string }
         Returns: {
