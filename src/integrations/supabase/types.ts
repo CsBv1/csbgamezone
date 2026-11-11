@@ -1362,6 +1362,22 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      purchase_csb_upgrade: {
+        Args: { _upgrade: string }
+        Returns: {
+          id: string
+          level: number
+          updated_at: string
+          upgrade_type: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "csbv1_upgrades"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       safe_profiles: {
         Args: never
         Returns: {

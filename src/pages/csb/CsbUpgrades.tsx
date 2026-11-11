@@ -42,7 +42,8 @@ const costFor = (base: number, level: number) => Math.floor(base * Math.pow(1.6,
 const CsbUpgrades = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { player, userId, spendBalance, updatePlayer } = useCsbv1();
+  const { player, userId, refresh } = useCsbv1();
+  const [buying, setBuying] = useState(false);
   const [levels, setLevels] = useState<Record<string, number>>({});
 
   const load = async () => {
@@ -59,19 +60,18 @@ const CsbUpgrades = () => {
     const lvl = levels[u.id] || 0;
     const cost = costFor(u.baseCost, lvl);
     if (player.balance < cost) { toast({ title: "Not enough Rune Power", variant: "destructive" }); return; }
-    const ok = await spendBalance(cost);
-    if (!ok) return;
-
-    const newLvl = lvl + 1;
-    await supabase.from("csbv1_upgrades" as any).upsert({
-      user_id: userId, upgrade_type: u.id, level: newLvl,
-    }, { onConflict: "user_id,upgrade_type" });
-
-    const patch = u.apply(newLvl);
-    if (Object.keys(patch).length) await updatePlayer(patch as any);
-
-    toast({ title: `${u.title} → Lv ${newLvl}`, description: u.effect(newLvl) });
-    load();
+    if (buying) return;
+    setBuying(true);
+    try {
+      const { data, error } = await supabase.rpc('purchase_csb_upgrade', { _upgrade: u.id });
+      if (error) throw error;
+      toast({ title: `${u.title} → Lv ${data.level}`, description: u.effect(data.level) });
+      await Promise.all([load(), refresh()]);
+    } catch {
+      toast({ title: "Upgrade failed", description: "No Rune Power was spent. Please try again.", variant: "destructive" });
+    } finally {
+      setBuying(false);
+    }
   };
 
   return (
@@ -101,7 +101,7 @@ const CsbUpgrades = () => {
                 <Progress value={Math.min(100, lvl * 10)} className="h-2 my-2" />
                 <div className="text-sm font-semibold mb-1">Next: {u.effect(lvl + 1)}</div>
                 <div className="text-xs opacity-90 mb-3 flex items-center gap-1"><Coins className="w-3 h-3" /> {cost.toLocaleString()} Rune Power</div>
-                <Button size="sm" className="w-full" disabled={!can} onClick={() => buy(u)}>
+                <Button size="sm" className="w-full" disabled={!can || buying} onClick={() => buy(u)}>
                   {can ? "Upgrade" : "Need more Rune Power"}
                 </Button>
               </Card>

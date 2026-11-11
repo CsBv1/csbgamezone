@@ -43,6 +43,13 @@
       "when": 1794388149344,
       "tag": "0005_server_verified_badge_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794388256285,
+      "tag": "0006_server_verified_rune_upgrades",
+      "breakpoints": true
     }
   ]
 }
