@@ -64,72 +64,35 @@ const WheelOfFortune = () => {
   }, []);
 
   const spin = async () => {
-    if (keys < 1) {
-      audioManager.playSFX('error');
-      toast.error("You need a key to spin! 🔑");
-      return;
-    }
-
-    if (!userId) {
-      audioManager.playSFX('error');
-      toast.error("Please connect your wallet!");
-      return;
-    }
-
-    audioManager.playSFX('spin');
+    if (spinning || !userId) return;
     setSpinning(true);
-    
-    // Deduct key
-    const { error: keyError } = await supabase
-      .from('user_keys' as any)
-      .update({ balance: keys - 1 })
-      .eq('user_id', userId);
-    
-    if (keyError) {
-      toast.error("Failed to use key!");
-      setSpinning(false);
-      return;
-    }
-    
-    setKeys(prev => prev - 1);
-    
-    const spins = 5 + Math.random() * 3;
-    const finalRotation = rotation + (360 * spins) + Math.random() * 360;
-    setRotation(finalRotation);
-
-    setTimeout(async () => {
-      audioManager.playSFX('wheelStop');
-      const segmentAngle = 360 / colorPrizes.length;
-      const normalizedRotation = finalRotation % 360;
-      const prizeIndex = Math.floor((360 - normalizedRotation) / segmentAngle) % colorPrizes.length;
-      const prize = colorPrizes[prizeIndex];
-      audioManager.playSFX('jackpot');
-
-      // Check if user already has this color
-      const hasColor = userColors.some((c: any) => c.color_name === prize.name);
-      
-      if (!hasColor) {
-        // Award new color
-        const { error: colorError } = await supabase
-          .from('user_colors' as any)
-          .insert({
-            user_id: userId,
-            color_name: prize.name,
-            color_value: prize.value,
-            active: false
-          });
-        
-        if (!colorError) {
-          setUserColors(prev => [...prev, { color_name: prize.name, color_value: prize.value }]);
-          toast.success(`🎉 Unlocked ${prize.emoji} ${prize.name}!`);
+    try {
+      const { data, error } = await supabase.rpc('spin_color_wheel');
+      if (error) throw error;
+      const outcome = data as { index: number; name: string; value: string; already_owned: boolean; keys: number };
+      const prize = colorPrizes[outcome.index];
+      setKeys(outcome.keys);
+      audioManager.playSFX('spin');
+      // Visual rotation follows the server outcome; it never determines a reward.
+      const targetAngle = 360 - (outcome.index + 0.5) * (360 / colorPrizes.length);
+      const currentAngle = ((rotation % 360) + 360) % 360;
+      setRotation(rotation + 6 * 360 + ((targetAngle - currentAngle + 360) % 360));
+      setTimeout(() => {
+        audioManager.playSFX('wheelStop');
+        audioManager.playSFX('jackpot');
+        if (!outcome.already_owned) {
+          setUserColors(prev => [...prev, { color_name: outcome.name, color_value: outcome.value }]);
+          toast.success(`🎉 Unlocked ${prize.emoji} ${outcome.name}!`);
+        } else {
+          toast.success(`${prize.emoji} You won ${outcome.name} (already unlocked)`);
         }
-      } else {
-        toast.success(`${prize.emoji} You won ${prize.name} (already unlocked)`);
-      }
-
-      setResult(prize.name);
+        setResult(outcome.name);
+        setSpinning(false);
+      }, 4000);
+    } catch {
+      toast.error("Spin failed. Please check your Keys and try again.");
       setSpinning(false);
-    }, 4000);
+    }
   };
 
   return (

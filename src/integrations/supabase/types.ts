@@ -1387,6 +1387,7 @@ export type Database = {
           username: string
         }[]
       }
+      spin_color_wheel: { Args: never; Returns: Json }
       swap_game_currency: { Args: { _swap: string }; Returns: Json }
     }
     Enums: {

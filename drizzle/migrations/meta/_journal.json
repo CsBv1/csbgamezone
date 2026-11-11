@@ -50,6 +50,13 @@
       "when": 1794388256285,
       "tag": "0006_server_verified_rune_upgrades",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794388544342,
+      "tag": "0007_server_owned_wheel_colors",
+      "breakpoints": true
     }
   ]
 }

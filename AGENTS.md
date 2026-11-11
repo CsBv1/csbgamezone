@@ -3,3 +3,4 @@
 - Balance caps are interim safeguards, not proof of valid game rewards; do not close economy security findings until payouts are validated from server-owned game state.
 - Badge shops call `purchase_csb_badge` with only a catalog ID; only that atomic server operation may grant a badge, while clients may update only `active`, so purchases and cosmetic identity cannot be forged.
 - Rune upgrades use `purchase_csb_upgrade` to derive current level, cost and energy capacity under locks; direct upgrade writes are revoked to prevent free levels and partial purchases.
+- Wheel color unlocks use `spin_color_wheel` to spend one Key and choose a uniform server-owned prize atomically; clients may only equip colors and animate the returned outcome, preventing forged unlocks.
