@@ -1343,6 +1343,25 @@ export type Database = {
         }
         Returns: string
       }
+      purchase_csb_badge: {
+        Args: { _badge_id: string }
+        Returns: {
+          active: boolean
+          badge_color: string
+          badge_id: string
+          badge_name: string
+          diamond_cost: number
+          id: string
+          purchased_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_badges"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       safe_profiles: {
         Args: never
         Returns: {

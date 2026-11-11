@@ -36,6 +36,13 @@
       "when": 1794387641902,
       "tag": "0004_atomic_game_currency_swaps",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794388149344,
+      "tag": "0005_server_verified_badge_purchases",
+      "breakpoints": true
     }
   ]
 }

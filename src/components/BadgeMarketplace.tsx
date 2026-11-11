@@ -104,31 +104,10 @@ export function BadgeMarketplace() {
 
     setPurchasing(badge.id);
     try {
-      // Deduct diamonds
-      const newBalance = userDiamonds - badge.cost;
-      const { error: diamondError } = await supabase
-        .from('user_diamonds')
-        .update({ balance: newBalance })
-        .eq('user_id', userId);
-
-      if (diamondError) throw diamondError;
-
-      // Add badge
-      const { error: badgeError } = await supabase
-        .from('user_badges')
-        .insert({
-          user_id: userId,
-          badge_id: badge.id,
-          badge_name: badge.name,
-          badge_color: badge.color,
-          diamond_cost: badge.cost,
-          active: false
-        });
-
-      if (badgeError) throw badgeError;
+      const { error } = await supabase.rpc('purchase_csb_badge', { _badge_id: badge.id });
+      if (error) throw error;
 
       toast.success(`🏆 ${badge.name} Badge purchased!`);
-      setUserDiamonds(newBalance);
       fetchData();
     } catch (error) {
       console.error('Error purchasing badge:', error);
