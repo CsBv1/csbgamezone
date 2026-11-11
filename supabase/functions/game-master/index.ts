@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,12 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
+    const { data: claims, error: authErr } = await sb.auth.getClaims(authHeader.replace("Bearer ", ""));
+    if (authErr || !claims?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Sign in to chat with the Game Master" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const body = await req.json();
     const message = String(body?.message ?? "").slice(0, 1000);
     const context = String(body?.context ?? "").slice(0, 200).replace(/[\r\n`]/g, " ");

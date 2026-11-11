@@ -98,7 +98,9 @@ serve(async (req) => {
       if (found.data.length > 0) customerId = found.data[0].id;
     } catch (_) { /* search unavailable: let checkout create a new customer */ }
 
-    const origin = req.headers.get("origin") || "https://csbgamezone.lovable.app";
+    const allowedOrigins = ["https://csbgamezone.lovable.app", "https://id-preview--c877ce83-e5a0-42ab-9c6e-47e716f8f670.lovable.app"];
+    const reqOrigin = req.headers.get("origin") ?? "";
+    const origin = allowedOrigins.includes(reqOrigin) ? reqOrigin : allowedOrigins[0];
 
     // Build checkout session config
     const sessionConfig: any = {

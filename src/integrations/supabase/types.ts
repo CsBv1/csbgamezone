@@ -714,6 +714,21 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_job_tokens: {
+        Row: {
+          name: string
+          token: string
+        }
+        Insert: {
+          name: string
+          token?: string
+        }
+        Update: {
+          name?: string
+          token?: string
+        }
+        Relationships: []
+      }
       maze_leaderboard: {
         Row: {
           completion_time_ms: number

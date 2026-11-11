@@ -309,6 +309,12 @@ serve(async (req) => {
     }
 
     if (type === "cmkr-cap") {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
+      const { data: u } = await userClient.auth.getUser(authHeader.replace("Bearer ", ""));
+      if (!isService && !u?.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       // Payout list is computed server-side; nothing from the caller is posted.
       const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
       const month = new Date().toISOString().slice(0, 7);

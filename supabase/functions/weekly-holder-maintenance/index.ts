@@ -27,6 +27,12 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
+    const jobToken = req.headers.get("x-job-token") ?? "";
+    const { data: tok } = await supabaseAdmin.from("internal_job_tokens" as any).select("token").eq("name", "weekly-holder-maintenance").maybeSingle();
+    if (!jobToken || !tok || (tok as any).token !== jobToken) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is missing");

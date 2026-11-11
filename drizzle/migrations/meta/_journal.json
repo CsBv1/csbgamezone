@@ -57,6 +57,13 @@
       "when": 1794388544342,
       "tag": "0007_server_owned_wheel_colors",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794389304328,
+      "tag": "0008_maintenance_cron_token",
+      "breakpoints": true
     }
   ]
 }
