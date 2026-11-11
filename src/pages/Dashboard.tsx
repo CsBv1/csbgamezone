@@ -41,77 +41,20 @@ const Dashboard = () => {
   const { bulls: subscriptionBulls, subscribed } = useSubscription();
   const totalBulls = bullsOwned + subscriptionBulls;
 
-  const handleSwap = async (creditsCost: number, diamondsAmount: number) => {
-    if (!isConnected) { toast({ title: "Wallet Required 🔒", description: "Please connect your wallet to swap", variant: "destructive" }); return; }
+  const swapCurrency = async (swap: 'credits_to_diamonds' | 'credits_to_bukals' | 'diamonds_to_keys') => {
+    if (!isConnected || isSwapping) return;
     setIsSwapping(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-      const [creditsResult, diamondsResult] = await Promise.all([
-        supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single(),
-        supabase.from('user_diamonds' as any).select('balance, total_earned').eq('user_id', user.id).single()
-      ]);
-      if (!(creditsResult.data as any) || (creditsResult.data as any).balance < creditsCost) {
-        toast({ title: "Not Enough Credits! 💰", description: `You need ${creditsCost} credits`, variant: "destructive" });
-        setIsSwapping(false); return;
-      }
-      const [creditUpdate, diamondUpdate] = await Promise.all([
-        supabase.from('user_credits' as any).update({ balance: (creditsResult.data as any).balance - creditsCost }).eq('user_id', user.id),
-        supabase.from('user_diamonds' as any).update({ balance: ((diamondsResult.data as any)?.balance || 0) + diamondsAmount, total_earned: ((diamondsResult.data as any)?.total_earned || 0) + diamondsAmount }).eq('user_id', user.id)
-      ]);
-      if (creditUpdate.error || diamondUpdate.error) throw new Error('Update failed');
-      toast({ title: "Swap Successful! 🎉", description: `Traded ${creditsCost} credits for ${diamondsAmount} 💎` });
-      setTimeout(() => window.location.reload(), 800);
-    } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
-    finally { setIsSwapping(false); }
-  };
-
-  const handleCreditToBukalSwap = async (creditsCost: number, bukalsAmount: number) => {
-    if (!isConnected) { toast({ title: "Wallet Required 🔒", description: "Please connect your wallet to swap", variant: "destructive" }); return; }
-    setIsSwapping(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-      const creditsResult = await supabase.from('user_credits' as any).select('balance').eq('user_id', user.id).single();
-      if (!(creditsResult.data as any) || (creditsResult.data as any).balance < creditsCost) {
-        toast({ title: "Not Enough Credits! 💰", description: `You need ${creditsCost.toLocaleString()} credits`, variant: "destructive" });
-        setIsSwapping(false); return;
-      }
-      await supabase.from('user_credits' as any).update({ balance: (creditsResult.data as any).balance - creditsCost }).eq('user_id', user.id);
-      const { data: existingBukals } = await supabase.from('user_bukals' as any).select('balance').eq('user_id', user.id).maybeSingle();
-      if (existingBukals && (existingBukals as any).balance !== undefined) {
-        await supabase.from('user_bukals' as any).update({ balance: (existingBukals as any).balance + bukalsAmount }).eq('user_id', user.id);
-      } else {
-        await supabase.from('user_bukals' as any).insert({ user_id: user.id, balance: bukalsAmount });
-      }
-      toast({ title: "Swap Successful! 🏆", description: `Traded ${creditsCost.toLocaleString()} credits for ${bukalsAmount} 🏆 Bukal!` });
-      window.location.reload();
-    } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
-    finally { setIsSwapping(false); }
-  };
-
-  const handleDiamondToKeySwap = async (diamondsCost: number, keysAmount: number) => {
-    if (!isConnected) { toast({ title: "Wallet Required 🔒", description: "Please connect your wallet to swap", variant: "destructive" }); return; }
-    setIsSwapping(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-      const diamondsResult = await supabase.from('user_diamonds' as any).select('balance').eq('user_id', user.id).single();
-      if (!(diamondsResult.data as any) || (diamondsResult.data as any).balance < diamondsCost) {
-        toast({ title: "Not Enough Diamonds! 💎", description: `You need ${diamondsCost.toLocaleString()} diamonds`, variant: "destructive" });
-        setIsSwapping(false); return;
-      }
-      await supabase.from('user_diamonds' as any).update({ balance: (diamondsResult.data as any).balance - diamondsCost }).eq('user_id', user.id);
-      const { data: existingKeys } = await supabase.from('user_keys' as any).select('balance').eq('user_id', user.id).maybeSingle();
-      if (existingKeys && (existingKeys as any).balance !== undefined) {
-        await supabase.from('user_keys' as any).update({ balance: (existingKeys as any).balance + keysAmount }).eq('user_id', user.id);
-      } else {
-        await supabase.from('user_keys' as any).insert({ user_id: user.id, balance: keysAmount });
-      }
-      toast({ title: "Swap Successful! 🎉", description: `Traded ${diamondsCost.toLocaleString()} 💎 for ${keysAmount} 🔑` });
-      window.location.reload();
-    } catch (error) { toast({ title: "Swap Failed", description: "Something went wrong.", variant: "destructive" }); }
-    finally { setIsSwapping(false); }
+      const { error } = await supabase.rpc('swap_game_currency', { _swap: swap });
+      if (error) throw error;
+      toast({ title: "Swap Successful! 🎉", description: "Your balances have been updated." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message :
+        (typeof error === 'object' && error !== null && 'message' in error ? String(error.message) : 'Please try again.');
+      toast({ title: "Swap Failed", description: message, variant: "destructive" });
+    } finally {
+      setIsSwapping(false);
+    }
   };
 
   return (
@@ -197,7 +140,7 @@ const Dashboard = () => {
                 <span className="text-sm font-semibold text-foreground">💎 Diamonds</span>
                 <span className="text-xs text-muted-foreground">100 Credits = 5 💎</span>
               </div>
-              <Button size="sm" className="w-full" onClick={() => handleSwap(100, 5)} disabled={isSwapping || !isConnected}>Get Diamonds</Button>
+              <Button size="sm" className="w-full" onClick={() => swapCurrency('credits_to_diamonds')} disabled={isSwapping || !isConnected}>Get Diamonds</Button>
             </div>
 
             <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg mb-3">
@@ -205,7 +148,7 @@ const Dashboard = () => {
                 <span className="text-sm font-semibold text-foreground">🏆 Bukals</span>
                 <span className="text-xs text-muted-foreground">1,000,000 Credits = 1 🏆</span>
               </div>
-              <Button size="sm" className="w-full" onClick={() => handleCreditToBukalSwap(1000000, 1)} disabled={isSwapping || !isConnected}>Get Bukal</Button>
+              <Button size="sm" className="w-full" onClick={() => swapCurrency('credits_to_bukals')} disabled={isSwapping || !isConnected}>Get Bukal</Button>
             </div>
 
             <div className="p-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
@@ -213,7 +156,7 @@ const Dashboard = () => {
                 <span className="text-sm font-semibold text-foreground">🔑 Keys</span>
                 <span className="text-xs text-muted-foreground">1,000,000 💎 = 1 🔑</span>
               </div>
-              <Button size="sm" className="w-full" onClick={() => handleDiamondToKeySwap(1000000, 1)} disabled={isSwapping || !isConnected}>Get Key</Button>
+              <Button size="sm" className="w-full" onClick={() => swapCurrency('diamonds_to_keys')} disabled={isSwapping || !isConnected}>Get Key</Button>
             </div>
           </Card>
 

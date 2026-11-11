@@ -1352,6 +1352,7 @@ export type Database = {
           username: string
         }[]
       }
+      swap_game_currency: { Args: { _swap: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

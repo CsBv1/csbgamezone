@@ -1,0 +1,3 @@
+# Architecture rules
+- Currency swaps use the authenticated `swap_game_currency` RPC with fixed server-owned rates and transactional locking; never accept client amounts or separate debit/credit requests, because failures must not lose funds.
+- Balance caps are interim safeguards, not proof of valid game rewards; do not close economy security findings until payouts are validated from server-owned game state.
