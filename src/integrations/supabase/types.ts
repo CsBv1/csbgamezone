@@ -1377,6 +1377,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      purchase_csb_tcg_card: {
+        Args: { _card_id: string }
+        Returns: {
+          card_id: string
+          created_at: string
+          id: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "csb_tcg_cards"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       purchase_csb_upgrade: {
         Args: { _upgrade: string }
         Returns: {

@@ -32,7 +32,9 @@ export default function CsbTcg() {
 
   const { connectedWallet } = useCardanoWallet();
   const { nfts: walletNfts } = useNFTBonuses(connectedWallet?.address || null);
-  const { player, userId, addBalance, spendBalance } = useCsbv1();
+  const { player, userId, addBalance, refresh } = useCsbv1();
+  const [buyingCard, setBuyingCard] = useState(false);
+  const purchasePending = useRef(false);
 
   const [bulls, setBulls] = useState<CsbBull[]>([]);
   const [captain, setCaptain] = useState<CsbBull | null>(null);
@@ -145,18 +147,27 @@ export default function CsbTcg() {
   // ---------- shop ----------
   const buyCard = async (id: string) => {
     const card = SHOP_CARDS.find((c) => c.id === id);
-    if (!card || !userId) return;
-    const ok = await spendBalance(card.price);
-    if (!ok) { toast({ title: 'Not enough Rune Power', description: `${card.name} costs ${card.price} 🪙` }); return; }
-    const current = owned.find((o) => o.card_id === id);
-    if (current) {
-      await supabase.from('csb_tcg_cards' as any).update({ quantity: current.quantity + 1 }).eq('user_id', userId).eq('card_id', id);
-      setOwned((p) => p.map((o) => (o.card_id === id ? { ...o, quantity: o.quantity + 1 } : o)));
-    } else {
-      await supabase.from('csb_tcg_cards' as any).insert({ user_id: userId, card_id: id, quantity: 1 });
-      setOwned((p) => [...p, { card_id: id, quantity: 1 }]);
+    if (!card || !userId || purchasePending.current) return;
+    purchasePending.current = true;
+    setBuyingCard(true);
+    try {
+      const { data, error } = await supabase.rpc('purchase_csb_tcg_card', { _card_id: id });
+      if (error || !data) {
+        toast({ title: 'Purchase not completed', description: 'Check your Rune Power balance and try again.', variant: 'destructive' });
+        return;
+      }
+      const saved = { card_id: data.card_id, quantity: data.quantity };
+      setOwned((items) => items.some((item) => item.card_id === saved.card_id)
+        ? items.map((item) => item.card_id === saved.card_id ? saved : item)
+        : [...items, saved]);
+      toast({ title: `Added ${card.name} to your collection`, description: 'Max 3 copies enter your deck.' });
+      await refresh();
+    } catch {
+      toast({ title: 'Could not confirm purchase', description: 'Reload your collection before trying again.', variant: 'destructive' });
+    } finally {
+      purchasePending.current = false;
+      setBuyingCard(false);
     }
-    toast({ title: `Added ${card.name} to your collection`, description: 'Max 3 copies enter your deck.' });
   };
 
   // ---------- match setup ----------
@@ -662,7 +673,7 @@ export default function CsbTcg() {
                     <div className="text-[11px] text-muted-foreground min-h-[30px]">{c.text}</div>
                     {c.type === 'minion' && <div className="text-[11px] font-bold">⚔️ {c.atk} · ❤️ {c.hp}</div>}
                     <div className="text-[11px] text-cyan-300">Owned: {have}/3</div>
-                    <Button size="sm" className="w-full bg-gradient-to-r from-sky-500 to-indigo-500" onClick={() => buyCard(c.id)}>
+                    <Button size="sm" disabled={buyingCard} className="w-full bg-gradient-to-r from-sky-500 to-indigo-500" onClick={() => buyCard(c.id)}>
                       <Coins className="w-3 h-3 mr-1" /> {c.price}
                     </Button>
                   </Card>

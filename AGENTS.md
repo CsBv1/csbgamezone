@@ -1,4 +1,5 @@
 # Architecture rules
+- Trading-card shops call `purchase_csb_tcg_card` with only a catalog ID; fixed server prices, locked payment and collection writes share one transaction, and clients have read-only collection access to prevent free cards.
 - Bookmark and saved-link icons use the existing token artwork in a multi-resolution favicon, Apple touch icon and web manifest; keep these references versioned together so browsers can refresh cached icons.
 - Currency swaps use the authenticated `swap_game_currency` RPC with fixed server-owned rates and transactional locking; never accept client amounts or separate debit/credit requests, because failures must not lose funds.
 - Balance caps are interim safeguards, not proof of valid game rewards; do not close economy security findings until payouts are validated from server-owned game state.

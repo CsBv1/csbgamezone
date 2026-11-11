@@ -85,6 +85,13 @@
       "when": 1794389552883,
       "tag": "0011_allow_tournament_leave",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794430913550,
+      "tag": "0012_server_verified_tcg_purchases",
+      "breakpoints": true
     }
   ]
 }
