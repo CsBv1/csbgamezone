@@ -71,6 +71,20 @@
       "when": 1794389439902,
       "tag": "0009_wallet_auth_no_profile_overwrite",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794389541139,
+      "tag": "0010_harden_cmkr_and_maze_writes",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794389552883,
+      "tag": "0011_allow_tournament_leave",
+      "breakpoints": true
     }
   ]
 }

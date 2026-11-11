@@ -8,3 +8,5 @@
 - [ ] Maze scores, tournaments, game results, game room payouts
 - [ ] Battle, TCG duel and world boss rewards
 - [ ] Bull World character stats, CMKR claims
+
+- [~] Interim guards: CMKR mining uses server month/time with 5s cooldown; maze/tournament times range-checked and write-once (scores still client-reported)
