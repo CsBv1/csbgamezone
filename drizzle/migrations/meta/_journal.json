@@ -64,6 +64,13 @@
       "when": 1794389304328,
       "tag": "0008_maintenance_cron_token",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794389439902,
+      "tag": "0009_wallet_auth_no_profile_overwrite",
+      "breakpoints": true
     }
   ]
 }
