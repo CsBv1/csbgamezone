@@ -92,6 +92,13 @@
       "when": 1794430913550,
       "tag": "0012_server_verified_tcg_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794594993601,
+      "tag": "0013_server_owned_key_rewards",
+      "breakpoints": true
     }
   ]
 }

@@ -640,6 +640,30 @@ export type Database = {
         }
         Relationships: []
       }
+      holder_key_awards: {
+        Row: {
+          amount: number
+          created_at: string
+          game: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          game: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          game?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       holder_season_points: {
         Row: {
           created_at: string
@@ -1136,6 +1160,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscription_bulls: {
+        Row: {
+          bulls: number
+          subscription_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bulls?: number
+          subscription_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bulls?: number
+          subscription_end?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       world_chat: {
         Row: {
           created_at: string
@@ -1284,7 +1329,12 @@ export type Database = {
       }
     }
     Functions: {
+      award_holder_keys: {
+        Args: { _amount: number; _game: string }
+        Returns: Json
+      }
       can_view_room_players: { Args: { _room_id: string }; Returns: boolean }
+      claim_daily_reward: { Args: never; Returns: Json }
       cleanup_old_chat_messages: { Args: never; Returns: undefined }
       cmkr_month_board: {
         Args: { _month: string }
@@ -1294,6 +1344,7 @@ export type Database = {
           username: string
         }[]
       }
+      csb_add_keys: { Args: { _amount: number; _uid: string }; Returns: number }
       csb_apply_battle_action: {
         Args: { _action: string; _room_id: string }
         Returns: {
@@ -1350,6 +1401,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      csb_total_bulls: { Args: { _uid: string }; Returns: number }
       handle_wallet_auth: {
         Args: {
           _nickname?: string

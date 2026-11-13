@@ -101,6 +101,11 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    // Persist server-verified subscription bulls so holder checks run on the server.
+    await supabaseClient.from("user_subscription_bulls").upsert({
+      user_id: user.id, bulls, subscription_end: subscriptionEnd, updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       tier,

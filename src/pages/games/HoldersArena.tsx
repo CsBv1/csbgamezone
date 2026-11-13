@@ -126,62 +126,16 @@ export default function HoldersArena() {
   }, []);
 
   const saveKeysToWallet = async (amount: number): Promise<boolean> => {
-    if (!userId || amount <= 0) {
-      console.log('[Keys] No userId or invalid amount:', { userId, amount });
+    if (!userId || amount <= 0) return false;
+    const { error } = await supabase.rpc('award_holder_keys' as any, { _game: 'Holders Arena', _amount: amount });
+    if (error) {
+      toast({ title: "Keys not saved", description: error.message, variant: "destructive" });
       return false;
     }
-    
-    try {
-      console.log('[Keys] Saving keys to wallet:', { userId, amount });
-      
-      // First check if user has keys record
-      const { data: current, error: fetchError } = await supabase
-        .from('user_keys')
-        .select('balance')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (fetchError) {
-        console.error('[Keys] Error fetching current balance:', fetchError);
-        throw fetchError;
-      }
-      
-      let updateError;
-      
-      if (current && (current as any).balance !== undefined) {
-        // Update existing record
-        const newBalance = ((current as any).balance || 0) + amount;
-        console.log('[Keys] Updating existing balance:', { old: (current as any).balance, new: newBalance });
-        
-        const { error } = await supabase
-          .from('user_keys')
-          .update({ balance: newBalance, updated_at: new Date().toISOString() })
-          .eq('user_id', userId);
-        updateError = error;
-      } else {
-        // Insert new record
-        console.log('[Keys] Creating new keys record with balance:', amount);
-        
-        const { error } = await supabase
-          .from('user_keys')
-          .insert({ user_id: userId, balance: amount });
-        updateError = error;
-      }
-      
-      if (updateError) {
-        console.error('[Keys] Error saving keys:', updateError);
-        throw updateError;
-      }
-      
-      console.log('[Keys] Successfully saved keys to wallet!');
-      toast({ title: `+${amount} 🔑 saved to wallet!`, description: "Keys added to your balance!" });
-      return true;
-    } catch (e) {
-      console.error('[Keys] Failed to save keys:', e);
-      toast({ title: "Failed to save keys", description: "Please try again", variant: "destructive" });
-      return false;
-    }
+    toast({ title: `+${amount} 🔑 saved to wallet!`, description: "Keys added to your balance!" });
+    return true;
   };
+
 
   const awardKeys = async (amount: number): Promise<boolean> => {
     if (amount <= 0) return false;

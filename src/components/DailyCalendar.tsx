@@ -76,37 +76,14 @@ export const DailyCalendar = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not logged in');
 
-      const dayOfYear = getDayOfYear(today);
-      const reward = getDayReward(dayOfYear, today.getDate());
-
-      const { error: claimErr } = await supabase.from('daily_claims').insert({
-        user_id: user.id,
-        claim_date: todayStr,
-        reward_type: reward.type,
-        reward_amount: reward.amount,
-      } as any);
+      const { data: claimed, error: claimErr } = await supabase.rpc('claim_daily_reward' as any);
       if (claimErr) {
         if (claimErr.code === '23505') { toast.error('Already claimed today!'); return; }
         throw claimErr;
       }
-
-      if (reward.type === 'diamonds') {
-        const { data: d } = await supabase.from('user_diamonds').select('balance, total_earned').eq('user_id', user.id).single();
-        await supabase.from('user_diamonds').update({
-          balance: ((d as any)?.balance || 0) + reward.amount,
-          total_earned: ((d as any)?.total_earned || 0) + reward.amount,
-        }).eq('user_id', user.id);
-      } else if (reward.type === 'keys') {
-        const { data: k } = await supabase.from('user_keys').select('balance').eq('user_id', user.id).single();
-        await supabase.from('user_keys').update({ balance: ((k as any)?.balance || 0) + reward.amount }).eq('user_id', user.id);
-      } else if (reward.type === 'bukals') {
-        const { data: b } = await supabase.from('user_bukals').select('balance').eq('user_id', user.id).maybeSingle();
-        if (b) {
-          await supabase.from('user_bukals').update({ balance: (b as any).balance + reward.amount }).eq('user_id', user.id);
-        } else {
-          await supabase.from('user_bukals').insert({ user_id: user.id, balance: reward.amount } as any);
-        }
-      }
+      const c = claimed as any;
+      const reward = { icon: c.type === 'keys' ? '🔑' : c.type === 'bukals' ? '🏆' : '💎',
+        label: `${Number(c.amount).toLocaleString()} ${c.type === 'keys' ? 'Keys' : c.type === 'bukals' ? 'Bukal' : 'Diamonds'}` };
 
       const event = SPECIAL_EVENTS[today.getDate()];
       const eventText = event ? ` 🎪 ${event.name} Bonus!` : '';
