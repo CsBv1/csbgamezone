@@ -6,3 +6,4 @@
 - Badge shops call `purchase_csb_badge` with only a catalog ID; only that atomic server operation may grant a badge, while clients may update only `active`, so purchases and cosmetic identity cannot be forged.
 - Rune upgrades use `purchase_csb_upgrade` to derive current level, cost and energy capacity under locks; direct upgrade writes are revoked to prevent free levels and partial purchases.
 - Wheel color unlocks use `spin_color_wheel` to spend one Key and choose a uniform server-owned prize atomically; clients may only equip colors and animate the returned outcome, preventing forged unlocks.- Keys are earned only through server functions (`award_holder_keys`, `claim_daily_reward`, swaps, wheel); browsers may only lower Key balances, because client-reported Key gains were forgeable.
+- Missions use `csb_mission_step` (server spends energy, advances progress) and `csb_claim_mission` (fixed reward × streak); client mission writes are revoked.

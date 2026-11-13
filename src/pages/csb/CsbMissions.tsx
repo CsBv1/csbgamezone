@@ -36,7 +36,7 @@ const diffColor: Record<string, string> = {
 const CsbMissions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { player, userId, currentEnergy, spendEnergy, addBalance } = useCsbv1();
+  const { player, userId, currentEnergy, refresh } = useCsbv1();
   const [progress, setProgress] = useState<Record<string, { progress: number; completed: boolean; claimed: boolean }>>({});
   const [now, setNow] = useState(Date.now());
 
@@ -72,40 +72,21 @@ const CsbMissions = () => {
   const startMission = async (m: MissionDef) => {
     if (!userId) return;
     if (currentEnergy < m.energyCost) { toast({ title: "Not enough energy ⚡", variant: "destructive" }); return; }
-    const ok = await spendEnergy(m.energyCost);
-    if (!ok) return;
-
-    const cur = progress[m.id]?.progress || 0;
-    const newProg = Math.min(m.goal, cur + 1);
-    const completed = newProg >= m.goal;
-
-    await supabase.from("csbv1_missions" as any).upsert({
-      user_id: userId, mission_id: m.id, reset_date: today,
-      progress: newProg, completed, claimed: false,
-    }, { onConflict: "user_id,mission_id,reset_date" });
-
-    toast({ title: completed ? `✅ ${m.title} complete!` : `Progress ${newProg}/${m.goal}`, description: `-${m.energyCost} ⚡` });
+    const { data, error } = await supabase.rpc("csb_mission_step" as any, { _mission: m.id });
+    if (error) { toast({ title: "Mission failed", description: error.message, variant: "destructive" }); return; }
+    const r = data as any;
+    toast({ title: r.completed ? `✅ ${m.title} complete!` : `Progress ${r.progress}/${m.goal}`, description: `-${m.energyCost} ⚡` });
+    await refresh();
     loadProgress();
   };
 
   const claimMission = async (m: MissionDef) => {
     if (!userId) return;
-    const reward = Math.floor(m.reward * streakMultiplier);
-    await addBalance(reward);
-    await supabase.from("csbv1_missions" as any).update({ claimed: true })
-      .eq("user_id", userId).eq("mission_id", m.id).eq("reset_date", today);
-
-    // bump streak (once per day on first claim of the day)
-    if (player && player.last_streak_date !== today) {
-      const yest = new Date(); yest.setDate(yest.getDate() - 1);
-      const yestStr = yest.toISOString().slice(0, 10);
-      const newStreak = player.last_streak_date === yestStr ? streak + 1 : 1;
-      await supabase.from("csbv1_players" as any).update({
-        streak_days: newStreak, last_streak_date: today,
-      }).eq("user_id", userId);
-    }
-
-    toast({ title: `+${reward} Rune Power 🎉`, description: `Streak x${streakMultiplier.toFixed(2)}` });
+    const { data, error } = await supabase.rpc("csb_claim_mission" as any, { _mission: m.id });
+    if (error) { toast({ title: "Claim failed", description: error.message, variant: "destructive" }); return; }
+    const r = data as any;
+    toast({ title: `+${r.reward} Rune Power 🎉`, description: `Streak ${r.streak} days` });
+    await refresh();
     loadProgress();
   };
 

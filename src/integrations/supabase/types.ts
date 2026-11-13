@@ -1367,6 +1367,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      csb_claim_mission: { Args: { _mission: string }; Returns: Json }
       csb_leaderboard_rows: {
         Args: never
         Returns: {
@@ -1379,6 +1380,11 @@ export type Database = {
           username: string
         }[]
       }
+      csb_mission_def: {
+        Args: { _id: string }
+        Returns: Record<string, unknown>
+      }
+      csb_mission_step: { Args: { _mission: string }; Returns: Json }
       csb_start_battle: {
         Args: { _guest_fighter: Json; _host_fighter: Json; _room_id: string }
         Returns: {
