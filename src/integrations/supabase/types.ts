@@ -753,6 +753,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lucky_chain_runs: {
+        Row: {
+          chain: number
+          diamonds: number
+          id: string
+          last_step_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chain?: number
+          diamonds?: number
+          id?: string
+          last_step_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chain?: number
+          diamonds?: number
+          id?: string
+          last_step_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       maze_leaderboard: {
         Row: {
           completion_time_ms: number
@@ -1415,6 +1445,10 @@ export type Database = {
           _wallet_name: string
         }
         Returns: string
+      }
+      lucky_chain_action: {
+        Args: { _action: string; _expected_chain?: number; _run_id?: string }
+        Returns: Json
       }
       purchase_csb_badge: {
         Args: { _badge_id: string }

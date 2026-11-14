@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,122 +10,66 @@ const LuckyChain = () => {
   const navigate = useNavigate();
   const [keys, setKeys] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [runId, setRunId] = useState<string | null>(null);
+  const busy = useRef(false);
   const [chain, setChain] = useState(0);
-  const [multiplier, setMultiplier] = useState(1.0);
+  const multiplier = 1 + chain * 0.3;
   const [diamonds, setDiamonds] = useState(0);
   const [gameActive, setGameActive] = useState(false);
   const [autoStarting, setAutoStarting] = useState(true);
  
+  const applyRun = (data: { id: string; chain: number; diamonds: number; status: string; keys: number }) => {
+    setRunId(data.id);
+    setChain(data.chain);
+    setDiamonds(data.diamonds);
+    setKeys(data.keys);
+    setGameActive(data.status === "active");
+  };
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        
-        const { data: keysData } = await supabase
-          .from('user_keys' as any)
-          .select('balance')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (keysData) {
-          const balance = (keysData as any).balance;
-          setKeys(balance);
-          if (balance >= 1) {
-            await startGameAuto(user.id, balance);
-          } else {
-            toast.error("You need a key to enter! 🔑");
-            setTimeout(() => navigate("/dashboard"), 2000);
-          }
-          setAutoStarting(false);
-        }
+    let mounted = true;
+    const start = async () => {
+      const { data, error } = await supabase.rpc("lucky_chain_action", { _action: "start" });
+      if (!mounted) return;
+      if (error) {
+        toast.error(error.message);
+      } else if (data) {
+        applyRun(data as unknown as Parameters<typeof applyRun>[0]);
       }
+      setAutoStarting(false);
     };
-    
-    fetchUserData();
+    void start();
+    return () => { mounted = false; };
   }, []);
 
-  const startGameAuto = async (uid: string, currentKeys: number) => {
+  const playAction = async (action: "continue" | "cash_out") => {
+    if (busy.current || !runId || !gameActive) return;
+    busy.current = true;
     setPlaying(true);
-    
-    const { error: keyError } = await supabase
-      .from('user_keys' as any)
-      .update({ balance: currentKeys - 1 })
-      .eq('user_id', uid);
-    
-    if (keyError) {
-      toast.error("Failed to use key!");
-      setPlaying(false);
-      setTimeout(() => navigate("/dashboard"), 2000);
-      return;
-    }
-    
-    setKeys(prev => prev - 1);
-    setGameActive(true);
-    setChain(0);
-    setMultiplier(1.0);
-    setDiamonds(0);
-    setPlaying(false);
-    
-    toast.success("🔗 Lucky Chain begins!");
-  };
-
-  const continueChain = async () => {
-    setPlaying(true);
-    
-    setTimeout(async () => {
-      const successChance = Math.max(0.3, 0.9 - (chain * 0.05));
-      const success = Math.random() < successChance;
-      
-      if (success) {
-        const newChain = chain + 1;
-        const newMultiplier = 1.0 + (newChain * 0.3);
-        const reward = Math.floor(20000 * newMultiplier);
-        
-        setChain(newChain);
-        setMultiplier(newMultiplier);
-        setDiamonds(prev => prev + reward);
-        
-        toast.success(`🔗 Chain ${newChain}! +${reward.toLocaleString()} 💎 (${newMultiplier.toFixed(1)}x)`);
-        
-        if (newChain >= 20) {
-          const bonus = 500000;
-          setDiamonds(prev => prev + bonus);
-          toast.success(`🏆 Max chain! +${bonus.toLocaleString()} bonus!`);
-          await claimRewards(diamonds + reward + bonus);
+    try {
+      if (action === "continue") await new Promise(resolve => setTimeout(resolve, 1500));
+      const { data, error } = await supabase.rpc("lucky_chain_action", {
+        _action: action, _run_id: runId, _expected_chain: chain,
+      });
+      if (error) throw error;
+      if (data) {
+        const result = data as unknown as Parameters<typeof applyRun>[0] & { success: boolean | null; reward: number; awarded: number };
+        applyRun(result);
+        if (result.status === "paid") {
+          toast.success(`💎 Claimed ${result.diamonds.toLocaleString()} diamonds!`);
+        } else if (result.success) {
+          toast.success(`🔗 Chain ${result.chain}! +${result.reward.toLocaleString()} 💎`);
         }
-      } else {
-        toast.error(`💔 Chain broken at ${chain}!`);
-        await claimRewards(diamonds);
       }
-      
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : (error as { message?: string }).message || "Could not save game. Try again.");
+      // Recover current state after a lost response without charging another Key.
+      const { data } = await supabase.from("lucky_chain_runs").select("id,chain,diamonds,status").eq("id", runId).maybeSingle();
+      if (data) applyRun({ ...data, keys });
+    } finally {
+      busy.current = false;
       setPlaying(false);
-    }, 1500);
-  };
-
-  const claimRewards = async (totalDiamonds: number) => {
-    if (!userId) return;
-    
-    const { data: diamondsData } = await supabase
-      .from('user_diamonds' as any)
-      .select('balance, total_earned')
-      .eq('user_id', userId)
-      .single();
-    
-    if (diamondsData) {
-      await supabase
-        .from('user_diamonds' as any)
-        .update({ 
-          balance: (diamondsData as any).balance + totalDiamonds,
-          total_earned: (diamondsData as any).total_earned + totalDiamonds
-        })
-        .eq('user_id', userId);
-      
-      toast.success(`💎 Claimed ${totalDiamonds.toLocaleString()} diamonds!`);
     }
-    
-    setGameActive(false);
   };
 
   const getChainColor = () => {
@@ -203,7 +147,7 @@ const LuckyChain = () => {
 
             <div className="space-y-4">
               <Button 
-                onClick={continueChain} 
+                onClick={() => playAction("continue")} 
                 disabled={playing} 
                 size="lg" 
                 className="w-full h-20 text-xl bg-gradient-to-r from-purple-600 to-pink-600"
@@ -212,7 +156,7 @@ const LuckyChain = () => {
                 Continue Chain
               </Button>
               <Button 
-                onClick={() => claimRewards(diamonds)} 
+                onClick={() => playAction("cash_out")} 
                 disabled={playing || diamonds === 0} 
                 size="lg" 
                 variant="outline"
