@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.handle_wallet_auth(text, text, text) FROM PUBLIC, anon, authenticated;
+COMMENT ON FUNCTION public.handle_wallet_auth(text, text, text) IS 'DEPRECATED: replaced by signature-verified wallet-login function';

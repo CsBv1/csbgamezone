@@ -8,6 +8,8 @@ import { Wallet, LogOut, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { walletSignIn, CHAIN_LABELS, type LoginChain } from '@/lib/walletLogin';
+import { LinkedWallets } from '@/components/LinkedWallets';
 
 interface CardanoWalletConnectorProps {
   onConnect?: (walletInfo: { walletName: string; address: string; nickname: string }) => void;
@@ -38,6 +40,8 @@ export const CardanoWalletConnector = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [nickname, setNickname] = useState('');
+  const [chain, setChain] = useState<LoginChain>('cardano');
+  const [busy, setBusy] = useState(false);
   const { toast } = useToast();
   
   const {
@@ -71,61 +75,19 @@ export const CardanoWalletConnector = ({
       return;
     }
 
+    setBusy(true);
     try {
-      const walletInfo = await connectWallet(selectedWallet, nickname);
-      
-      // Register wallet in database and get user_id
-      const { data: userId, error: rpcError } = await (supabase as any).rpc('handle_wallet_auth' as any, {
-        _wallet_address: walletInfo.address,
-        _wallet_name: walletInfo.walletName,
-        _nickname: walletInfo.nickname,
-      });
-
-      if (rpcError) {
-        console.error('Database error:', rpcError);
-        toast({
-          title: "Connection Failed",
-          description: "Could not sync wallet. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Sign in with the wallet credentials to create a proper session
-      const email = `${walletInfo.address}@cardano.wallet`;
-      const password = `wallet_auth_${walletInfo.address}`;
-      
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        console.error('Sign in error:', signInError);
-        toast({
-          title: "Connection Failed",
-          description: "Authentication failed. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Wallet Connected! 🎉",
-        description: `Welcome, ${nickname}!`,
-      });
-
-      onConnect?.(walletInfo);
+      await walletSignIn({ chain, cardanoKey: selectedWallet, nickname: nickname.trim() });
+      toast({ title: "Wallet Connected! 🎉", description: `Welcome, ${nickname}!` });
       setIsOpen(false);
       setSelectedWallet(null);
       setNickname('');
+      setTimeout(() => window.location.reload(), 300);
     } catch (error) {
       console.error('Wallet connection error:', error);
-      toast({
-        title: "Connection Failed",
-        description: "Failed to connect wallet. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Connection Failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -149,7 +111,7 @@ export const CardanoWalletConnector = ({
 
   if (isConnected && connectedWallet) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Card className="px-4 py-2 bg-gradient-to-r from-primary/20 to-primary/10 border-primary/40">
           <div className="flex items-center gap-2">
             <Wallet className="w-4 h-4 text-primary" />
@@ -161,6 +123,7 @@ export const CardanoWalletConnector = ({
             </div>
           </div>
         </Card>
+        <LinkedWallets />
         <Button
           variant="outline"
           size="sm"
@@ -189,7 +152,7 @@ export const CardanoWalletConnector = ({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl gradient-gold bg-clip-text text-transparent">
-              Connect Cardano Wallet
+              Connect Wallet
             </DialogTitle>
             <DialogDescription>
               {!selectedWallet 
@@ -198,7 +161,22 @@ export const CardanoWalletConnector = ({
             </DialogDescription>
           </DialogHeader>
 
-          {!selectedWallet ? (
+          {!selectedWallet && (
+            <div className="grid grid-cols-5 gap-1 mt-2">
+              {(Object.keys(CHAIN_LABELS) as LoginChain[]).map((c) => (
+                <Button key={c} size="sm" variant={chain === c ? 'default' : 'outline'} className="flex-col h-14 px-1 text-xs" onClick={() => setChain(c)}>
+                  <span className="text-lg leading-none">{CHAIN_LABELS[c].icon}</span>
+                  {CHAIN_LABELS[c].label}
+                </Button>
+              ))}
+            </div>
+          )}
+          {!selectedWallet && chain !== 'cardano' ? (
+            <div className="mt-2 space-y-3 text-center">
+              <p className="text-sm text-muted-foreground">Use {CHAIN_LABELS[chain].wallet}. You will sign a free message, no transaction.</p>
+              <Button variant="outline" className="w-full h-12" onClick={() => setSelectedWallet(chain)}>Continue with {CHAIN_LABELS[chain].wallet}</Button>
+            </div>
+          ) : !selectedWallet ? (
             <div className="mt-4">
               {detectedWallets.length === 0 ? (
                 <Card className="p-6 text-center">
@@ -232,7 +210,7 @@ export const CardanoWalletConnector = ({
               <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
                 <CheckCircle className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">
-                  {SUPPORTED_WALLETS.find(w => w.id === selectedWallet)?.name}
+                  {chain === 'cardano' ? (SUPPORTED_WALLETS.find(w => w.id === selectedWallet)?.name ?? selectedWallet) : CHAIN_LABELS[chain].wallet}
                 </span>
               </div>
 
@@ -262,10 +240,10 @@ export const CardanoWalletConnector = ({
                 <Button
                   variant="gold"
                   onClick={handleConnect}
-                  disabled={isConnecting || !nickname.trim()}
+                  disabled={busy || isConnecting || !nickname.trim()}
                   className="flex-1"
                 >
-                  {isConnecting ? 'Connecting...' : 'Connect'}
+                  {busy ? 'Check your wallet…' : 'Sign in'}
                 </Button>
               </div>
             </div>

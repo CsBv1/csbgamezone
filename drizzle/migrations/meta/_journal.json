@@ -113,6 +113,27 @@
       "when": 1794648658644,
       "tag": "0015_server_owned_lucky_chain",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795525232114,
+      "tag": "0016_multichain_wallet_login",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795525244846,
+      "tag": "0017_total_bulls_all_networks",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795525400003,
+      "tag": "0018_retire_unsigned_wallet_auth",
+      "breakpoints": true
     }
   ]
 }

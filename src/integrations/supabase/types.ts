@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      bull_collections: {
+        Row: {
+          chain: string
+          collection_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          chain: string
+          collection_id: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Update: {
+          chain?: string
+          collection_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       bw_boss_damage: {
         Row: {
           boss_id: string
@@ -1129,6 +1153,7 @@ export type Database = {
           highest_rarity: string | null
           id: string
           last_scanned_at: string
+          other_chain_bulls: number
           rarity_bonus: number
           updated_at: string
           user_id: string
@@ -1140,6 +1165,7 @@ export type Database = {
           highest_rarity?: string | null
           id?: string
           last_scanned_at?: string
+          other_chain_bulls?: number
           rarity_bonus?: number
           updated_at?: string
           user_id: string
@@ -1151,6 +1177,7 @@ export type Database = {
           highest_rarity?: string | null
           id?: string
           last_scanned_at?: string
+          other_chain_bulls?: number
           rarity_bonus?: number
           updated_at?: string
           user_id?: string
@@ -1208,6 +1235,72 @@ export type Database = {
           subscription_end?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_identities: {
+        Row: {
+          address: string
+          chain: string
+          created_at: string
+          extra_address: string | null
+          id: string
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          address: string
+          chain: string
+          created_at?: string
+          extra_address?: string | null
+          id?: string
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          address?: string
+          chain?: string
+          created_at?: string
+          extra_address?: string | null
+          id?: string
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
+      wallet_login_challenges: {
+        Row: {
+          address: string
+          chain: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          link_user_id: string | null
+          message: string
+          nonce: string
+        }
+        Insert: {
+          address: string
+          chain: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          link_user_id?: string | null
+          message: string
+          nonce: string
+        }
+        Update: {
+          address?: string
+          chain?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          link_user_id?: string | null
+          message?: string
+          nonce?: string
         }
         Relationships: []
       }

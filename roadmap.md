@@ -12,3 +12,9 @@
 - [ ] Bull World character stats, CMKR claims
 
 - [~] Interim guards: CMKR mining uses server month/time with 5s cooldown; maze/tournament times range-checked and write-once (scores still client-reported)
+
+## Multichain wallets
+- [x] Signature sign-in for Cardano, Solana, Ethereum, Base, Bitcoin; add more wallets to one account
+- [x] Bulls from every linked wallet count toward total bulls
+- [ ] Add Solana / Ethereum / Base / Bitcoin Bull collection IDs (blocked: not minted yet)
+- [ ] Older Cardano accounts still have the old guessable password until they sign in once with a signature
