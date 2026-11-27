@@ -63,7 +63,7 @@ export const LinkedWallets = () => {
             ))}
             {scan && scan.wallets.length === 0 && <p className="text-sm text-muted-foreground">No verified wallets yet. Add one below.</p>}
             {scan && scan.collectionsConfigured === 0 && (
-              <p className="text-xs text-muted-foreground">Bulls on Solana, Ethereum, Base and Bitcoin will show here once those collections are minted.</p>
+              <p className="text-xs text-muted-foreground">Bulls on Solana, Ethereum and Bitcoin will show here once those collections are minted.</p>
             )}
           </div>
           <div className="grid grid-cols-5 gap-1">

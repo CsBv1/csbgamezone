@@ -1,12 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export type LoginChain = 'cardano' | 'solana' | 'ethereum' | 'base' | 'bitcoin';
+export type LoginChain = 'cardano' | 'solana' | 'ethereum' | 'bitcoin';
 
 export const CHAIN_LABELS: Record<LoginChain, { label: string; wallet: string; icon: string }> = {
   cardano: { label: 'Cardano', wallet: 'VESPR, Eternl, Lace…', icon: '₳' },
   solana: { label: 'Solana', wallet: 'Phantom', icon: '◎' },
   ethereum: { label: 'Ethereum', wallet: 'MetaMask', icon: 'Ξ' },
-  base: { label: 'Base', wallet: 'MetaMask', icon: '🔵' },
   bitcoin: { label: 'Bitcoin', wallet: 'Xverse', icon: '₿' },
 };
 
@@ -39,7 +38,7 @@ const solanaSigner: Signer = async (getMessage) => {
 
 const evmSigner = (chainId: string): Signer => async (getMessage) => {
   const eth = (window as any).ethereum;
-  if (!eth) throw new Error('Install MetaMask to use Ethereum or Base');
+  if (!eth) throw new Error('Install MetaMask to use Ethereum');
   const [address] = await eth.request({ method: 'eth_requestAccounts' });
   try { await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); } catch { /* signing works on any chain */ }
   const message = await getMessage(address.toLowerCase());
@@ -65,7 +64,6 @@ function signerFor(chain: LoginChain, cardanoKey?: string): Signer {
   if (chain === 'cardano') return cardanoSigner(cardanoKey!);
   if (chain === 'solana') return solanaSigner;
   if (chain === 'ethereum') return evmSigner('0x1');
-  if (chain === 'base') return evmSigner('0x2105');
   return bitcoinSigner;
 }
 
